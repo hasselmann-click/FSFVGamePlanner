@@ -2,6 +2,7 @@
 using FSFV.Gamplanner.Data.Model.Intermediary;
 using FSFV.Gamplanner.Data.Util;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace FSFV.Gamplanner.Data.Context
 {
@@ -13,10 +14,9 @@ namespace FSFV.Gamplanner.Data.Context
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            //optionsBuilder.UseSqlServer("Data Source=.\\SQLEXPRESS;Initial Catalog=Dev;Integrated Security=True;MultipleActiveResultSets=False;");
-
-            // TODO move to appsettings.json
-            optionsBuilder.UseSqlServer(@"Server=laptop-9g1tdj2q;Database=Dev;Trusted_Connection=True;");
+            // TODO connection string for locale db
+            var server = Environment.MachineName.StartsWith("DESKTOP") ? "DESKTOP" : "LAPTOP";
+            optionsBuilder.UseSqlServer(@"Server=" + server + ";Database=Dev;Trusted_Connection=True;");
 
             // TODO configure table columns
             // e.g. prevent VARCHAR(max) and nullable FK etc

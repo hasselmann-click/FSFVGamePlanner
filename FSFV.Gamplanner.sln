@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.Common", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.ConsoleRunner", "FSFV.Gameplanner.ConsoleRunner\FSFV.Gameplanner.ConsoleRunner.csproj", "{74B67718-A90C-40AB-B233-E85FCFDC672E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSFV.Gameplanner.Service", "FSFV.Gameplanner.Service\FSFV.Gameplanner.Service.csproj", "{440A27FB-450E-4EA2-AF89-7D464EB39886}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.Service", "FSFV.Gameplanner.Service\FSFV.Gameplanner.Service.csproj", "{440A27FB-450E-4EA2-AF89-7D464EB39886}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{CE2BB506-F90F-49A8-81C2-AAB9D33F5AD4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{440A27FB-450E-4EA2-AF89-7D464EB39886}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{440A27FB-450E-4EA2-AF89-7D464EB39886}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{440A27FB-450E-4EA2-AF89-7D464EB39886}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE2BB506-F90F-49A8-81C2-AAB9D33F5AD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE2BB506-F90F-49A8-81C2-AAB9D33F5AD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE2BB506-F90F-49A8-81C2-AAB9D33F5AD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE2BB506-F90F-49A8-81C2-AAB9D33F5AD4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
