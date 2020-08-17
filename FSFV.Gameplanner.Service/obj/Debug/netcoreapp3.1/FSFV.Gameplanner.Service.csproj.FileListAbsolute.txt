@@ -1,9 +1,0 @@
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\bin\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.deps.json
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\bin\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.dll
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\bin\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.pdb
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\obj\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.csprojAssemblyReference.cache
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\obj\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.AssemblyInfoInputs.cache
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\obj\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.AssemblyInfo.cs
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\obj\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.csproj.CoreCompileInputs.cache
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\obj\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.dll
-C:\Users\Hasselmann\source\repos\FSFV.Gamplanner\FSFV.Gameplanner.Service\obj\Debug\netcoreapp3.1\FSFV.Gameplanner.Service.pdb
