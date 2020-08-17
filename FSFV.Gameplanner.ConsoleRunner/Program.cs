@@ -1,15 +1,6 @@
-﻿using FSFV.Gameplanner.Common.Dto.Input;
-using FSFV.Gameplanner.Service.Input;
-using FSFV.Gamplanner.Data.Context;
-using FSFV.Gamplanner.Data.Model;
-using FSFV.Gamplanner.Data.Model.Intermediary;
+﻿using FSFV.Gameplanner.Service.Input;
 using Microsoft.Extensions.Configuration;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.ConsoleRunner

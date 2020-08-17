@@ -2,7 +2,6 @@
 using FSFV.Gamplanner.Data.Model.Intermediary;
 using FSFV.Gamplanner.Data.Util;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.CodeAnalysis;
 
 namespace FSFV.Gamplanner.Data.Context
 {
