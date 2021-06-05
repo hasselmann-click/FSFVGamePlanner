@@ -1,6 +1,9 @@
-﻿using FSFV.Gameplanner.Service.Input;
+﻿using FSFV.Gameplanner.Service.Fixtures;
+using FSFV.Gameplanner.Service.Input;
 using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.ConsoleRunner
@@ -18,8 +21,13 @@ namespace FSFV.Gameplanner.ConsoleRunner
             var cmdOptions = new ConfigurationBuilder().AddCommandLine(args, ArgsKeys).Build();
             var inputJsonFile = cmdOptions[Arguments.Input];
 
-            await new InputHandlerService().StoreInputInDB(inputJsonFile);
+            var teams = await new InputHandlerService().StoreInputInDB(inputJsonFile);
+            var games = GameCreatorUtil.GetFixtures(teams);
 
+            foreach (var game in games.OrderBy(g => g.GameDay).ThenBy(g => g.GameDayOrder))
+            {
+                Console.WriteLine(game);
+            }
 
         }
 

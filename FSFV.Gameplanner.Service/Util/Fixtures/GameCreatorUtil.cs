@@ -1,17 +1,30 @@
-﻿using FSFV.Gamplanner.Data.Model;
+﻿using FSFV.Gameplanner.Data.Model;
+using FSFV.Gamplanner.Data.Model;
 using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
 
 namespace FSFV.Gameplanner.Service.Fixtures
 {
-    public class GameCreatorService
+    public static class GameCreatorUtil
+
     {
 
         private const string TableValueSeparator = ".";
         private const string TableValueSeparatorPattern = @"\" + TableValueSeparator;
         private const string TableValueFiller = "X";
 
+        public static List<Game> GetFixtures(List<Team> teams)
+        {
+            var table = GenerateGameTable(teams);
+            return CreateGameList(teams, table);
+        }
+
+        /// <summary>
+        /// Creates all the possible games from the single leg (!) game table
+        /// </summary>
+        /// <param name="teams">The teams</param>
+        /// <param name="table">The single leg game table</param>
         private static List<Game> CreateGameList(List<Team> teams, String[,] table)
         {
             int l = teams.Count;
@@ -36,14 +49,17 @@ namespace FSFV.Gameplanner.Service.Fixtures
             return games;
         }
 
-        private static String[,] generateGameTable(List<Team> teams)
+        /// <summary>
+        /// Generates a single leg game table. Each team plays each team once!
+        /// </summary>
+        private static String[,] GenerateGameTable(List<Team> teams) // TODO only make the count of teams, not a list. The teams themself are not interesting here. Then make this a util.
         {
             // [row,column]
             int l = teams.Count;
-            String[,] table = new String[l,l];
+            String[,] table = new String[l, l];
             for (int r = 0; r < l; ++r)
             {
-                table[r,r] = TableValueFiller;
+                table[r, r] = TableValueFiller;
             }
 
             // day 1
@@ -51,7 +67,7 @@ namespace FSFV.Gameplanner.Service.Fixtures
             int match1 = 0;
             for (int r = l - 1; r >= (l / 2); --r)
             {
-                table[r,l - 1 - r] = day + TableValueSeparator + ++match1;
+                table[r, l - 1 - r] = day + TableValueSeparator + ++match1;
             }
 
             // follow up days
@@ -68,7 +84,7 @@ namespace FSFV.Gameplanner.Service.Fixtures
                 while (!(r == c || (prev_r == c && prev_c == r)))
                 {
 
-                    table[r,c] = d + "." + ++match;
+                    table[r, c] = d + "." + ++match;
                     remaining[r] = null;
                     remaining[c] = null;
 
@@ -132,7 +148,7 @@ namespace FSFV.Gameplanner.Service.Fixtures
                     top = l - 1;
                     ++bottom;
                 }
-                else if (string.IsNullOrEmpty(table[top,bottom]))
+                else if (string.IsNullOrEmpty(table[top, bottom]))
                 {
                     CrossReferenceItem crItem = new CrossReferenceItem(top--, bottom++, d + "." + ++crMatch);
                     crItems.Add(crItem);
@@ -175,7 +191,7 @@ namespace FSFV.Gameplanner.Service.Fixtures
 
             foreach (var cri in crItems)
             {
-                table[cri.row,cri.column] = cri.value;
+                table[cri.row, cri.column] = cri.value;
                 remaining[cri.row] = null;
                 remaining[cri.column] = null;
             }
@@ -195,8 +211,8 @@ namespace FSFV.Gameplanner.Service.Fixtures
 
         }
 
-
-    private static void printTable(Object[,] table)
+        // TODO remove or make util
+        private static void printTable(Object[,] table)
         {
             int l = table.Length;
             for (int i = 0; i < l; ++i)
@@ -204,7 +220,7 @@ namespace FSFV.Gameplanner.Service.Fixtures
                 Console.Write("|");
                 for (int j = 0; j < l; ++j)
                 {
-                    Object v = table[i,j];
+                    Object v = table[i, j];
                     Console.Write(v + "|");
                 }
                 Console.WriteLine();

@@ -8,24 +8,24 @@ using FSFV.Gamplanner.Data.Model.Intermediary;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace FSFV.Gameplanner.Service.Input
 {
     public class InputHandlerService
     {
-
-        public async Task<int> StoreInputInDB(string inputJsonFile)
+        public async Task<List<Team>> StoreInputInDB(string inputJsonFile)
         {
             var inputDto = ReadInput(inputJsonFile);
-            
+
             // input validation..?
 
             await using var context = new GameplannerDbContext();
-
-            if (context.Teams.Any())
+            var data = await context.Teams.ToListAsync();
+            if(data.Any())
             {
                 Console.WriteLine("Already data in database. Stopping.");
-                return 0;
+                return data;
             }
 
             var season = new Season() { Description = inputDto.season };
@@ -52,7 +52,8 @@ namespace FSFV.Gameplanner.Service.Input
             }
 
             context.Teams.AddRange(teams);
-            return await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+            return teams;
         }
 
         private static StartInputDto ReadInput(string inputJsonFile)

@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FSFV.Gamplanner.Data\FSFV.Gamplanner.Data.csproj" />
+    <ProjectReference Include="..\FSFV.Gamplanner.Data\FSFV.Gameplanner.Data.csproj" />
   </ItemGroup>
 
 </Project>
