@@ -39,7 +39,7 @@ Gruppe B
                 new Team { TeamID = 5, Name = "El Social"}
             };
 
-            var games = GameCreatorUtil.GetFixtures(teams);
+            var games = old_GameCreatorUtil.GetFixtures(teams);
 
             foreach (var game in games.OrderBy(g => g.GameDay).ThenBy(g => g.GameDayOrder))
             {

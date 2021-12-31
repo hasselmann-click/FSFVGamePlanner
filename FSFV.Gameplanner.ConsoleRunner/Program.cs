@@ -1,40 +1,24 @@
-﻿using FSFV.Gameplanner.Service.Fixtures;
-using FSFV.Gameplanner.Service.Input;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using FSFV.Gameplanner.Service;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace FSFV.Gameplanner.ConsoleRunner
 {
     class Program
     {
 
-        public class Arguments
+        static void Main(string[] args)
         {
-            public const string Input = "input";
+            ConfigureServices().GetRequiredService<Runner>().Run();
         }
 
-        static async Task Main(string[] args)
+        private static ServiceProvider ConfigureServices()
         {
-            var cmdOptions = new ConfigurationBuilder().AddCommandLine(args, ArgsKeys).Build();
-            var inputJsonFile = cmdOptions[Arguments.Input];
-
-            var teams = await new InputHandlerService().StoreInputInDB(inputJsonFile);
-            var games = GameCreatorUtil.GetFixtures(teams);
-
-            foreach (var game in games.OrderBy(g => g.GameDay).ThenBy(g => g.GameDayOrder))
-            {
-                Console.WriteLine(game);
-            }
-
+            return new ServiceCollection()
+                .AddLogging(b => b.AddConsole())
+                .AddSingleton<Runner>()
+                .AddTransient<SlotService>()
+                .BuildServiceProvider();
         }
-
-        private static readonly Dictionary<string, string> ArgsKeys = new Dictionary<string, string>()
-        {
-            {"-i", Arguments.Input }
-        };
-
     }
 }
