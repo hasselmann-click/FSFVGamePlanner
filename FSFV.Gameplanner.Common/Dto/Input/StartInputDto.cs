@@ -10,7 +10,7 @@ namespace FSFV.Gameplanner.Common.Dto.Input
 
         public IList<DefinitionTupleDto> leagues { get; set; }
 
-        public IList<GroupingDto> groupings{ get; set; }
+        public IList<GroupingDto> groupings { get; set; }
 
     }
 

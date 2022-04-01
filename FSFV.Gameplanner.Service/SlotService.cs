@@ -23,62 +23,18 @@ namespace FSFV.Gameplanner.Service
         {
             // TODO sub group support
 
-            // pair games for referees
             var groups = games.OrderByDescending(g => g.Group.Priority).GroupBy(g => g.Group).ToList();
             List<Tuple<Game, Game>> pairs = new(games.Count / 2 + groups.Count); // if uneven per group a placeholder
-            foreach (var group in groups.Select(g => g.ToList()))
-            {
-                for (int i = 0, j = 1; i < group.Count; i += 2, j += 2)
-                {
-                    var game1 = group[i];
-                    var game2 = group[j];
 
-                    game1.Referee = DetermineRef(game2);
-                    game2.Referee = DetermineRef(game1);
+            BuildRefereePairs(groups, pairs);
+            Distribute(pitches, pairs);
+            BuildTimeSlots(pitches);
 
-                    game1.Referee.RefereeCommitment++;
-                    game2.Referee.RefereeCommitment++;
+            return new GameDay { Pitches = pitches };
+        }
 
-                    pairs.Add(Tuple.Create(game1, game2));
-                }
-                if ((group.Count & 1) == 1) // is odd? Then last game was skipped
-                {
-                    logger.LogDebug($"Uneven number of games, adding placeholder");
-                    var lastGame = group[group.Count - 1];
-                    lastGame.Referee = DetermineRefFromPreLastGame(pairs[pairs.Count - 1]);
-                    pairs.Add(Tuple.Create(lastGame, PLACEHOLDER));
-                }
-            }
-
-            // distribute pairs to pitches
-
-            // TODO ZK Duty
-            // TODO Max parallel pitches per group
-
-            foreach (var pair in pairs)
-            {
-                var minDuration = pair.Item1.MinDuration.Add(pair.Item2.MinDuration);
-                bool added = false;
-                foreach (var pitch in pitches.OrderBy(p => p.StartTime).ThenBy(p => p.Games.Count))
-                {
-                    if (pitch.TimeLeft < minDuration)
-                        continue;
-
-                    pitch.Games.Add(pair.Item1);
-                    pitch.Games.Add(pair.Item2);
-                    added = true;
-                    break;
-                }
-
-                if (!added)
-                {
-                    logger.LogError($"Could not slot game pair. Adding to pitch of type {pitches[0].Type.PitchTypeID}");
-                    pitches[0].Games.Add(pair.Item1);
-                    pitches[0].Games.Add(pair.Item2);
-                }
-            }
-
-            // creating time slots
+        private static void BuildTimeSlots(List<Pitch> pitches)
+        {
             foreach (var pitch in pitches)
             {
                 var timeLeft = pitch.TimeLeft;
@@ -105,8 +61,63 @@ namespace FSFV.Gameplanner.Service
                     });
                 }
             }
+        }
 
-            return new GameDay { Pitches = pitches };
+        private void Distribute(List<Pitch> pitches, List<Tuple<Game, Game>> pairs)
+        {
+
+            // TODO ZK Duty
+            // TODO Max parallel pitches per group
+
+            foreach (var pair in pairs)
+            {
+                var minDuration = pair.Item1.MinDuration.Add(pair.Item2.MinDuration);
+                bool added = false;
+                foreach (var pitch in pitches.OrderBy(p => p.StartTime).ThenBy(p => p.Games.Count))
+                {
+                    if (pitch.TimeLeft < minDuration)
+                        continue;
+
+                    pitch.Games.Add(pair.Item1);
+                    pitch.Games.Add(pair.Item2);
+                    added = true;
+                    break;
+                }
+
+                if (!added)
+                {
+                    logger.LogError($"Could not slot game pair. Adding to pitch of type {pitches[0].Type.PitchTypeID}");
+                    pitches[0].Games.Add(pair.Item1);
+                    pitches[0].Games.Add(pair.Item2);
+                }
+            }
+        }
+
+        private void BuildRefereePairs(List<IGrouping<Grouping, Game>> groups, List<Tuple<Game, Game>> pairs)
+        {
+            foreach (var group in groups.Select(g => g.ToList()))
+            {
+                for (int i = 0, j = 1; i < group.Count; i += 2, j += 2)
+                {
+                    var game1 = group[i];
+                    var game2 = group[j];
+
+                    game1.Referee = DetermineRef(game2);
+                    game2.Referee = DetermineRef(game1);
+
+                    game1.Referee.RefereeCommitment++;
+                    game2.Referee.RefereeCommitment++;
+
+                    pairs.Add(Tuple.Create(game1, game2));
+                }
+                if ((group.Count & 1) == 1) // is odd? Then last game was skipped
+                {
+                    logger.LogDebug($"Uneven number of games, adding placeholder");
+                    var lastGame = group[group.Count - 1];
+                    lastGame.Referee = DetermineRefFromPreLastGame(pairs[pairs.Count - 1]);
+                    pairs.Add(Tuple.Create(lastGame, PLACEHOLDER));
+                }
+            }
         }
 
         public class GroupType
