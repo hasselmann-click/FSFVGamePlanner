@@ -1,4 +1,4 @@
-﻿Name,MinDurationMinutes,FinalsDays,RequiredPitch,Priority,FixtureStart
-M,85,1,0,0,6
-H,85,3,0,100,1
-F,65,1,2,50,1
+﻿Name,MinDurationMinutes,FinalsDays,Priority,FixtureStart,RequiredPitchName
+M,85,1,0,6
+H,85,3,100,1
+F,65,1,50,1,R2
