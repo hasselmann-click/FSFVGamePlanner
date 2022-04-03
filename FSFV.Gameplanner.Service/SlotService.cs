@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FSFV.Gameplanner.Common.Dto;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,13 +14,13 @@ namespace FSFV.Gameplanner.Service
             this.logger = logger;
         }
 
-        private static readonly Game PLACEHOLDER = new Game();
+        private static readonly Game PLACEHOLDER = new();
         private readonly ILogger<SlotService> logger;
 
-        private Team DetermineRef(Game game) => game.Home.RefereeCommitment > game.Away.RefereeCommitment ? game.Away : game.Home;
-        private Team DetermineRefFromPreLastGame(Tuple<Game, Game> lastPair) => lastPair.Item1.Referee == lastPair.Item2.Home ? lastPair.Item2.Away : lastPair.Item2.Home;
+        private static Team DetermineRef(Game game) => game.Home.RefereeCommitment > game.Away.RefereeCommitment ? game.Away : game.Home;
+        private static Team DetermineRefFromPreLastGame(Tuple<Game, Game> lastPair) => lastPair.Item1.Referee == lastPair.Item2.Home ? lastPair.Item2.Away : lastPair.Item2.Home;
 
-        public GameDay Slot(List<Pitch> pitches, List<Game> games)
+        public List<Pitch> Slot(List<Pitch> pitches, List<Game> games)
         {
             // TODO sub group support
 
@@ -30,7 +31,7 @@ namespace FSFV.Gameplanner.Service
             Distribute(pitches, pairs);
             BuildTimeSlots(pitches);
 
-            return new GameDay { Pitches = pitches };
+            return pitches;
         }
 
         private static void BuildTimeSlots(List<Pitch> pitches)
@@ -86,14 +87,15 @@ namespace FSFV.Gameplanner.Service
 
                 if (!added)
                 {
-                    logger.LogError($"Could not slot game pair. Adding to pitch of type {pitches[0].Type.PitchTypeID}");
+                    logger.LogError("Could not slot game pair. Adding to pitch" +
+                        " of type {PitchTypeID}", pitches[0].Type.PitchTypeID);
                     pitches[0].Games.Add(pair.Item1);
                     pitches[0].Games.Add(pair.Item2);
                 }
             }
         }
 
-        private void BuildRefereePairs(List<IGrouping<Grouping, Game>> groups, List<Tuple<Game, Game>> pairs)
+        private void BuildRefereePairs(List<IGrouping<Group, Game>> groups, List<Tuple<Game, Game>> pairs)
         {
             foreach (var group in groups.Select(g => g.ToList()))
             {
@@ -113,77 +115,11 @@ namespace FSFV.Gameplanner.Service
                 if ((group.Count & 1) == 1) // is odd? Then last game was skipped
                 {
                     logger.LogDebug($"Uneven number of games, adding placeholder");
-                    var lastGame = group[group.Count - 1];
-                    lastGame.Referee = DetermineRefFromPreLastGame(pairs[pairs.Count - 1]);
+                    var lastGame = group[^1];
+                    lastGame.Referee = DetermineRefFromPreLastGame(pairs[^1]);
                     pairs.Add(Tuple.Create(lastGame, PLACEHOLDER));
                 }
             }
-        }
-
-        public class GroupType
-        {
-            public int GroupTypeID { get; set; }
-        }
-        public class Grouping
-        {
-            public int GroupingID { get; set; }
-            public int Priority { get; set; }
-            public GroupType Type { get; set; }
-            public Grouping SubGroup { get; set; }
-
-            public override bool Equals(object obj)
-            {
-                return obj is Grouping grouping &&
-                       GroupingID == grouping.GroupingID;
-            }
-        }
-        public class TeamType
-        {
-            public string Name { get; set; }
-        }
-        public class Team
-        {
-            public TeamType Type { get; set; }
-            public int RefereeCommitment { get; set; }
-        }
-        public class Game
-        {
-            public Grouping Group { get; set; }
-            public Team Home { get; set; }
-            public Team Away { get; set; }
-            public Team Referee { get; set; }
-
-            public TimeSpan MinDuration { get; set; }
-        }
-
-        public class TimeSlot
-        {
-            public Game Game { get; set; }
-            public DateTime StartTime { get; set; }
-            public DateTime EndTime { get; set; }
-        }
-        public class PitchType
-        {
-            public int PitchTypeID { get; set; }
-        }
-        public class Pitch
-        {
-            public PitchType Type { get; set; }
-            public DateTime StartTime { get; set; }
-            public DateTime EndTime { get; set; }
-
-            public List<Game> Games { get; set; } = new(10);
-            public List<TimeSlot> Slots { get; set; } = new(10);
-            // TODO test performance
-            public TimeSpan TimeLeft => EndTime.Subtract(StartTime)
-                .Subtract(Games.Select(g => g.MinDuration)
-                    .Aggregate(TimeSpan.Zero, (d1, d2) => d1.Add(d2)));
-
-
-        }
-        public class GameDay
-        {
-            public List<Pitch> Pitches { get; set; }
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Tests.Util
                 {
                     Home = new Team { Type = new TeamType { Name = "EA1" } },
                     Away = new Team { Type = new TeamType { Name = "EA2" } },
-                    Group = new Group
+                    Group = new Grouping
                     {
                         GroupingID = 1,
                         Priority = 100,

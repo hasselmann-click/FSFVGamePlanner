@@ -1,10 +1,10 @@
-﻿using FSFV.Gameplanner.Service;
+﻿using FSFV.Gameplanner.Common.Dto;
+using FSFV.Gameplanner.Service;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
-using static FSFV.Gameplanner.Service.SlotService;
 
 namespace FSFV.Gameplanner.ConsoleRunner
 {
@@ -19,37 +19,16 @@ namespace FSFV.Gameplanner.ConsoleRunner
             this.slotService = slotService;
         }
 
-        public void Run()
+        public void Run(List<Pitch> pitches, List<Game> fixtures)
         {
-            List<Pitch> pitches = new()
-            {
-                new Pitch
-                {
-                    StartTime = DateTime.Parse("10:00"),
-                    EndTime = DateTime.Parse("18:00"),
-                    Type = new PitchType { PitchTypeID = 1 }
-                },
-                new Pitch
-                {
-                    StartTime = DateTime.Parse("10:00"),
-                    EndTime = DateTime.Parse("14:00"),
-                    Type = new PitchType { PitchTypeID = 2 }
-                },
-                new Pitch
-                {
-                    StartTime = DateTime.Parse("12:00"),
-                    EndTime = DateTime.Parse("18:00"),
-                    Type = new PitchType { PitchTypeID = 3 }
-                }
-            };
 
-            var honorGroupType = new Grouping
+            var honorGroupType = new Group
             {
                 GroupingID = 1,
                 Priority = 100,
                 Type = new GroupType { GroupTypeID = 1 }
             };
-            var menGroupType = new Grouping
+            var menGroupType = new Group
             {
                 GroupingID = 2,
                 Priority = 50,
@@ -146,10 +125,11 @@ namespace FSFV.Gameplanner.ConsoleRunner
 
 
             var gameDay = slotService.Slot(pitches, games);
-            logger.LogInformation(JsonSerializer.Serialize(gameDay, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            }));
+            logger.LogInformation("{GameDay}",
+                JsonSerializer.Serialize(gameDay, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                }));
 
             // TODO remove wait for log to finish
             Task.Delay(2000).Wait();
