@@ -17,7 +17,8 @@ public class Pitch
     public List<TimeSlot> Slots { get; set; } = new(10);
     
     // TODO test performance
-    public TimeSpan TimeLeft => EndTime.Subtract(StartTime)
+    public TimeSpan TimeLeft => EndTime
+        .Subtract(StartTime)
         .Subtract(Games.Select(g => g.MinDuration)
             .Aggregate(TimeSpan.Zero, (d1, d2) => d1.Add(d2)));
 }

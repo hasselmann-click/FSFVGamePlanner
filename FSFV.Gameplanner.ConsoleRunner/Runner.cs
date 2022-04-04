@@ -18,6 +18,10 @@ namespace FSFV.Gameplanner.ConsoleRunner;
 
 public class Runner
 {
+
+    private const string MatchPlanCsv = "C:\\Users\\bj13_\\source\\repos\\FSFVGamePlanner\\FSFV.Gameplanner.ConsoleRunner\\MatchPlan.csv";
+    private const string MatchPlanJson = "C:\\Users\\bj13_\\source\\repos\\FSFVGamePlanner\\FSFV.Gameplanner.ConsoleRunner\\MatchPlan.json";
+
     private readonly IConfiguration configuration;
     private readonly ILogger<Runner> logger;
     private readonly SlotService slotService;
@@ -32,7 +36,7 @@ public class Runner
 
     public async Task Run(string[] args)
     {
-
+        // TODO use Working Directory instead of single files
         if (args.Length < 2)
             throw new ArgumentException("Missing arguments");
 
@@ -48,7 +52,7 @@ public class Runner
         List<Game> games = await ParseFixturesAsync(groupTypes, fixtureFiles);
         List<Pitch> pitches = await ParsePitchesAsync(logger, pitchesFile);
 
-        var pitchesOrdered = pitches.GroupBy(p => p.GameDay).OrderByDescending(g => g.Key);
+        var pitchesOrdered = pitches.GroupBy(p => p.GameDay).OrderBy(g => g.Key);
         List<GameDay> gameDays = new(pitchesOrdered.Count());
         foreach (var gameDayPitches in pitchesOrdered)
         {
@@ -61,12 +65,61 @@ public class Runner
             });
         }
 
-        logger.LogInformation("{GameDay}",
-                        JsonSerializer.Serialize(gameDays, new JsonSerializerOptions
-                        {
-                            WriteIndented = true
-                        }));
+        // write json
+        await File.WriteAllTextAsync(MatchPlanJson, JsonSerializer.Serialize(gameDays, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        }), Encoding.UTF8);
 
+        // write csv
+        using var csvStream = File.OpenWrite(MatchPlanCsv);
+        using var csvWriter = new StreamWriter(csvStream, Encoding.UTF8);
+        await csvWriter.WriteLineAsync(string.Join(",", new string[]
+                {
+                    "GameDay",
+                    "Pitch",
+                    "StartTime",
+                    "EndTime",
+                    "Home",
+                    "Away",
+                    "Referee",
+                    "Group",
+                    "League"
+                }));
+        foreach (var gameDay in gameDays)
+        {
+            var slots = gameDay.Pitches
+                .SelectMany(p => p.Slots
+                    .Select(s => new
+                    {
+                        GameDay = s.Game.GameDay,
+                        Pitch = p.Name,
+                        s.StartTime,
+                        s.EndTime,
+                        s.Game.Home,
+                        s.Game.Away,
+                        s.Game.Referee,
+                        Group = s.Game.Group.Name,
+                        League = s.Game.Group.Type.Name
+                    }))
+                .OrderBy(a => a.StartTime);
+
+            foreach (var slot in slots)
+            {
+                await csvWriter.WriteLineAsync(string.Join(",", new string[]
+                {
+                    slot.GameDay.ToString(),
+                    slot.Pitch,
+                    slot.StartTime.ToShortTimeString(),
+                    slot.EndTime.ToShortTimeString(),
+                    slot.Home.Name,
+                    slot.Away.Name,
+                    slot.Referee.Name,
+                    slot.Group,
+                    slot.League
+                }));
+            }
+        }
     }
 
     private static Dictionary<string, GroupTypeDto> ParseGroupTypes(

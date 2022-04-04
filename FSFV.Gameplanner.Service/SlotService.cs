@@ -1,7 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
-using FSFV.Gameplanner.Common.Dto;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +22,7 @@ public class SlotService
 
     private static Team DetermineRef(Game game)
         => game.Home.RefereeCommitment > game.Away.RefereeCommitment ? game.Away : game.Home;
-    private static Team DetermineRefFromPreLastGame(Tuple<Game, Game> lastPair)
+    private static Team DetermineRefFromPreLastGame((Game, Game) lastPair)
         => lastPair.Item1.Referee == lastPair.Item2.Home ? lastPair.Item2.Away : lastPair.Item2.Home;
 
     public List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games)
@@ -34,8 +32,11 @@ public class SlotService
         if (!(pitches?.Count > 0 && games?.Count > 0))
             return pitches;
 
-        var groups = games.OrderByDescending(g => g.Group.Type.Priority).GroupBy(g => g.Group).ToList();
-        List<Tuple<Game, Game>> pairs = new(games.Count / 2 + groups.Count); // if uneven per group a placeholder
+        var groups = games
+            .OrderByDescending(g => g.Group.Type.Priority)
+            .GroupBy(g => g.Group)
+            .ToList();
+        List<(Game, Game)> pairs = new(games.Count / 2 + groups.Count); // if uneven per group a placeholder
 
         BuildRefereePairs(groups, pairs);
         Distribute(pitches, pairs);
@@ -48,16 +49,16 @@ public class SlotService
     {
         foreach (var pitch in pitches)
         {
-            var timeLeft = pitch.TimeLeft;
-            var numberOfBreaks = pitch.Games.Count - 1;
-            var additionalBreak = timeLeft.Divide(numberOfBreaks);
-
-            if (pitch.Games.Count == 0)
+            if (pitch.Games.Count < 1)
             {
                 logger.LogWarning("No games for pitch {pitch} on {date}", pitch.Name,
                     pitch.StartTime.ToShortDateString());
                 continue;
             }
+
+            var timeLeft = pitch.TimeLeft;
+            var numberOfBreaks = pitch.Games.Count - 1;
+            var additionalBreak = timeLeft.Divide(numberOfBreaks);
 
             pitch.Slots = new List<TimeSlot>(pitch.Games.Count)
                 {
@@ -81,7 +82,7 @@ public class SlotService
         }
     }
 
-    private void Distribute(List<Pitch> pitches, List<Tuple<Game, Game>> pairs)
+    private void Distribute(List<Pitch> pitches, List<(Game, Game)> pairs)
     {
 
         // TODO ZK Duty
@@ -89,23 +90,25 @@ public class SlotService
 
         foreach (var pair in pairs)
         {
-
-            if (pair.Item2.Group == null
-                || pair.Item1.Group == null)
-            {
-                int i = 0;
-
-            }
-
             var minDuration = pair.Item1.MinDuration.Add(pair.Item2.MinDuration);
             bool added = false;
             foreach (var pitch in pitches.OrderBy(p => p.StartTime).ThenBy(p => p.Games.Count))
             {
-                if (pitch.TimeLeft < minDuration)
+                var timeLeft = pitch.TimeLeft;
+                if (timeLeft < minDuration)
+                {
+                    logger.LogDebug("Not enough time left for pitch {pitch}: {time} < {duration}",
+                        pitch.Name, timeLeft.TotalMinutes, minDuration.TotalMinutes);
                     continue;
-
+                }
+                else
+                {
+                    logger.LogDebug("{pitch}: {time} > {duration}",
+                        pitch.Name, timeLeft.TotalMinutes, minDuration.TotalMinutes);
+                }
                 pitch.Games.Add(pair.Item1);
-                pitch.Games.Add(pair.Item2);
+                if (pair.Item2 != PLACEHOLDER)
+                    pitch.Games.Add(pair.Item2);
                 added = true;
                 break;
             }
@@ -115,12 +118,13 @@ public class SlotService
                 logger.LogError("Could not slot game pair. Adding to pitch" +
                     " of type {PitchTypeID}", pitches[0].Name);
                 pitches[0].Games.Add(pair.Item1);
-                pitches[0].Games.Add(pair.Item2);
+                if (pair.Item2 != PLACEHOLDER)
+                    pitches[0].Games.Add(pair.Item2);
             }
         }
     }
 
-    private void BuildRefereePairs(List<IGrouping<Group, Game>> groups, List<Tuple<Game, Game>> pairs)
+    private void BuildRefereePairs(List<IGrouping<Group, Game>> groups, List<(Game, Game)> pairs)
     {
         foreach (var group in groups.Select(g => g.ToList()))
         {
@@ -135,14 +139,14 @@ public class SlotService
                 game1.Referee.RefereeCommitment++;
                 game2.Referee.RefereeCommitment++;
 
-                pairs.Add(Tuple.Create(game1, game2));
+                pairs.Add((game1, game2));
             }
             if ((group.Count & 1) == 1) // is odd? Then last game was skipped
             {
                 logger.LogDebug($"Uneven number of games, adding placeholder");
                 var lastGame = group[^1];
                 lastGame.Referee = DetermineRefFromPreLastGame(pairs[^1]);
-                pairs.Add(Tuple.Create(lastGame, PLACEHOLDER));
+                pairs.Add((lastGame, PLACEHOLDER));
             }
         }
     }

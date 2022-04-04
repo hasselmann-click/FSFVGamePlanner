@@ -9,21 +9,24 @@ namespace FSFV.Gameplanner.ConsoleRunner;
 class Program
 {
 
-    static async Task Main(string[] args)
+    static Task Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build();
         var serviceProvider = ConfigureServices(configuration);
-
-        // TODO expect directory with fixture files instead of single files..
-        await serviceProvider.GetRequiredService<Runner>().Run(args);
+        return serviceProvider.GetRequiredService<Runner>().Run(args);
     }
 
     private static ServiceProvider ConfigureServices(IConfigurationRoot configuration)
     {
         return new ServiceCollection()
-            .AddLogging(b => b.AddConsole())
+            .AddLogging(config =>
+            {
+                config.ClearProviders();
+                config.AddConfiguration(configuration.GetSection("Logging"));
+                config.AddConsole();
+            })
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<Runner>()
             .AddScoped<SlotService>()
