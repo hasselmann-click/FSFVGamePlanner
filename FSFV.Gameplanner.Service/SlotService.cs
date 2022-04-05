@@ -1,5 +1,6 @@
 ﻿using FSFV.Gameplanner.Common;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,10 +9,10 @@ namespace FSFV.Gameplanner.Service;
 public class SlotService
 {
 
-    private static readonly Game PLACEHOLDER = new()
-    {
-        Group = new() { Type = new() { MinDurationMinutes = 0 } }
-    };
+    private static readonly Random RNG = new Random(23432546);
+
+    private static readonly Game PLACEHOLDER = new() { Group = new() { Type = new() { MinDurationMinutes = 0 } } };
+    private static readonly TimeSpan MaxBreak = TimeSpan.FromMinutes(30);
 
     public SlotService(ILogger<SlotService> logger)
     {
@@ -33,8 +34,8 @@ public class SlotService
             return pitches;
 
         var groups = games
-            .OrderByDescending(g => g.Group.Type.Priority)
             .GroupBy(g => g.Group)
+            .OrderByDescending(g => g.Key.Type.Priority)
             .ToList();
         List<(Game, Game)> pairs = new(games.Count / 2 + groups.Count); // if uneven per group a placeholder
 
@@ -59,24 +60,53 @@ public class SlotService
             var timeLeft = pitch.TimeLeft;
             var numberOfBreaks = pitch.Games.Count - 1;
             var additionalBreak = timeLeft.Divide(numberOfBreaks);
+            if (additionalBreak < TimeSpan.Zero)
+                additionalBreak = TimeSpan.Zero;
+            else if (additionalBreak > MaxBreak)
+                additionalBreak = MaxBreak;
+            else
+                // round to nearest 5
+                additionalBreak = TimeSpan.FromMinutes(
+                    Math.Floor(additionalBreak.TotalMinutes / 5.0) * 5);
 
+            pitch.Games = pitch.Games.OrderByDescending(g => g.Group.Type.Priority).ToList();
+
+            int parallel = 1;
+            int i = 0;
+            var firstGame = pitch.Games[i++];
             pitch.Slots = new List<TimeSlot>(pitch.Games.Count)
                 {
                     new TimeSlot
                     {
                         StartTime = pitch.StartTime,
-                        EndTime = pitch.StartTime.Add(pitch.Games[0].MinDuration).Add(additionalBreak),
-                        Game = pitch.Games[0]
+                        EndTime = pitch.StartTime.Add(firstGame.MinDuration).Add(additionalBreak),
+                        Game = firstGame
                     }
                 };
-            for (int i = 1; i < pitch.Games.Count; ++i)
+
+            for (; i < pitch.Games.Count; ++i)
             {
-                var start = pitch.Slots[i - 1].EndTime;
+                var prev = pitch.Slots[i - 1];
+                var game = pitch.Games[i];
+                DateTime start;
+                if (prev.Game.Group.Type == game.Group.Type
+                    && game.Group.Type.ParallelGamesPerPitch >= ++parallel)
+                {
+                    start = prev.StartTime;
+                }
+                else
+                {
+                    parallel = 1;
+                    start = prev.EndTime;
+                }
+
+                // don't add break to last timeslot
+                var breakToAdd = i == pitch.Games.Count - 1 ? TimeSpan.Zero : additionalBreak;
                 pitch.Slots.Add(new TimeSlot
                 {
                     StartTime = start,
-                    EndTime = start.Add(pitch.Games[i].MinDuration).Add(additionalBreak),
-                    Game = pitch.Games[i]
+                    EndTime = start.Add(game.MinDuration).Add(breakToAdd),
+                    Game = game
                 });
             }
         }
@@ -86,14 +116,33 @@ public class SlotService
     {
 
         // TODO ZK Duty
-        // TODO Max parallel pitches per group
 
-        foreach (var pair in pairs)
+        foreach (var pair in pairs.OrderBy(p => RNG.Next()))
         {
-            var minDuration = pair.Item1.MinDuration.Add(pair.Item2.MinDuration);
+
+            var groupType = pair.Item1.Group.Type;
+            var secondGroupType = pair.Item2.Group.Type;
+            var mainGroupType = groupType.Name == null ? secondGroupType : groupType;
+
+            var requiredPitch = mainGroupType.RequiredPitchName;
+            var parallelGames = Math.Max(1, mainGroupType.ParallelGamesPerPitch);
+            var minDuration = pair.Item1.MinDuration.Add(pair.Item2.MinDuration).Divide(parallelGames);
             bool added = false;
-            foreach (var pitch in pitches.OrderBy(p => p.StartTime).ThenBy(p => p.Games.Count))
+
+            foreach (var pitch in pitches
+                .Where(p => string.IsNullOrEmpty(requiredPitch) || requiredPitch.Equals(p.Name))
+                .OrderBy(p => p.StartTime)
+                .ThenBy(p => p.Games.Count)
+                .ThenBy(p => RNG.Next()))
             {
+                // check maximum parallel pitches per group type
+                if (!pitch.Games.Any(g => g.Group.Type == mainGroupType)
+                    && mainGroupType.MaxParallelPitches <= pitches.Count(p =>
+                        p.Games.Any(g => g.Group.Type == mainGroupType)))
+                {
+                    continue;
+                }
+
                 var timeLeft = pitch.TimeLeft;
                 if (timeLeft < minDuration)
                 {
@@ -115,11 +164,13 @@ public class SlotService
 
             if (!added)
             {
-                logger.LogError("Could not slot game pair. Adding to pitch" +
-                    " of type {PitchTypeID}", pitches[0].Name);
-                pitches[0].Games.Add(pair.Item1);
+                var minimumGamesPitch = pitches.OrderBy(p => p.Games.Count).First();
+                logger.LogError("Could not slot game pair of type {type} on gameday {gameday}." +
+                    " Adding to pitch of type {PitchTypeID}",
+                    pair.Item1.Group.Type.Name, pair.Item1.GameDay, minimumGamesPitch.Name);
+                minimumGamesPitch.Games.Add(pair.Item1);
                 if (pair.Item2 != PLACEHOLDER)
-                    pitches[0].Games.Add(pair.Item2);
+                    minimumGamesPitch.Games.Add(pair.Item2);
             }
         }
     }

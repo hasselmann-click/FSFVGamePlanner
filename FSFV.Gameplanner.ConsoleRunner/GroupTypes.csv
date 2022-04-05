@@ -1,4 +1,4 @@
-﻿Name,MinDurationMinutes,FinalsDays,Priority,FixtureStart,RequiredPitchName
-M,85,1,0,6
-H,85,3,100,1
-F,65,1,50,1,R2
+﻿Name,MinDurationMinutes,FinalsDays,Priority,FixtureStart,RequiredPitchName,ParallelGamesPerPitch,MaxParallelPitches
+M,85,1,50,6,,1,100
+H,85,3,100,1,,1,2
+F,65,1,50,1,R2,2,1

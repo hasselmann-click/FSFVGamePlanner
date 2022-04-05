@@ -36,6 +36,7 @@ public class Runner
 
     public async Task Run(string[] args)
     {
+
         // TODO use Working Directory instead of single files
         if (args.Length < 2)
             throw new ArgumentException("Missing arguments");
@@ -103,7 +104,6 @@ public class Runner
                         League = s.Game.Group.Type.Name
                     }))
                 .OrderBy(a => a.StartTime);
-
             foreach (var slot in slots)
             {
                 await csvWriter.WriteLineAsync(string.Join(",", new string[]
@@ -119,7 +119,9 @@ public class Runner
                     slot.League
                 }));
             }
+            await csvWriter.FlushAsync();
         }
+        csvWriter.Close();
     }
 
     private static Dictionary<string, GroupTypeDto> ParseGroupTypes(
@@ -153,8 +155,13 @@ public class Runner
 
             var group = new Group { Name = name[^1], Type = type };
 
+
+            var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = false
+            };
             using var reader = new StreamReader(file);
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            using var csv = new CsvReader(reader, csvConfig);
             var fixtures = csv.GetRecordsAsync<FixtureDto>();
 
             await foreach (var fixture in fixtures)

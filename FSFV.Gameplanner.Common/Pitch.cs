@@ -19,6 +19,6 @@ public class Pitch
     // TODO test performance
     public TimeSpan TimeLeft => EndTime
         .Subtract(StartTime)
-        .Subtract(Games.Select(g => g.MinDuration)
+        .Subtract(Games.Select(g => g.MinDuration.Divide(g.Group.Type.ParallelGamesPerPitch))
             .Aggregate(TimeSpan.Zero, (d1, d2) => d1.Add(d2)));
 }

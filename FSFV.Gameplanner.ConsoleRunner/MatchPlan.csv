@@ -1,128 +1,131 @@
 ﻿GameDay,Pitch,StartTime,EndTime,Home,Away,Referee,Group,League
-1,R2,10:00,12:11,A.C. Tabula Brisant,AS Lettenwiese,Saints FC,E,H
-1,R6,10:00,12:11,BSC Tram 5,A.C. Tabula Entspannt,Schachtjor Intermezzo,H,H
-1,R7,10:00,11:07,Juventinas,Blutgretchen,Divas united,F,F
-1,R11,10:00,11:23,MaraDonnas,Rapid Industrie,elle real,F,F
-1,R7,11:07,12:14,Divas united,elle real,Juventinas,F,F
-1,R11,11:23,13:07,Freestylers,Zwietracht Turicum,Gremio,A,M
-1,R2,12:11,14:23,Saints FC,Zenit ,A.C. Tabula Brisant,E,H
-1,R6,12:11,14:23,Schachtjor Intermezzo,ZüriUtd,BSC Tram 5,H,H
-1,R7,12:14,13:41,Real Cabron,Ex Hürlimann,Sporting Morgenstern,B,M
-1,R11,13:07,14:51,Gremio,Dynamo Röntgen,Freestylers,A,M
-1,R7,13:41,15:08,Sporting Morgenstern,Real Azul,Real Cabron,B,M
-1,R2,14:23,16:35,Wacker Selnau,Furttals Finest,RotoR,A,M
-1,R6,14:23,16:35,FC Widerstand Wipkingen,Schachtjor,Aurora,A,M
-1,R11,14:51,16:35,Deportivo La Habana,Olympique Lettenwiese,Traktor Emilie,B,M
-1,R7,15:08,16:35,Sputnik,Zürich United,FC Eglisau,B,M
-1,R2,16:35,18:46,RotoR,A.C. Tabula Rasant,Wacker Selnau,A,M
-1,R6,16:35,18:46,Aurora,FC Tormotor 07,FC Widerstand Wipkingen,A,M
-1,R7,16:35,18:02,FC Eglisau,Atletico Bernina,Sputnik,B,M
-1,R11,16:35,18:18,Traktor Emilie,Bund Schöne Rosen,Deportivo La Habana,B,M
-2,R2,10:00,10:56,A.C. Tabula Brisant,1. FC Brennivin,AS Lettenwiese,E,H
-2,R6,10:00,11:48,SPIELFREI,Zenit ,Saints FC,E,H
-2,R7,10:00,12:11,BSC Tram 5,El Social,A.C. Tabula Entspannt,H,H
-2,R11,10:00,11:48,SPIELFREI,ZüriUtd,Schachtjor Intermezzo,H,H
-2,R2,10:56,11:52,Saints FC,AS Lettenwiese,1. FC Brennivin,E,H
-2,R6,11:48,13:17,Juventinas,Real Rosé,Blutgretchen,F,F
-2,R11,11:48,13:17,MaraDonnas,elle real,Loriñas,F,F
-2,R2,11:52,12:49,Freestylers,FC Tormotor 07,Zwietracht Turicum,A,M
-2,R7,12:11,14:23,Schachtjor Intermezzo,A.C. Tabula Entspannt,El Social,H,H
-2,R2,12:49,13:45,Gremio,Zwietracht Turicum,FC Tormotor 07,A,M
-2,R6,13:17,14:46,Divas united,Blutgretchen,Real Rosé,F,F
-2,R11,13:17,14:46,Loriñas,Rapid Industrie,MaraDonnas,F,F
-2,R2,13:45,14:42,Deportivo La Habana,Real Azul,Zürich United,B,M
-2,R7,14:23,16:35,Wacker Selnau,Dynamo Röntgen,Schachtjor,A,M
-2,R2,14:42,15:38,Zürich United,Olympique Lettenwiese,Real Azul,B,M
-2,R6,14:46,16:35,FC Widerstand Wipkingen,A.C. Tabula Rasant,Aurora,A,M
-2,R11,14:46,16:35,Real Cabron,Atletico Bernina,Ex Hürlimann,B,M
-2,R2,15:38,16:34,Sputnik,Bund Schöne Rosen,FC Eglisau,B,M
-2,R2,16:34,17:31,FC Eglisau,Traktor Emilie,Bund Schöne Rosen,B,M
-2,R6,16:35,18:23,Aurora,RotoR,A.C. Tabula Rasant,A,M
-2,R7,16:35,18:46,Schachtjor,Furttals Finest,Dynamo Röntgen,A,M
-2,R11,16:35,18:23,Sporting Morgenstern,Ex Hürlimann,Atletico Bernina,B,M
-3,R2,10:00,10:56,Saints FC,1. FC Brennivin,Zenit ,E,H
-3,R6,10:00,11:48,SPIELFREI,A.C. Tabula Brisant,AS Lettenwiese,E,H
-3,R7,10:00,12:11,Schachtjor Intermezzo,El Social,ZüriUtd,H,H
-3,R11,10:00,11:48,SPIELFREI,BSC Tram 5,A.C. Tabula Entspannt,H,H
-3,R2,10:56,11:52,Zenit ,AS Lettenwiese,Saints FC,E,H
-3,R6,11:48,13:17,Divas united,Real Rosé,MaraDonnas,F,F
-3,R11,11:48,13:17,Rapid Industrie,elle real,Loriñas,F,F
-3,R2,11:52,12:49,Gremio,FC Tormotor 07,Wacker Selnau,A,M
-3,R7,12:11,14:23,ZüriUtd,A.C. Tabula Entspannt,Schachtjor Intermezzo,H,H
-3,R2,12:49,13:45,Wacker Selnau,Zwietracht Turicum,Gremio,A,M
-3,R6,13:17,14:46,MaraDonnas,Blutgretchen,Divas united,F,F
-3,R11,13:17,14:46,Loriñas,Juventinas,Rapid Industrie,F,F
-3,R2,13:45,14:42,Zürich United,Real Azul,Olympique Lettenwiese,B,M
-3,R7,14:23,16:35,Schachtjor,Dynamo Röntgen,Furttals Finest,A,M
-3,R2,14:42,15:38,Bund Schöne Rosen,Olympique Lettenwiese,Zürich United,B,M
-3,R6,14:46,16:35,FC Widerstand Wipkingen,RotoR,Freestylers,A,M
-3,R11,14:46,16:35,Sporting Morgenstern,Atletico Bernina,Deportivo La Habana,B,M
-3,R2,15:38,16:34,Sputnik,Traktor Emilie,Real Cabron,B,M
-3,R2,16:34,17:31,FC Eglisau,Real Cabron,Sputnik,B,M
-3,R6,16:35,18:23,Aurora,Freestylers,FC Widerstand Wipkingen,A,M
-3,R7,16:35,18:46,A.C. Tabula Rasant,Furttals Finest,Schachtjor,A,M
-3,R11,16:35,18:23,Deportivo La Habana,Ex Hürlimann,Sporting Morgenstern,B,M
-4,R2,10:00,10:56,Zenit ,1. FC Brennivin,SPIELFREI,E,H
-4,R6,10:00,11:48,A.C. Tabula Brisant,Saints FC,AS Lettenwiese,E,H
-4,R7,10:00,12:11,ZüriUtd,El Social,SPIELFREI,H,H
-4,R11,10:00,11:48,BSC Tram 5,Schachtjor Intermezzo,A.C. Tabula Entspannt,H,H
-4,R2,10:56,11:52,SPIELFREI,AS Lettenwiese,Zenit ,E,H
-4,R6,11:48,13:17,MaraDonnas,Real Rosé,Rapid Industrie,F,F
-4,R11,11:48,13:17,Loriñas,elle real,Juventinas,F,F
-4,R2,11:52,12:49,Gremio,Freestylers,FC Tormotor 07,A,M
-4,R7,12:11,14:23,SPIELFREI,A.C. Tabula Entspannt,ZüriUtd,H,H
-4,R2,12:49,13:45,Wacker Selnau,FC Tormotor 07,Gremio,A,M
-4,R6,13:17,14:46,Rapid Industrie,Blutgretchen,Real Rosé,F,F
-4,R11,13:17,14:46,Juventinas,Divas united,elle real,F,F
-4,R2,13:45,14:42,Zürich United,Ex Hürlimann,Bund Schöne Rosen,B,M
-4,R7,14:23,16:35,Schachtjor,Zwietracht Turicum,A.C. Tabula Rasant,A,M
-4,R2,14:42,15:38,Bund Schöne Rosen,Real Azul,Ex Hürlimann,B,M
-4,R6,14:46,16:35,RotoR,Furttals Finest,Aurora,A,M
-4,R11,14:46,16:35,Sporting Morgenstern,Real Cabron,Atletico Bernina,B,M
-4,R2,15:38,16:34,Traktor Emilie,Olympique Lettenwiese,FC Eglisau,B,M
-4,R2,16:34,17:31,FC Eglisau,Sputnik,Traktor Emilie,B,M
-4,R6,16:35,18:23,Aurora,FC Widerstand Wipkingen,RotoR,A,M
-4,R7,16:35,18:46,A.C. Tabula Rasant,Dynamo Röntgen,Zwietracht Turicum,A,M
-4,R11,16:35,18:23,Deportivo La Habana,Atletico Bernina,Sporting Morgenstern,B,M
-5,R2,10:00,10:56,AS Lettenwiese,1. FC Brennivin,A.C. Tabula Brisant,E,H
-5,R6,10:00,11:48,SPIELFREI,Saints FC,Zenit ,E,H
-5,R7,10:00,12:11,A.C. Tabula Entspannt,El Social,BSC Tram 5,H,H
-5,R11,10:00,11:48,SPIELFREI,Schachtjor Intermezzo,ZüriUtd,H,H
-5,R2,10:56,11:52,A.C. Tabula Brisant,Zenit ,AS Lettenwiese,E,H
-5,R6,11:48,13:17,Rapid Industrie,Real Rosé,elle real,F,F
-5,R11,11:48,13:17,Juventinas,MaraDonnas,Loriñas,F,F
-5,R2,11:52,12:49,Wacker Selnau,Freestylers,Schachtjor,A,M
-5,R7,12:11,14:23,BSC Tram 5,ZüriUtd,A.C. Tabula Entspannt,H,H
-5,R2,12:49,13:45,Schachtjor,FC Tormotor 07,Wacker Selnau,A,M
-5,R6,13:17,14:46,elle real,Blutgretchen,Rapid Industrie,F,F
-5,R11,13:17,14:46,Loriñas,Divas united,Juventinas,F,F
-5,R2,13:45,14:42,Bund Schöne Rosen,Ex Hürlimann,Real Azul,B,M
-5,R7,14:23,16:35,A.C. Tabula Rasant,Zwietracht Turicum,Dynamo Röntgen,A,M
-5,R2,14:42,15:38,Traktor Emilie,Real Azul,Bund Schöne Rosen,B,M
-5,R6,14:46,16:35,FC Widerstand Wipkingen,Furttals Finest,Aurora,A,M
-5,R11,14:46,16:35,Deportivo La Habana,Real Cabron,Zürich United,B,M
-5,R2,15:38,16:34,Sputnik,Olympique Lettenwiese,FC Eglisau,B,M
-5,R2,16:34,17:31,FC Eglisau,Sporting Morgenstern,Olympique Lettenwiese,B,M
-5,R6,16:35,18:23,Aurora,Gremio,Furttals Finest,A,M
-5,R7,16:35,18:46,RotoR,Dynamo Röntgen,A.C. Tabula Rasant,A,M
-5,R11,16:35,18:23,Zürich United,Atletico Bernina,Deportivo La Habana,B,M
-6,R2,10:00,12:05,elle real,Real Rosé,Blutgretchen,F,F
-6,R6,10:00,12:05,Juventinas,Rapid Industrie,Divas united,F,F
-6,R7,10:00,12:11,Wacker Selnau,Gremio,Freestylers,A,M
-6,R11,10:00,12:11,A.C. Tabula Rasant,FC Tormotor 07,RotoR,A,M
-6,R2,12:05,14:10,Loriñas,Blutgretchen,elle real,F,F
-6,R6,12:05,14:10,Divas united,MaraDonnas,Juventinas,F,F
-6,R7,12:11,14:23,Schachtjor,Freestylers,Wacker Selnau,A,M
-6,R11,12:11,14:23,RotoR,Zwietracht Turicum,FC Tormotor 07,A,M
-6,R2,14:10,16:35,FC Widerstand Wipkingen,Dynamo Röntgen,Furttals Finest,A,M
-6,R6,14:10,16:35,Deportivo La Habana,Sporting Morgenstern,Real Cabron,B,M
-6,R7,14:23,16:35,Bund Schöne Rosen,Atletico Bernina,Traktor Emilie,B,M
-6,R11,14:23,16:35,Sputnik,Real Azul,Olympique Lettenwiese,B,M
-6,R2,16:35,19:00,Aurora,Furttals Finest,FC Widerstand Wipkingen,A,M
-6,R6,16:35,19:00,Zürich United,Real Cabron,Deportivo La Habana,B,M
-6,R7,16:35,18:46,Traktor Emilie,Ex Hürlimann,Atletico Bernina,B,M
-6,R11,16:35,18:46,FC Eglisau,Olympique Lettenwiese,Sputnik,B,M
-7,R2,10:00,16:55,Blutgretchen,Real Rosé,elle real,F,F
-7,R6,10:00,16:55,Divas united,Rapid Industrie,MaraDonnas,F,F
-7,R2,16:55,23:50,Juventinas,elle real,Blutgretchen,F,F
-7,R6,16:55,23:50,Loriñas,MaraDonnas,Divas united,F,F
+1,R2,10:00,11:40,SPIELFREI,El Social,BSC Tram 5,H,H
+1,R6,10:00,11:25,SPIELFREI,1. FC Brennivin,A.C. Tabula Brisant,E,H
+1,R7,10:00,11:55,FC Widerstand Wipkingen,Schachtjor,Aurora,A,M
+1,R11,10:00,11:35,Saints FC,Zenit ,AS Lettenwiese,E,H
+1,R6,11:25,12:50,A.C. Tabula Brisant,AS Lettenwiese,SPIELFREI,E,H
+1,R11,11:35,13:10,Deportivo La Habana,Olympique Lettenwiese,Traktor Emilie,B,M
+1,R2,11:40,13:20,BSC Tram 5,A.C. Tabula Entspannt,El Social,H,H
+1,R7,11:55,13:50,Aurora,FC Tormotor 07,FC Widerstand Wipkingen,A,M
+1,R6,12:50,14:15,Freestylers,Zwietracht Turicum,Gremio,A,M
+1,R11,13:10,14:45,Traktor Emilie,Bund Schöne Rosen,Deportivo La Habana,B,M
+1,R2,13:20,15:00,Schachtjor Intermezzo,ZüriUtd,A.C. Tabula Entspannt,H,H
+1,R7,13:50,15:45,Real Cabron,Ex Hürlimann,Sporting Morgenstern,B,M
+1,R6,14:15,15:40,Gremio,Dynamo Röntgen,Freestylers,A,M
+1,R11,14:45,16:20,Sputnik,Zürich United,FC Eglisau,B,M
+1,R2,15:00,16:20,Divas united,elle real,MaraDonnas,F,F
+1,R2,15:00,16:20,MaraDonnas,Rapid Industrie,Divas united,F,F
+1,R6,15:40,17:05,Wacker Selnau,Furttals Finest,RotoR,A,M
+1,R7,15:45,17:10,Sporting Morgenstern,Real Azul,Real Cabron,B,M
+1,R2,16:20,17:40,Loriñas,Real Rosé,Juventinas,F,F
+1,R2,16:20,17:25,Juventinas,Blutgretchen,Loriñas,F,F
+1,R11,16:20,17:45,FC Eglisau,Atletico Bernina,Sputnik,B,M
+1,R6,17:05,18:30,RotoR,A.C. Tabula Rasant,Wacker Selnau,A,M
+2,R2,10:00,11:25,Wacker Selnau,Dynamo Röntgen,Schachtjor,A,M
+2,R6,10:00,11:25,BSC Tram 5,El Social,Schachtjor Intermezzo,H,H
+2,R7,10:00,11:55,SPIELFREI,ZüriUtd,A.C. Tabula Entspannt,H,H
+2,R11,10:00,11:55,FC Widerstand Wipkingen,A.C. Tabula Rasant,Aurora,A,M
+2,R2,11:25,12:50,Schachtjor,Furttals Finest,Dynamo Röntgen,A,M
+2,R6,11:25,12:50,Schachtjor Intermezzo,A.C. Tabula Entspannt,BSC Tram 5,H,H
+2,R7,11:55,13:50,SPIELFREI,Zenit ,AS Lettenwiese,E,H
+2,R11,11:55,13:50,Aurora,RotoR,A.C. Tabula Rasant,A,M
+2,R2,12:50,14:15,Real Cabron,Atletico Bernina,Ex Hürlimann,B,M
+2,R6,12:50,14:15,A.C. Tabula Brisant,1. FC Brennivin,Saints FC,E,H
+2,R7,13:50,15:45,Freestylers,FC Tormotor 07,Zwietracht Turicum,A,M
+2,R11,13:50,15:45,Deportivo La Habana,Real Azul,Zürich United,B,M
+2,R2,14:15,15:40,Sporting Morgenstern,Ex Hürlimann,Atletico Bernina,B,M
+2,R6,14:15,15:40,Saints FC,AS Lettenwiese,1. FC Brennivin,E,H
+2,R2,15:40,16:45,MaraDonnas,elle real,Rapid Industrie,F,F
+2,R2,15:40,16:45,Loriñas,Rapid Industrie,elle real,F,F
+2,R6,15:40,17:05,Sputnik,Bund Schöne Rosen,FC Eglisau,B,M
+2,R7,15:45,17:10,Gremio,Zwietracht Turicum,FC Tormotor 07,A,M
+2,R11,15:45,17:10,Zürich United,Olympique Lettenwiese,Real Azul,B,M
+2,R2,16:45,17:50,Juventinas,Real Rosé,Blutgretchen,F,F
+2,R2,16:45,17:50,Divas united,Blutgretchen,Real Rosé,F,F
+2,R6,17:05,18:30,FC Eglisau,Traktor Emilie,Bund Schöne Rosen,B,M
+3,R2,10:00,11:05,Rapid Industrie,elle real,Loriñas,F,F
+3,R2,10:00,11:05,Loriñas,Juventinas,Rapid Industrie,F,F
+3,R6,10:00,11:25,Schachtjor Intermezzo,El Social,ZüriUtd,H,H
+3,R7,10:00,11:55,Saints FC,1. FC Brennivin,Zenit ,E,H
+3,R11,10:00,11:55,FC Widerstand Wipkingen,RotoR,Freestylers,A,M
+3,R2,11:05,12:10,Divas united,Real Rosé,MaraDonnas,F,F
+3,R2,11:05,12:10,MaraDonnas,Blutgretchen,Divas united,F,F
+3,R6,11:25,12:50,ZüriUtd,A.C. Tabula Entspannt,Schachtjor Intermezzo,H,H
+3,R7,11:55,13:50,Zenit ,AS Lettenwiese,Saints FC,E,H
+3,R11,11:55,13:50,Aurora,Freestylers,FC Widerstand Wipkingen,A,M
+3,R2,12:10,13:35,Sporting Morgenstern,Atletico Bernina,Deportivo La Habana,B,M
+3,R6,12:50,14:15,SPIELFREI,BSC Tram 5,A.C. Tabula Entspannt,H,H
+3,R2,13:35,15:00,Deportivo La Habana,Ex Hürlimann,Sporting Morgenstern,B,M
+3,R7,13:50,15:45,Schachtjor,Dynamo Röntgen,Furttals Finest,A,M
+3,R11,13:50,15:45,Zürich United,Real Azul,Olympique Lettenwiese,B,M
+3,R6,14:15,15:40,SPIELFREI,A.C. Tabula Brisant,AS Lettenwiese,E,H
+3,R2,15:00,16:25,Gremio,FC Tormotor 07,Wacker Selnau,A,M
+3,R6,15:40,17:05,Sputnik,Traktor Emilie,Real Cabron,B,M
+3,R7,15:45,17:10,A.C. Tabula Rasant,Furttals Finest,Schachtjor,A,M
+3,R11,15:45,17:10,Bund Schöne Rosen,Olympique Lettenwiese,Zürich United,B,M
+3,R2,16:25,17:50,Wacker Selnau,Zwietracht Turicum,Gremio,A,M
+3,R6,17:05,18:30,FC Eglisau,Real Cabron,Sputnik,B,M
+4,R2,10:00,11:05,Loriñas,elle real,Juventinas,F,F
+4,R2,10:00,11:05,Juventinas,Divas united,elle real,F,F
+4,R6,10:00,11:35,ZüriUtd,El Social,A.C. Tabula Entspannt,H,H
+4,R7,10:00,11:35,A.C. Tabula Brisant,Saints FC,SPIELFREI,E,H
+4,R11,10:00,11:55,Traktor Emilie,Olympique Lettenwiese,FC Eglisau,B,M
+4,R2,11:05,12:10,MaraDonnas,Real Rosé,Blutgretchen,F,F
+4,R2,11:05,12:10,Rapid Industrie,Blutgretchen,Real Rosé,F,F
+4,R6,11:35,13:10,SPIELFREI,A.C. Tabula Entspannt,ZüriUtd,H,H
+4,R7,11:35,13:10,Schachtjor,Zwietracht Turicum,A.C. Tabula Rasant,A,M
+4,R11,11:55,13:50,FC Eglisau,Sputnik,Traktor Emilie,B,M
+4,R2,12:10,13:35,Gremio,Freestylers,FC Tormotor 07,A,M
+4,R6,13:10,14:45,Zenit ,1. FC Brennivin,AS Lettenwiese,E,H
+4,R7,13:10,14:45,A.C. Tabula Rasant,Dynamo Röntgen,Zwietracht Turicum,A,M
+4,R2,13:35,15:00,Wacker Selnau,FC Tormotor 07,Gremio,A,M
+4,R11,13:50,15:45,Sporting Morgenstern,Real Cabron,Atletico Bernina,B,M
+4,R6,14:45,16:20,SPIELFREI,AS Lettenwiese,Zenit ,E,H
+4,R7,14:45,16:20,Zürich United,Ex Hürlimann,Bund Schöne Rosen,B,M
+4,R2,15:00,16:25,RotoR,Furttals Finest,Aurora,A,M
+4,R11,15:45,17:10,Deportivo La Habana,Atletico Bernina,Sporting Morgenstern,B,M
+4,R6,16:20,17:45,BSC Tram 5,Schachtjor Intermezzo,SPIELFREI,H,H
+4,R7,16:20,17:45,Bund Schöne Rosen,Real Azul,Ex Hürlimann,B,M
+4,R2,16:25,17:50,Aurora,FC Widerstand Wipkingen,RotoR,A,M
+5,R2,10:00,11:40,SPIELFREI,Saints FC,Zenit ,E,H
+5,R6,10:00,11:25,A.C. Tabula Rasant,Zwietracht Turicum,Dynamo Röntgen,A,M
+5,R7,10:00,11:55,Deportivo La Habana,Real Cabron,Zürich United,B,M
+5,R11,10:00,11:35,SPIELFREI,Schachtjor Intermezzo,ZüriUtd,H,H
+5,R6,11:25,12:50,RotoR,Dynamo Röntgen,A.C. Tabula Rasant,A,M
+5,R11,11:35,13:10,A.C. Tabula Entspannt,El Social,BSC Tram 5,H,H
+5,R2,11:40,13:20,Bund Schöne Rosen,Ex Hürlimann,Real Azul,B,M
+5,R7,11:55,13:50,Zürich United,Atletico Bernina,Deportivo La Habana,B,M
+5,R6,12:50,14:15,Sputnik,Olympique Lettenwiese,FC Eglisau,B,M
+5,R11,13:10,14:45,BSC Tram 5,ZüriUtd,A.C. Tabula Entspannt,H,H
+5,R2,13:20,15:00,Traktor Emilie,Real Azul,Bund Schöne Rosen,B,M
+5,R7,13:50,15:45,Wacker Selnau,Freestylers,Schachtjor,A,M
+5,R6,14:15,15:40,FC Eglisau,Sporting Morgenstern,Olympique Lettenwiese,B,M
+5,R11,14:45,16:20,AS Lettenwiese,1. FC Brennivin,A.C. Tabula Brisant,E,H
+5,R2,15:00,16:20,Rapid Industrie,Real Rosé,elle real,F,F
+5,R2,15:00,16:20,elle real,Blutgretchen,Rapid Industrie,F,F
+5,R6,15:40,17:05,FC Widerstand Wipkingen,Furttals Finest,Aurora,A,M
+5,R7,15:45,17:10,Schachtjor,FC Tormotor 07,Wacker Selnau,A,M
+5,R2,16:20,17:40,Juventinas,MaraDonnas,Loriñas,F,F
+5,R2,16:20,17:25,Loriñas,Divas united,Juventinas,F,F
+5,R11,16:20,17:45,A.C. Tabula Brisant,Zenit ,AS Lettenwiese,E,H
+5,R6,17:05,18:30,Aurora,Gremio,Furttals Finest,A,M
+6,R2,10:00,11:55,Sputnik,Real Azul,Olympique Lettenwiese,B,M
+6,R6,10:00,11:55,Wacker Selnau,Gremio,Freestylers,A,M
+6,R7,10:00,11:55,A.C. Tabula Rasant,FC Tormotor 07,RotoR,A,M
+6,R11,10:00,11:55,Deportivo La Habana,Sporting Morgenstern,Real Cabron,B,M
+6,R2,11:55,13:50,FC Eglisau,Olympique Lettenwiese,Sputnik,B,M
+6,R6,11:55,13:50,Schachtjor,Freestylers,Wacker Selnau,A,M
+6,R7,11:55,13:20,RotoR,Zwietracht Turicum,FC Tormotor 07,A,M
+6,R11,11:55,13:50,Zürich United,Real Cabron,Deportivo La Habana,B,M
+6,R2,13:50,15:25,Juventinas,Rapid Industrie,Divas united,F,F
+6,R2,13:50,15:25,Divas united,MaraDonnas,Juventinas,F,F
+6,R6,13:50,15:45,Bund Schöne Rosen,Atletico Bernina,Traktor Emilie,B,M
+6,R11,13:50,15:45,FC Widerstand Wipkingen,Dynamo Röntgen,Furttals Finest,A,M
+6,R2,15:25,17:00,elle real,Real Rosé,Blutgretchen,F,F
+6,R2,15:25,16:30,Loriñas,Blutgretchen,Real Rosé,F,F
+6,R6,15:45,17:10,Traktor Emilie,Ex Hürlimann,Atletico Bernina,B,M
+6,R11,15:45,17:10,Aurora,Furttals Finest,FC Widerstand Wipkingen,A,M
+7,R2,10:00,11:35,Blutgretchen,Real Rosé,elle real,F,F
+7,R2,10:00,11:35,Juventinas,elle real,Blutgretchen,F,F
+7,R2,11:35,13:10,Divas united,Rapid Industrie,MaraDonnas,F,F
+7,R2,11:35,12:40,Loriñas,MaraDonnas,Divas united,F,F
