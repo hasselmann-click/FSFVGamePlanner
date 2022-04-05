@@ -2,7 +2,7 @@
   "profiles": {
     "FSFV.Gameplanner.ConsoleRunner": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Users\\bj13_\\source\\repos\\FSFVGamePlanner\\FSFV.Gameplanner.ConsoleRunner\\pitches.example.csv\" \"C:\\Users\\bj13_\\OneDrive\\FSFV\\FSFV Material für Spielplan\\2021_22\\FS22\\Fixtures_F_F.csv\" \"C:\\Users\\bj13_\\OneDrive\\FSFV\\FSFV Material für Spielplan\\2021_22\\FS22\\Fixtures_H_E.csv\" \"C:\\Users\\bj13_\\OneDrive\\FSFV\\FSFV Material für Spielplan\\2021_22\\FS22\\Fixtures_H_H.csv\" \"C:\\Users\\bj13_\\OneDrive\\FSFV\\FSFV Material für Spielplan\\2021_22\\FS22\\Games_M_A.csv\" \"C:\\Users\\bj13_\\OneDrive\\FSFV\\FSFV Material für Spielplan\\2021_22\\FS22\\Games_M_B.csv\" "
+      "commandLineArgs": "\"C:\\Users\\bj13_\\OneDrive\\FSFV\\FSFV Material für Spielplan\\2021_22\\FS22\""
     }
   }
 }

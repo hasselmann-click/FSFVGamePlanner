@@ -16,7 +16,6 @@ public class Pitch
     public List<Game> Games { get; set; } = new(10);
     public List<TimeSlot> Slots { get; set; } = new(10);
     
-    // TODO test performance
     public TimeSpan TimeLeft => EndTime
         .Subtract(StartTime)
         .Subtract(Games.Select(g => g.MinDuration.Divide(g.Group.Type.ParallelGamesPerPitch))

@@ -11,7 +11,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.ConsoleRunner;
@@ -19,8 +18,11 @@ namespace FSFV.Gameplanner.ConsoleRunner;
 public class Runner
 {
 
-    private const string MatchPlanCsv = "C:\\Users\\bj13_\\source\\repos\\FSFVGamePlanner\\FSFV.Gameplanner.ConsoleRunner\\MatchPlan.csv";
-    private const string MatchPlanJson = "C:\\Users\\bj13_\\source\\repos\\FSFVGamePlanner\\FSFV.Gameplanner.ConsoleRunner\\MatchPlan.json";
+    private const string MatchPlanCsv = "MatchPlan.csv";
+    //private const string MatchPlanJson = "MatchPlan.json";
+
+    private const string PitchesFileSearchPattern = "pitches.csv";
+    private const string FixtureFilesSearchPattern = "fixtures_*_*.csv";
 
     private readonly IConfiguration configuration;
     private readonly ILogger<Runner> logger;
@@ -37,22 +39,30 @@ public class Runner
     public async Task Run(string[] args)
     {
 
-        // TODO use Working Directory instead of single files
-        if (args.Length < 2)
+        if (args.Length < 1)
             throw new ArgumentException("Missing arguments");
 
-        // TODO validate pitch and fixture files
-        var pitchesFile = args[0];
-        var fixtureFiles = new List<string>(args.Length - 1);
-        for (int i = 1; i < args.Length; ++i)
-        {
-            fixtureFiles.Add(args[i]);
-        }
+        var workDirPath = args[0];
+        if (!Directory.Exists(workDirPath))
+            throw new ArgumentException($"Directory not valid: {workDirPath}");
+
+        var pitchesFile = Directory.GetFiles(workDirPath, PitchesFileSearchPattern).FirstOrDefault();
+        if (string.IsNullOrEmpty(pitchesFile))
+            throw new ArgumentException($"Could not find pitches file: {PitchesFileSearchPattern}");
+
+        var fixtureFiles = Directory.GetFiles(workDirPath, FixtureFilesSearchPattern);
+        if (fixtureFiles == null || fixtureFiles.Length == 0)
+            throw new ArgumentException($"Could not find any fixture files with pattern:" +
+                $" {FixtureFilesSearchPattern}");
 
         Dictionary<string, GroupTypeDto> groupTypes = ParseGroupTypes(configuration);
         List<Game> games = await ParseFixturesAsync(groupTypes, fixtureFiles);
         List<Pitch> pitches = await ParsePitchesAsync(logger, pitchesFile);
 
+        // TODO skip certain gamedays for certain leagues
+        // e.g. for cup days. Or integrate cup fixtures in fixture file?
+
+        // slot by game day
         var pitchesOrdered = pitches.GroupBy(p => p.GameDay).OrderBy(g => g.Key);
         List<GameDay> gameDays = new(pitchesOrdered.Count());
         foreach (var gameDayPitches in pitchesOrdered)
@@ -66,17 +76,23 @@ public class Runner
             });
         }
 
-        // write json
-        await File.WriteAllTextAsync(MatchPlanJson, JsonSerializer.Serialize(gameDays, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        }), Encoding.UTF8);
+        // write meta json
+        //await File.WriteAllTextAsync(Path.Combine(workDirPath, MatchPlanJson),
+        //    JsonSerializer.Serialize(gameDays, new JsonSerializerOptions
+        //    {
+        //        WriteIndented = true
+        //    }), Encoding.UTF8);
 
+        await WriteCsv(workDirPath, gameDays);
+    }
+
+    private static async Task WriteCsv(string workDirPath, List<GameDay> gameDays)
+    {
         // write csv
-        using var csvStream = File.OpenWrite(MatchPlanCsv);
+        using var csvStream = File.OpenWrite(Path.Combine(workDirPath, MatchPlanCsv));
         using var csvWriter = new StreamWriter(csvStream, Encoding.UTF8);
         await csvWriter.WriteLineAsync(string.Join(",", new string[]
-                {
+        {
                     "GameDay",
                     "Pitch",
                     "StartTime",
@@ -86,7 +102,7 @@ public class Runner
                     "Referee",
                     "Group",
                     "League"
-                }));
+        }));
         foreach (var gameDay in gameDays)
         {
             var slots = gameDay.Pitches
@@ -140,15 +156,15 @@ public class Runner
     }
 
     private static async Task<List<Game>> ParseFixturesAsync(
-        Dictionary<string, GroupTypeDto> groupTypes, List<string> fixtureFiles)
+        Dictionary<string, GroupTypeDto> groupTypes, string[] fixtureFiles)
     {
         // ed. guess: fixtures for 6 game days à 5 matches
-        List<Game> games = new(fixtureFiles.Count * 6 * 5);
+        List<Game> games = new(fixtureFiles.Length * 6 * 5);
         // ed. guess: 10 teams per group
-        Dictionary<string, Team> teams = new(fixtureFiles.Count * 10);
+        Dictionary<string, Team> teams = new(fixtureFiles.Length * 10);
         foreach (var file in fixtureFiles)
         {
-            // TODO requirement: file has to be called "*_[GroupType]_[Group].*"
+            // requirement: file has to be called "*_[GroupType]_[Group].*"
             var name = Path.GetFileNameWithoutExtension(file).Split('_');
             if (name.Length < 2 || !groupTypes.TryGetValue(name[^2], out var type))
                 throw new ArgumentException($"Could not get group type from file {file}");

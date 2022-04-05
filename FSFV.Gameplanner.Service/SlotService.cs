@@ -28,19 +28,16 @@ public class SlotService
 
     public List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games)
     {
-        // TODO sub group support
 
         if (!(pitches?.Count > 0 && games?.Count > 0))
             return pitches;
 
         var groups = games
             .GroupBy(g => g.Group)
-            .OrderByDescending(g => g.Key.Type.Priority)
             .ToList();
-        List<(Game, Game)> pairs = new(games.Count / 2 + groups.Count); // if uneven per group a placeholder
-
-        BuildRefereePairs(groups, pairs);
-        Distribute(pitches, pairs);
+        // TODO referees for parallel games
+        var refPairs = BuildRefereePairs(groups);
+        Distribute(pitches, refPairs);
         BuildTimeSlots(pitches);
 
         return pitches;
@@ -112,71 +109,57 @@ public class SlotService
         }
     }
 
-    private void Distribute(List<Pitch> pitches, List<(Game, Game)> pairs)
+    private void Distribute(List<Pitch> pitches, IEnumerable<IGrouping<Group, (Game, Game)>> refPairs)
     {
-
         // TODO ZK Duty
 
-        foreach (var pair in pairs.OrderBy(p => RNG.Next()))
+        foreach (var pairs in refPairs.OrderByDescending(g => g.Key.Type.Priority))
         {
-
-            var groupType = pair.Item1.Group.Type;
-            var secondGroupType = pair.Item2.Group.Type;
-            var mainGroupType = groupType.Name == null ? secondGroupType : groupType;
-
-            var requiredPitch = mainGroupType.RequiredPitchName;
-            var parallelGames = Math.Max(1, mainGroupType.ParallelGamesPerPitch);
-            var minDuration = pair.Item1.MinDuration.Add(pair.Item2.MinDuration).Divide(parallelGames);
-            bool added = false;
-
-            foreach (var pitch in pitches
-                .Where(p => string.IsNullOrEmpty(requiredPitch) || requiredPitch.Equals(p.Name))
-                .OrderBy(p => p.StartTime)
-                .ThenBy(p => p.Games.Count)
-                .ThenBy(p => RNG.Next()))
+            foreach (var pair in pairs.OrderBy(p => RNG.Next()))
             {
-                // check maximum parallel pitches per group type
-                if (!pitch.Games.Any(g => g.Group.Type == mainGroupType)
-                    && mainGroupType.MaxParallelPitches <= pitches.Count(p =>
-                        p.Games.Any(g => g.Group.Type == mainGroupType)))
+                var groupType = pairs.Key.Type;
+                var requiredPitch = groupType.RequiredPitchName;
+                var parallelGames = Math.Max(1, groupType.ParallelGamesPerPitch);
+                var minDuration = pair.Item1.MinDuration
+                    .Add(pair.Item2.MinDuration).Divide(parallelGames);
+
+                var shuffledPitches = pitches
+                    .Where(p => string.IsNullOrEmpty(requiredPitch) || requiredPitch.Equals(p.Name))
+                    .Where(p => p.TimeLeft > minDuration)
+                    .OrderBy(p => p.StartTime)
+                    .ThenBy(p => p.Games.Count)
+                    .ThenBy(p => RNG.Next())
+                    .OrderByDescending(p => p.Games.Count(g => g.Group.Type == groupType))
+                    .ToList();
+
+                if (!shuffledPitches.Any())
                 {
+                    // TODO try to consider distance between pitches?
+                    var mPitches = pitches.OrderByDescending(p => p.TimeLeft).Take(2).ToList();
+                    mPitches[0].Games.Add(pair.Item1);
+                    if (pair.Item2 != PLACEHOLDER)
+                        mPitches[1].Games.Add(pair.Item2);
+                    logger.LogError("Could not slot game pair of type {type} on gameday {gameday}." +
+                        " Adding to pitch {pitch1} and {pitch2}",
+                        groupType.Name, pair.Item1.GameDay, mPitches[0].Name, mPitches[1].Name);
                     continue;
                 }
 
-                var timeLeft = pitch.TimeLeft;
-                if (timeLeft < minDuration)
-                {
-                    logger.LogDebug("Not enough time left for pitch {pitch}: {time} < {duration}",
-                        pitch.Name, timeLeft.TotalMinutes, minDuration.TotalMinutes);
-                    continue;
-                }
-                else
-                {
-                    logger.LogDebug("{pitch}: {time} > {duration}",
-                        pitch.Name, timeLeft.TotalMinutes, minDuration.TotalMinutes);
-                }
+                var idx = shuffledPitches.Count > groupType.MaxParallelPitches
+                        ? groupType.MaxParallelPitches - 1 : shuffledPitches.Count - 1;
+                var pitch = shuffledPitches[idx];
+
                 pitch.Games.Add(pair.Item1);
                 if (pair.Item2 != PLACEHOLDER)
                     pitch.Games.Add(pair.Item2);
-                added = true;
-                break;
-            }
-
-            if (!added)
-            {
-                var minimumGamesPitch = pitches.OrderBy(p => p.Games.Count).First();
-                logger.LogError("Could not slot game pair of type {type} on gameday {gameday}." +
-                    " Adding to pitch of type {PitchTypeID}",
-                    pair.Item1.Group.Type.Name, pair.Item1.GameDay, minimumGamesPitch.Name);
-                minimumGamesPitch.Games.Add(pair.Item1);
-                if (pair.Item2 != PLACEHOLDER)
-                    minimumGamesPitch.Games.Add(pair.Item2);
             }
         }
     }
 
-    private void BuildRefereePairs(List<IGrouping<Group, Game>> groups, List<(Game, Game)> pairs)
+    private IEnumerable<IGrouping<Group, (Game, Game)>> BuildRefereePairs(
+        List<IGrouping<Group, Game>> groups)
     {
+        List<(Game, Game)> pairs = new(groups.Sum(g => g.Count()));
         foreach (var group in groups.Select(g => g.ToList()))
         {
             for (int i = 0, j = 1; j < group.Count; i += 2, j += 2)
@@ -200,5 +183,6 @@ public class SlotService
                 pairs.Add((lastGame, PLACEHOLDER));
             }
         }
+        return pairs.GroupBy(p => p.Item1.Group);
     }
 }
