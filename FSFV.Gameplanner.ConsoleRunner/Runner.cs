@@ -135,7 +135,6 @@ public class Runner
                     slot.League
                 }));
             }
-            await csvWriter.FlushAsync();
         }
         csvWriter.Close();
     }
