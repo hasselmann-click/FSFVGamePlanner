@@ -33,6 +33,7 @@ public class SlotService
             return pitches;
 
         var groups = games
+            .OrderBy(g => RNG.Next())
             .GroupBy(g => g.Group)
             .ToList();
         // TODO referees for parallel games

@@ -67,7 +67,7 @@ public class Runner
         List<GameDay> gameDays = new(pitchesOrdered.Count());
         foreach (var gameDayPitches in pitchesOrdered)
         {
-            var slottedPitches = slotService.SlotGameDay(gameDayPitches.ToList(),
+            var slottedPitches = slotService.SlotGameDay(gameDayPitches.ToList(), 
                 games.Where(g => g.GameDay == gameDayPitches.Key).ToList());
             gameDays.Add(new GameDay
             {
@@ -101,7 +101,8 @@ public class Runner
                     "Away",
                     "Referee",
                     "Group",
-                    "League"
+                    "League",
+                    "Date"
         }));
         foreach (var gameDay in gameDays)
         {
@@ -132,7 +133,8 @@ public class Runner
                     slot.Away.Name,
                     slot.Referee.Name,
                     slot.Group,
-                    slot.League
+                    slot.League,
+                    slot.StartTime.ToString("dd.MM.yy")
                 }));
             }
         }
@@ -228,11 +230,11 @@ public class Runner
             pitchNames.Add(headers[h]);
         }
 
-        // ed. guess: 4 pitches
+        // educated guess: 4 pitches
         List<Pitch> pitches = new(lines.Length * 4);
         for (int i = 1; i < lines.Length; ++i)
         {
-            // following rowes: 08.05.22,10:00-18:00,10:00-18:00,...
+            // following rows: 08.05.22,10:00-18:00,10:00-18:00,...
             var fields = lines[i].Split(separator);
             if (!DateTime.TryParse(fields[0], out var gameDay))
             {
