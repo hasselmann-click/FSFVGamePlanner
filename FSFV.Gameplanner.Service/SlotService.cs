@@ -6,34 +6,25 @@ using System.Linq;
 
 namespace FSFV.Gameplanner.Service;
 
-public class SlotService
+public class SlotService : AbstractSlotService, ISlotService
 {
-
-    private static readonly Random RNG = new Random(23432546);
-
-    private static readonly Game PLACEHOLDER = new() { Group = new() { Type = new() { MinDurationMinutes = 0 } } };
-    private static readonly TimeSpan MaxBreak = TimeSpan.FromMinutes(30);
-
-    public SlotService(ILogger<SlotService> logger)
+    public SlotService(ILogger<SlotService> Logger, Random rng) : base(Logger, rng)
     {
-        this.logger = logger;
     }
-
-    private readonly ILogger<SlotService> logger;
 
     private static Team DetermineRef(Game game)
         => game.Home.RefereeCommitment > game.Away.RefereeCommitment ? game.Away : game.Home;
     private static Team DetermineRefFromPreLastGame((Game, Game) lastPair)
         => lastPair.Item1.Referee == lastPair.Item2.Home ? lastPair.Item2.Away : lastPair.Item2.Home;
 
-    public List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games)
+    public override List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games)
     {
 
         if (!(pitches?.Count > 0 && games?.Count > 0))
             return pitches;
 
         var groups = games
-            .OrderBy(g => RNG.Next())
+            .OrderBy(g => Rng.Next())
             .GroupBy(g => g.Group)
             .ToList();
         // TODO referees for parallel games
@@ -44,79 +35,13 @@ public class SlotService
         return pitches;
     }
 
-    private void BuildTimeSlots(List<Pitch> pitches)
-    {
-        foreach (var pitch in pitches)
-        {
-            if (pitch.Games.Count < 1)
-            {
-                logger.LogWarning("No games for pitch {pitch} on {date}", pitch.Name,
-                    pitch.StartTime.ToShortDateString());
-                continue;
-            }
-
-            var timeLeft = pitch.TimeLeft;
-            var numberOfBreaks = pitch.Games.Count - 1;
-            var additionalBreak = numberOfBreaks > 0 ? timeLeft.Divide(numberOfBreaks) : TimeSpan.Zero;
-            if (additionalBreak < TimeSpan.Zero)
-                additionalBreak = TimeSpan.Zero;
-            else if (additionalBreak > MaxBreak)
-                additionalBreak = MaxBreak;
-            else
-                // round to nearest 5
-                additionalBreak = TimeSpan.FromMinutes(
-                    Math.Floor(additionalBreak.TotalMinutes / 5.0) * 5);
-
-            pitch.Games = pitch.Games.OrderByDescending(g => g.Group.Type.Priority).ToList();
-
-            int parallel = 1;
-            int i = 0;
-            var firstGame = pitch.Games[i++];
-            pitch.Slots = new List<TimeSlot>(pitch.Games.Count)
-                {
-                    new TimeSlot
-                    {
-                        StartTime = pitch.StartTime,
-                        EndTime = pitch.StartTime.Add(firstGame.MinDuration).Add(additionalBreak),
-                        Game = firstGame
-                    }
-                };
-
-            for (; i < pitch.Games.Count; ++i)
-            {
-                var prev = pitch.Slots[i - 1];
-                var game = pitch.Games[i];
-                DateTime start;
-                if (prev.Game.Group.Type == game.Group.Type
-                    && game.Group.Type.ParallelGamesPerPitch >= ++parallel)
-                {
-                    start = prev.StartTime;
-                }
-                else
-                {
-                    parallel = 1;
-                    start = prev.EndTime;
-                }
-
-                // don't add break to last timeslot
-                var breakToAdd = i == pitch.Games.Count - 1 ? TimeSpan.Zero : additionalBreak;
-                pitch.Slots.Add(new TimeSlot
-                {
-                    StartTime = start,
-                    EndTime = start.Add(game.MinDuration).Add(breakToAdd),
-                    Game = game
-                });
-            }
-        }
-    }
-
     private void Distribute(List<Pitch> pitches, IEnumerable<IGrouping<Group, (Game, Game)>> refPairs)
     {
         // TODO ZK Duty
 
         foreach (var pairs in refPairs.OrderByDescending(g => g.Key.Type.Priority))
         {
-            foreach (var pair in pairs.OrderBy(p => RNG.Next()))
+            foreach (var pair in pairs.OrderBy(p => Rng.Next()))
             {
                 var groupType = pairs.Key.Type;
                 var requiredPitch = groupType.RequiredPitchName;
@@ -129,7 +54,7 @@ public class SlotService
                     .Where(p => p.TimeLeft > minDuration)
                     .OrderBy(p => p.StartTime)
                     .ThenBy(p => p.Games.Count)
-                    .ThenBy(p => RNG.Next())
+                    .ThenBy(p => Rng.Next())
                     .OrderByDescending(p => p.Games.Count(g => g.Group.Type == groupType))
                     .ToList();
 
@@ -140,7 +65,7 @@ public class SlotService
                     mPitches[0].Games.Add(pair.Item1);
                     if (pair.Item2 != PLACEHOLDER)
                         mPitches[1].Games.Add(pair.Item2);
-                    logger.LogError("Could not slot game pair of type {type} on gameday {gameday}." +
+                    Logger.LogError("Could not slot game pair of type {type} on gameday {gameday}." +
                         " Adding to pitch {pitch1} and {pitch2}",
                         groupType.Name, pair.Item1.GameDay, mPitches[0].Name, mPitches[1].Name);
                     continue;
@@ -178,7 +103,7 @@ public class SlotService
             }
             if ((group.Count & 1) == 1) // is odd? Then last game was skipped
             {
-                logger.LogDebug($"Uneven number of games, adding placeholder");
+                Logger.LogDebug($"Uneven number of games, adding placeholder");
                 var lastGame = group[^1];
                 lastGame.Referee = DetermineRefFromPreLastGame(pairs[^1]);
                 pairs.Add((lastGame, PLACEHOLDER));

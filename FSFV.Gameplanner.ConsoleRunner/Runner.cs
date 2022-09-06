@@ -19,17 +19,16 @@ public class Runner
 {
 
     private const string MatchPlanCsv = "MatchPlan.csv";
-    //private const string MatchPlanJson = "MatchPlan.json";
 
     private const string PitchesFileSearchPattern = "pitches.csv";
     private const string FixtureFilesSearchPattern = "fixtures_*_*.csv";
+    private const string DateFormat = "dd.MM.yy";
 
     private readonly IConfiguration configuration;
     private readonly ILogger<Runner> logger;
-    private readonly SlotService slotService;
+    private readonly ISlotService slotService;
 
-    public Runner(IConfiguration configuration, ILogger<Runner> logger,
-        SlotService slotService)
+    public Runner(IConfiguration configuration, ILogger<Runner> logger, ISlotService slotService)
     {
         this.configuration = configuration;
         this.logger = logger;
@@ -67,7 +66,7 @@ public class Runner
         List<GameDay> gameDays = new(pitchesOrdered.Count());
         foreach (var gameDayPitches in pitchesOrdered)
         {
-            var slottedPitches = slotService.SlotGameDay(gameDayPitches.ToList(), 
+            var slottedPitches = slotService.SlotGameDay(gameDayPitches.ToList(),
                 games.Where(g => g.GameDay == gameDayPitches.Key).ToList());
             gameDays.Add(new GameDay
             {
@@ -75,13 +74,6 @@ public class Runner
                 Pitches = slottedPitches
             });
         }
-
-        // write meta json
-        //await File.WriteAllTextAsync(Path.Combine(workDirPath, MatchPlanJson),
-        //    JsonSerializer.Serialize(gameDays, new JsonSerializerOptions
-        //    {
-        //        WriteIndented = true
-        //    }), Encoding.UTF8);
 
         await WriteCsv(workDirPath, gameDays);
     }
@@ -110,7 +102,7 @@ public class Runner
                 .SelectMany(p => p.Slots
                     .Select(s => new
                     {
-                        GameDay = s.Game.GameDay,
+                        s.Game.GameDay,
                         Pitch = p.Name,
                         s.StartTime,
                         s.EndTime,
@@ -131,10 +123,10 @@ public class Runner
                     slot.EndTime.ToShortTimeString(),
                     slot.Home.Name,
                     slot.Away.Name,
-                    slot.Referee.Name,
+                    slot.Referee?.Name ?? "<kein>",
                     slot.Group,
                     slot.League,
-                    slot.StartTime.ToString("dd.MM.yy")
+                    slot.StartTime.ToString(DateFormat)
                 }));
             }
         }

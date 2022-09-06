@@ -2,12 +2,15 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.ConsoleRunner;
 
 class Program
 {
+
+    private static readonly Random RNG = new(23432546);
 
     static Task Main(string[] args)
     {
@@ -29,7 +32,9 @@ class Program
             })
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<Runner>()
-            .AddScoped<SlotService>()
+            //.AddScoped<ISlotService, SlotService>()
+            .AddScoped<ISlotService, LinearSlotService>()
+            .AddSingleton(RNG)
             .BuildServiceProvider();
     }
 }
