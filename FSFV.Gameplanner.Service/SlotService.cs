@@ -57,7 +57,7 @@ public class SlotService
 
             var timeLeft = pitch.TimeLeft;
             var numberOfBreaks = pitch.Games.Count - 1;
-            var additionalBreak = timeLeft.Divide(numberOfBreaks);
+            var additionalBreak = numberOfBreaks > 0 ? timeLeft.Divide(numberOfBreaks) : TimeSpan.Zero;
             if (additionalBreak < TimeSpan.Zero)
                 additionalBreak = TimeSpan.Zero;
             else if (additionalBreak > MaxBreak)
