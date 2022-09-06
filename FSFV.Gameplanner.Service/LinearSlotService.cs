@@ -26,13 +26,14 @@ public class LinearSlotService : AbstractSlotService
         var requirementGroups = groups.Where(g => !string.IsNullOrEmpty(g.Key.Type.RequiredPitchName));
         foreach(var requirementGroup in requirementGroups)
         {
+            // TODO requirement groups will always be scheduled first!
             // TODO support multiple required pitches
             var pname = requirementGroup.Key.Type.RequiredPitchName;
             var pitch = pitches.FirstOrDefault(p => p.Name == pname)
                 ?? throw new ArgumentException("Could not find required pitch {name}", pname);
             pitch.Games.AddRange(requirementGroup.ToList());
-            groups.Remove(requirementGroup);
         }
+        groups.RemoveAll(g => requirementGroups.Select(rg => rg.Key).Contains(g.Key));
 
         foreach (var group in groups.OrderByDescending(g => g.Key.Type.Priority))
         {
@@ -68,12 +69,12 @@ public class LinearSlotService : AbstractSlotService
 
                     var pidx = shuffledPitches.Count > groupType.MaxParallelPitches ? groupType.MaxParallelPitches - 1 : shuffledPitches.Count - 1;
                     pitch = shuffledPitches[pidx];
+                    // remember possible parallel game
                     parallelPitchName = pitch.Name;
 
                 }
-                else // if (parallelGames < maxParallelGames)
+                else // parallel game
                 {
-                    // remember possible parallel game
                     pitch = pitches.First(p => p.Name == parallelPitchName);
                 }
 
@@ -84,7 +85,26 @@ public class LinearSlotService : AbstractSlotService
         }
 
         BuildTimeSlots(pitches);
-        // AddReferees
+        AddRefereesToTimeslots(pitches);
         return pitches;
+    }
+
+    private void AddRefereesToTimeslots(List<Pitch> pitches)
+    {
+        foreach(var slotGroups in pitches.SelectMany(p => p.Slots.GroupBy(s => s.Game.Group.Type.Name)))
+        {
+                var slots = slotGroups.ToArray();
+                for(int i = 0; i < slots.Length - 1; ++i)
+                {
+                    var current = slots[i];
+                    var next = slots[i+1];
+                // TODO handle parallel games
+                    //if(current.StartTime == next.StartTime)
+                    //{
+                        
+                    //}
+                }
+            }
+        }
     }
 }

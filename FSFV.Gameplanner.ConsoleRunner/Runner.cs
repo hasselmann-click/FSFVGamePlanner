@@ -163,8 +163,6 @@ public class Runner
                 throw new ArgumentException($"Could not get group type from file {file}");
 
             var group = new Group { Name = name[^1], Type = type };
-
-
             var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = false
