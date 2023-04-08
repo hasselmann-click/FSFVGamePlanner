@@ -53,9 +53,14 @@ public class Runner
         if (fixtureFiles == null || fixtureFiles.Length == 0)
             throw new ArgumentException($"Could not find any fixture files with pattern:" +
                 $" {FixtureFilesSearchPattern}");
+        logger.LogInformation("Found the following fixture files: {files}", string.Join(", ", fixtureFiles.Select(f => Path.GetFileName(f))));
 
         Dictionary<string, GroupTypeDto> groupTypes = ParseGroupTypes(configuration);
+        logger.LogInformation("Using the following group types: {leagues}", string.Join(", ", groupTypes.Keys));
+
         List<Game> games = await ParseFixturesAsync(groupTypes, fixtureFiles);
+        logger.LogInformation("Found {count} games", games.Count);
+
         List<Pitch> pitches = await ParsePitchesAsync(logger, pitchesFile);
 
         // TODO skip certain gamedays for certain leagues
@@ -148,7 +153,7 @@ public class Runner
         return records.ToDictionary(r => r.Name);
     }
 
-    private static async Task<List<Game>> ParseFixturesAsync(
+    private async Task<List<Game>> ParseFixturesAsync(
         Dictionary<string, GroupTypeDto> groupTypes, string[] fixtureFiles)
     {
         // ed. guess: fixtures for 6 game days à 5 matches
@@ -171,6 +176,8 @@ public class Runner
             using var csv = new CsvReader(reader, csvConfig);
             var fixtures = csv.GetRecordsAsync<FixtureDto>();
 
+            logger.LogInformation("Starting at game day {start} for group {group} of type {type}",
+                               group.Type.FixtureStart, group.Name, group.Type.Name);
             await foreach (var fixture in fixtures)
             {
 

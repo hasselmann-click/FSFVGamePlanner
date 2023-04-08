@@ -24,7 +24,7 @@ public class LinearSlotService : AbstractSlotService
             .ToList();
 
         var requirementGroups = groups.Where(g => !string.IsNullOrEmpty(g.Key.Type.RequiredPitchName));
-        foreach(var requirementGroup in requirementGroups)
+        foreach (var requirementGroup in requirementGroups)
         {
             // TODO requirement groups will always be scheduled first!
             // TODO support multiple required pitches
@@ -91,19 +91,18 @@ public class LinearSlotService : AbstractSlotService
 
     private void AddRefereesToTimeslots(List<Pitch> pitches)
     {
-        foreach(var slotGroups in pitches.SelectMany(p => p.Slots.GroupBy(s => s.Game.Group.Type.Name)))
+        foreach (var slotGroups in pitches.SelectMany(p => p.Slots.GroupBy(s => s.Game.Group.Type.Name)))
         {
-                var slots = slotGroups.ToArray();
-                for(int i = 0; i < slots.Length - 1; ++i)
-                {
-                    var current = slots[i];
-                    var next = slots[i+1];
+            var slots = slotGroups.ToArray();
+            for (int i = 0; i < slots.Length - 1; ++i)
+            {
+                var current = slots[i];
+                var next = slots[i + 1];
                 // TODO handle parallel games
-                    //if(current.StartTime == next.StartTime)
-                    //{
-                        
-                    //}
-                }
+                //if(current.StartTime == next.StartTime)
+                //{
+
+                //}
             }
         }
     }

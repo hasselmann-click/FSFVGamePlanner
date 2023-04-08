@@ -19,4 +19,8 @@
     <ProjectReference Include="..\FSFV.Gameplanner.Service\FSFV.Gameplanner.Service.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Util\" />
+  </ItemGroup>
+
 </Project>

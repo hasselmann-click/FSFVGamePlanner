@@ -2,6 +2,7 @@ using FSFV.Gameplanner.Service;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using System;
 
 namespace Tests
 {
@@ -15,7 +16,7 @@ namespace Tests
         public void Setup()
         {
             var loggerMock = new Mock<ILogger<SlotService>>();
-            this.slotService = new SlotService(loggerMock.Object);
+            this.slotService = new SlotService(loggerMock.Object, Random.Shared);
         }
 
         [TestMethod]
