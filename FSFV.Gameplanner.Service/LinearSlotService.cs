@@ -24,7 +24,7 @@ public class LinearSlotService : AbstractSlotService
             .ToList();
 
         var requirementGroups = groups.Where(g => !string.IsNullOrEmpty(g.Key.Type.RequiredPitchName));
-        foreach(var requirementGroup in requirementGroups)
+        foreach (var requirementGroup in requirementGroups)
         {
             // TODO requirement groups will always be scheduled first!
             // TODO support multiple required pitches
@@ -91,20 +91,71 @@ public class LinearSlotService : AbstractSlotService
 
     private void AddRefereesToTimeslots(List<Pitch> pitches)
     {
-        foreach(var slotGroups in pitches.SelectMany(p => p.Slots.GroupBy(s => s.Game.Group.Type.Name)))
+        foreach (var pitch in pitches)
         {
-                var slots = slotGroups.ToArray();
-                for(int i = 0; i < slots.Length - 1; ++i)
+            foreach (var slotGroups in pitch.Slots.GroupBy(s => s.Game.Group.Type.Name))
+            {
+                var slots = slotGroups.OrderBy(s => s.StartTime).ToArray();
+                if (slots.Length == 1)
                 {
+                    var slot = slots[0];
+                    Logger.LogError("Single game of type {type} at game day {day} at {time} on" +
+                        " pitch {pitch}. Can't place referee", slotGroups.Key, slot.Game.GameDay,
+                        slot.StartTime, pitch.Name);
+                    continue;
+                }
+
+                var referees = new HashSet<string>(slots.Length);
+                for (int i = slots.Length - 1; i > 0; --i)
+                {
+
                     var current = slots[i];
-                    var next = slots[i+1];
-                // TODO handle parallel games
-                    //if(current.StartTime == next.StartTime)
-                    //{
-                        
-                    //}
+                    var refCandidates = new List<Team>(8); // ed. guess: 2 before, 2 after, some parallels
+
+                    TimeSlot after = current;
+                    while (i < slots.Length - 1 && after.StartTime == current.StartTime)
+                    {
+                        after = slots[i + 1];
+                    }
+                    refCandidates.Add(after.Game.Home);
+                    refCandidates.Add(after.Game.Away);
+
+                    TimeSlot afterParallel = after;
+                    while (i < slots.Length - 1 && afterParallel.StartTime == current.StartTime)
+                    {
+                        refCandidates.Add(afterParallel.Game.Home);
+                        refCandidates.Add(afterParallel.Game.Away);
+                        afterParallel = slots[i + 1];
+                    }
+
+                    foreach(var refCandidate in refCandidates.OrderBy(c => c.RefereeCommitment))
+                    {
+                        if (referees.Contains(refCandidate.Name))
+                            continue;
+                        ++refCandidate.RefereeCommitment;
+                        current.Game.Referee = refCandidate;
+                        referees.Add(refCandidate.Name);
+                    }
+
+                    TimeSlot before = current;
+                    while (i > 0 && before.StartTime == current.StartTime)
+                    {
+                        before = slots[i - 1];
+                    }
+                    refCandidates.Add(before.Game.Home);
+                    refCandidates.Add(before.Game.Away);
+
+                    TimeSlot beforeParallel = after;
+                    while (i > 0 && beforeParallel.StartTime == current.StartTime)
+                    {
+                        refCandidates.Add(beforeParallel.Game.Home);
+                        refCandidates.Add(beforeParallel.Game.Away);
+                        beforeParallel = slots[i + 1];
+                    }
+
                 }
             }
         }
     }
+}
 }
