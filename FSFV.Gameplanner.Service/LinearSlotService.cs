@@ -23,14 +23,13 @@ public class LinearSlotService : AbstractSlotService
             .GroupBy(g => g.Group)
             .ToList();
 
+        // TODO dont schedule groups with requirements always first!
         var requirementGroups = groups.Where(g => !string.IsNullOrEmpty(g.Key.Type.RequiredPitchName));
         foreach (var requirementGroup in requirementGroups)
         {
-            // TODO requirement groups will always be scheduled first!
             // TODO support multiple required pitches
             var pname = requirementGroup.Key.Type.RequiredPitchName;
-            var pitch = pitches.FirstOrDefault(p => p.Name == pname)
-                ?? throw new ArgumentException("Could not find required pitch {name}", pname);
+            var pitch = pitches.FirstOrDefault(p => p.Name == pname) ?? throw new ArgumentException("Could not find required pitch {name}", pname);
             pitch.Games.AddRange(requirementGroup.ToList());
         }
         groups.RemoveAll(g => requirementGroups.Select(rg => rg.Key).Contains(g.Key));
@@ -38,54 +37,30 @@ public class LinearSlotService : AbstractSlotService
         foreach (var group in groups.OrderByDescending(g => g.Key.Type.Priority))
         {
             var groupType = group.Key.Type;
-            var requiredPitch = groupType.RequiredPitchName;
-            var maxParallelGames = Math.Max(1, groupType.ParallelGamesPerPitch);
-
-            var parallelGames = maxParallelGames;
-            var parallelPitchName = "";
             foreach (var game in group.OrderBy(p => Rng.Next()))
             {
                 var minDuration = game.MinDuration;
-                Pitch pitch;
-                if (parallelGames == maxParallelGames || parallelGames == 0)
-                {
-                    var shuffledPitches = pitches
-                    .Where(p => string.IsNullOrEmpty(requiredPitch) || requiredPitch.Equals(p.Name))
+                var shuffledPitches = pitches
                     .Where(p => p.TimeLeft > minDuration)
-                    .OrderBy(p => p.StartTime)
-                    .ThenBy(p => p.Games.Count)
-                    .ThenBy(p => Rng.Next())
-                    .OrderByDescending(p => p.Games.Count(g => g.Group.Type == groupType))
+                    .OrderBy(p => p.TimeLeft)
                     .ToList();
 
-                    if (!shuffledPitches.Any())
-                    {
-                        var mPitch = pitches.OrderByDescending(p => p.TimeLeft).First();
-                        mPitch.Games.Add(game);
-                        Logger.LogError("Could not slot game of type {type} on gameday {day}." +
-                            " Adding to pitch {pitch}.", groupType.Name, game.GameDay, mPitch.Name);
-                        continue;
-                    }
-
-                    var pidx = shuffledPitches.Count > groupType.MaxParallelPitches ? groupType.MaxParallelPitches - 1 : shuffledPitches.Count - 1;
-                    pitch = shuffledPitches[pidx];
-                    // remember possible parallel game
-                    parallelPitchName = pitch.Name;
-
-                }
-                else // parallel game
+                if (!shuffledPitches.Any())
                 {
-                    pitch = pitches.First(p => p.Name == parallelPitchName);
+                    var mPitch = pitches.OrderByDescending(p => p.TimeLeft).First();
+                    mPitch.Games.Add(game);
+                    Logger.LogError("Could not slot game of type {type} on gameday {day}." +
+                        " Adding to pitch {pitch}.", groupType.Name, game.GameDay, mPitch.Name);
+                    continue;
                 }
 
-                --parallelGames;
-                pitch.Games.Add(game);
+                var pidx = shuffledPitches.Count > groupType.MaxParallelPitches ? groupType.MaxParallelPitches - 1 : shuffledPitches.Count - 1;
+                shuffledPitches[pidx].Games.Add(game);
             }
-
         }
 
         BuildTimeSlots(pitches);
-        AddRefereesToTimeslots(pitches);
+        //AddRefereesToTimeslots(pitches);
         return pitches;
     }
 

@@ -23,6 +23,7 @@ public class Runner
     private const string PitchesFileSearchPattern = "pitches.csv";
     private const string FixtureFilesSearchPattern = "fixtures_*_*.csv";
     private const string DateFormat = "dd.MM.yy";
+    private const string SPIELFREI = "SPIELFREI";
 
     private readonly IConfiguration configuration;
     private readonly ILogger<Runner> logger;
@@ -59,7 +60,13 @@ public class Runner
         logger.LogInformation("Using the following group types: {leagues}", string.Join(", ", groupTypes.Keys));
 
         List<Game> games = await ParseFixturesAsync(groupTypes, fixtureFiles);
+        var spielfrei = games.Where(g => g.Home.Name == SPIELFREI || g.Away.Name == "SPIELFREI");
         logger.LogInformation("Found {count} games", games.Count);
+        if (spielfrei.Any())
+        {
+            logger.LogInformation("Removing {count} with 'SPIELFREI'", spielfrei.Count());
+            games = games.Except(spielfrei).ToList();
+        }
 
         List<Pitch> pitches = await ParsePitchesAsync(logger, pitchesFile);
 
