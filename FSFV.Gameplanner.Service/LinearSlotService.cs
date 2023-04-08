@@ -118,6 +118,7 @@ public class LinearSlotService : AbstractSlotService
                     {
                         // also look for parallel "before" games
                         TimeSlot beforeParallel = before;
+                        beforeId += 1; // id hack, otherwise the first option would be skipped
                         while (beforeParallel.StartTime == before.StartTime && beforeId >= 0)
                         {
                             refCandidates.Add(beforeParallel.Game.Home);
