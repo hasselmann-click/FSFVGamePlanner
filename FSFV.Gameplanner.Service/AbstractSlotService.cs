@@ -20,13 +20,13 @@ namespace FSFV.Gameplanner.Service
             this.logger = logger;
             this.rng = rng;
         }
-        
+
         protected ILogger Logger => logger;
         protected Random Rng => rng;
 
         public abstract List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games);
 
-        protected void BuildTimeSlots(List<Pitch> pitches)
+        protected virtual void BuildTimeSlots(List<Pitch> pitches)
         {
             foreach (var pitch in pitches)
             {
@@ -88,6 +88,87 @@ namespace FSFV.Gameplanner.Service
                         EndTime = start.Add(game.MinDuration).Add(breakToAdd),
                         Game = game
                     });
+                }
+            }
+        }
+
+        protected void AddRefereesToTimeslots(List<Pitch> pitches)
+        {
+            // For every pitch group games by league (GroupType)
+            foreach (var pitch in pitches)
+            {
+                foreach (var slotGroups in pitch.Slots.GroupBy(s => s.Game.Group.Type.Name))
+                {
+                    var slots = slotGroups.OrderBy(s => s.StartTime).ToArray();
+                    if (slots.Length == 1)
+                    {
+                        var slot = slots[0];
+                        Logger.LogError("Single game of type {type} at game day {day} at {time} on" +
+                            " pitch {pitch}. Can't place referee", slotGroups.Key, slot.Game.GameDay,
+                            slot.StartTime, pitch.Name);
+                        continue;
+                    }
+
+                    var referees = new HashSet<string>(slots.Length);
+                    for (int i = 0; i < slots.Length; ++i)
+                    {
+                        var current = slots[i];
+                        var refCandidates = new List<Team>(8); // ed. guess: 2 before, 2 after, some parallels
+
+                        // look for a game after the current one
+                        TimeSlot after = current;
+                        int afterId = i + 1;
+                        while (after.StartTime == current.StartTime && afterId < slots.Length)
+                        {
+                            after = slots[afterId++];
+                        }
+                        if (after.StartTime != current.StartTime)
+                        {
+                            // also look for parallel "after" games
+                            TimeSlot afterParallel = after;
+                            afterId -= 1; // id hack, otherwise the last option would be skipped
+                            while (afterParallel.StartTime == after.StartTime && afterId < slots.Length)
+                            {
+                                refCandidates.Add(afterParallel.Game.Home);
+                                refCandidates.Add(afterParallel.Game.Away);
+                                afterParallel = slots[afterId++];
+                            }
+                        }
+
+                        // look for a game before the current one
+                        TimeSlot before = current;
+                        int beforeId = i - 1;
+                        while (before.StartTime == current.StartTime && beforeId >= 0)
+                        {
+                            before = slots[beforeId--];
+                        }
+                        if (before.StartTime != current.StartTime)
+                        {
+                            // also look for parallel "before" games
+                            TimeSlot beforeParallel = before;
+                            beforeId += 1; // id hack, otherwise the first option would be skipped
+                            while (beforeParallel.StartTime == before.StartTime && beforeId >= 0)
+                            {
+                                refCandidates.Add(beforeParallel.Game.Home);
+                                refCandidates.Add(beforeParallel.Game.Away);
+                                beforeParallel = slots[beforeId--];
+                            }
+                        }
+
+                        var referee = refCandidates
+                            .Where(rc => !referees.Contains(rc.Name))
+                            .OrderBy(c => c.RefereeCommitment)
+                            .FirstOrDefault();
+                        if (referee == null)
+                        {
+                            Logger.LogError("No referee candidates for a game of type {type} at game day" +
+                                " {day} at {time} on pitch {pitch}.", slotGroups.Key, current.Game.GameDay, current.StartTime, pitch.Name);
+                            continue;
+                        }
+                        ++referee.RefereeCommitment;
+                        current.Game.Referee = referee;
+                        referees.Add(referee.Name);
+                    }
                 }
             }
         }

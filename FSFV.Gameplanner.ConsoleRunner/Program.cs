@@ -1,4 +1,4 @@
-﻿using FSFV.Gameplanner.Service;
+﻿using FSFV.Gameplanner.Service.RuleBased.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -33,7 +33,8 @@ class Program
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<Runner>()
             //.AddScoped<ISlotService, SlotService>()
-            .AddScoped<ISlotService, LinearSlotService>()
+            //.AddScoped<ISlotService, LinearSlotService>()
+            .AddRuleBasedSlotting()
             .AddSingleton(RNG)
             .BuildServiceProvider();
     }

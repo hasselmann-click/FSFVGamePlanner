@@ -78,8 +78,10 @@ public class Runner
         List<GameDay> gameDays = new(pitchesOrdered.Count());
         foreach (var gameDayPitches in pitchesOrdered)
         {
-            var slottedPitches = slotService.SlotGameDay(gameDayPitches.ToList(),
-                games.Where(g => g.GameDay == gameDayPitches.Key).ToList());
+            var slottedPitches = slotService.SlotGameDay(
+                gameDayPitches.ToList(),
+                games.Where(g => g.GameDay == gameDayPitches.Key).ToList()
+            );
             gameDays.Add(new GameDay
             {
                 GameDayID = gameDayPitches.Key,
