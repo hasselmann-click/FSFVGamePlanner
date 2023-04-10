@@ -103,9 +103,9 @@ public class RuleBasedSlotService : AbstractSlotService
         }
 
         BuildTimeSlots(pitches);
-        AddRefereesToTimeslots(pitches);
-
         rules.ToList().ForEach(r => r.ProcessAfterGameday(pitches));
+
+        AddRefereesToTimeslots(pitches);
         return pitches;
     }
 

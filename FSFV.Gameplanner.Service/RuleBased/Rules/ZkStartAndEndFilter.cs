@@ -26,4 +26,9 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
         var shortestMinDuration = games.Select(g => g.Group.Type.MinDurationMinutes).Min();
     }
 
+    public override void ProcessAfterGameday(List<Pitch> pitches)
+    {
+        base.ProcessAfterGameday(pitches);
+    }
+
 }
