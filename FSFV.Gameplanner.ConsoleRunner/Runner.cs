@@ -37,6 +37,10 @@ public class Runner
         this.slotService = slotService;
     }
 
+    // TODO config: Referee yes or no
+    // TODO config: Mark teams as ZK (A list of teams as input?), then activate ZK rule
+    // TODO skip certain gamedays for certain leagues e.g. for cup days, finals.. Or integrate cup fixtures in fixture file?
+
     public async Task Run(string[] args)
     {
 
@@ -70,9 +74,6 @@ public class Runner
         }
 
         List<Pitch> pitches = await ParsePitchesAsync(logger, pitchesFile);
-
-        // TODO skip certain gamedays for certain leagues
-        // e.g. for cup days. Or integrate cup fixtures in fixture file?
 
         // slot by game day
         var pitchesOrdered = pitches.GroupBy(p => p.GameDay).OrderBy(g => g.Key);
