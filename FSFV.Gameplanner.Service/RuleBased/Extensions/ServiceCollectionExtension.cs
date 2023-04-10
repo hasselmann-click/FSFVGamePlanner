@@ -14,6 +14,8 @@ public static class ServiceCollectionExtension
             .AddSingleton<ISlotRule>(new RequiredPitchFilter(1000))
             .AddSingleton<ISlotRule>(new MaxParallelPitchesFilter(100))
             .AddSingleton<ISlotRule>(new LeaguePriorityFilter(10))
+            // TODO currently only one sorting rule can be applied
+            .AddSingleton<ISlotRule>(new MorningAndEveningGamesSort(1))
             ;
     }
 }

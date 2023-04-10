@@ -28,6 +28,7 @@ internal class MaxParallelPitchesFilter : AbstractSlotRule
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
         // return games which are either not maxed out (yet) or playing on the pitch already
+        // TODO: check if there is enough space left for the league to finish on the maximum number of pitches
         return games.Where(g =>
                 !isMaxedOut.Contains(g.Group.Type.Name)
                 || currentParallelPitchesByLeague[g.Group.Type.Name].Contains(pitch.Name))

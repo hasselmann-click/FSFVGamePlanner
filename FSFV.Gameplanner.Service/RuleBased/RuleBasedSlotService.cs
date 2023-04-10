@@ -9,6 +9,7 @@ namespace FSFV.Gameplanner.Service.Rules;
 public class RuleBasedSlotService : AbstractSlotService
 {
     private static readonly List<Game> EmptyList = new(0);
+    private static readonly TimeSpan SlotBuffer = TimeSpan.FromMinutes(30);
 
     private readonly IEnumerable<ISlotRule> rules;
     private readonly ILogger<RuleBasedSlotService> logger;
@@ -28,39 +29,80 @@ public class RuleBasedSlotService : AbstractSlotService
     public override List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games)
     {
         rules.ToList().ForEach(r => r.ProcessBeforeGameday(pitches, games));
+        var gameDate = pitches.Select(p => new { p.GameDay, Date = p.StartTime.ToShortDateString() }).First();
+        // vars for endless loop prevention
+        var hasSlottedGames = true;
+        var previousGamesCount = games.Count;
+        // if at one point no games could be scheduled on a pitch, it's almost impossible
+        // to have some scheduled later on. Thus ignoring these pitches.
+        var pitchesToIgnore = new HashSet<string>(pitches.Count);
+
         while (games.Any())
         {
-            foreach (var p in pitches)
+            // order pitches by their next available starting time 
+            var orderedPitches = pitches
+                .Where(p => !pitchesToIgnore.Contains(p.Name))
+                .OrderBy(p => Rng.NextInt64())
+                .OrderBy(op => op.NextStartTime);
+            var currentStartTime = orderedPitches.Select(p => p.NextStartTime).First();
+            foreach (var nextPitch in orderedPitches)
             {
+                // slot games only for pitches which are in 30 minutes of each other.
+                if (nextPitch.NextStartTime.Subtract(currentStartTime) > SlotBuffer)
+                {
+                    break;
+                }
+
                 IEnumerable<Game> slotCandidates = games;
                 foreach (var rule in rules) // rules are ordered by their priority
                 {
-                    slotCandidates = rule.Apply(p, slotCandidates, pitches) ?? EmptyList;
+                    slotCandidates = rule.Apply(nextPitch, slotCandidates, pitches) ?? EmptyList;
                 }
                 if (!slotCandidates.Any())
                 {
+                    pitchesToIgnore.Add(nextPitch.Name);
                     continue;
                 }
 
                 var scheduledGame = slotCandidates.First();
                 foreach (var rule in rules)
                 {
-                    rule.Update(p, scheduledGame);
+                    rule.Update(nextPitch, scheduledGame);
                 }
 
                 games.Remove(scheduledGame);
-                p.Games.Add(scheduledGame);
+                nextPitch.Games.Add(scheduledGame);
                 if (!games.Any())
+                    break;
+            }
+
+            // endless loop prevention
+            // if any games were slotted, the current count is smaller than the previous count
+            var currentGamesCount = games.Count;
+            if (previousGamesCount == currentGamesCount)
+            {
+                // if it hadn't slotted games in the previous "round" already
+                if (!hasSlottedGames)
                 {
+                    var tempPitch = pitches.OrderByDescending(p => p.TimeLeft).First();
+                    tempPitch.Games.AddRange(games);
+                    logger.LogError("Could not slot any games multiple times on game day {day} at {date}. Adding" +
+                        " to {cnt} games to pitch {pitch}", gameDate.GameDay, gameDate.Date, currentGamesCount, tempPitch.Name);
                     break;
                 }
+                hasSlottedGames = false;
+            }
+            else
+            {
+                hasSlottedGames = true;
+                previousGamesCount = currentGamesCount;
             }
         }
-        rules.ToList().ForEach(r => r.ProcessAfterGameday(pitches));
 
         BuildTimeSlots(pitches);
         AddRefereesToTimeslots(pitches);
 
+        rules.ToList().ForEach(r => r.ProcessAfterGameday(pitches));
         return pitches;
     }
 

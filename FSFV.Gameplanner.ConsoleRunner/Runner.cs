@@ -19,6 +19,7 @@ public class Runner
 {
 
     private const string MatchPlanCsv = "MatchPlan.csv";
+    private const string StatisticsCsv = "statistics.csv";
 
     private const string PitchesFileSearchPattern = "pitches.csv";
     private const string FixtureFilesSearchPattern = "fixtures_*_*.csv";
@@ -90,6 +91,37 @@ public class Runner
         }
 
         await WriteCsv(workDirPath, gameDays);
+        await WriteStatsCsv(workDirPath, games);
+    }
+
+    private async Task WriteStatsCsv(string workDirPath, List<Game> games)
+    {
+        using var csvStream = File.OpenWrite(Path.Combine(workDirPath, StatisticsCsv));
+        using var csvWriter = new StreamWriter(csvStream, Encoding.UTF8);
+        await csvWriter.WriteLineAsync(string.Join(",", new string[]
+        {
+                    "League",
+                    "Team",
+                    "Referee",
+                    "Morning",
+                    "Evening"
+        }));
+        var teams = games
+            .SelectMany(g => new[] { (League: g.Group.Type.Name, Team: g.Home), (League: g.Group.Type.Name, Team: g.Away) })
+            .DistinctBy(t => t.Team.Name)
+            .OrderBy(t => t.League);
+        foreach (var t in teams)
+        {
+            await csvWriter.WriteLineAsync(string.Join(",", new string[]
+                   {
+                       t.League,
+                       t.Team.Name,
+                       t.Team.RefereeCommitment + "",
+                       t.Team.MorningGames + "",
+                       t.Team.EveningGames + ""
+                   }));
+        }
+        csvWriter.Close();
     }
 
     private static async Task WriteCsv(string workDirPath, List<GameDay> gameDays)
