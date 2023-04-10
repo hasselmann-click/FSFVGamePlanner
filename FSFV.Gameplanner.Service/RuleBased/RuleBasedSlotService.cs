@@ -45,11 +45,13 @@ public class RuleBasedSlotService : AbstractSlotService
                 .OrderBy(p => Rng.NextInt64())
                 .OrderBy(op => op.NextStartTime);
             var currentStartTime = orderedPitches.Select(p => p.NextStartTime).First();
+            logger.LogDebug("Pitch Order: {pitches}", string.Join(", ", orderedPitches.Select(op => "[" + op.Name + ": " + op.NextStartTime + "]")));
             foreach (var nextPitch in orderedPitches)
             {
                 // slot games only for pitches which are in 30 minutes of each other.
                 if (nextPitch.NextStartTime.Subtract(currentStartTime) > SlotBuffer)
                 {
+                    logger.LogDebug("Stopping placing at pitch {pitch}", nextPitch.Name);
                     break;
                 }
 
@@ -60,6 +62,7 @@ public class RuleBasedSlotService : AbstractSlotService
                 }
                 if (!slotCandidates.Any())
                 {
+                    logger.LogDebug("Ignoring pitch {pitch}", nextPitch.Name);
                     pitchesToIgnore.Add(nextPitch.Name);
                     continue;
                 }
