@@ -1,23 +1,30 @@
 ﻿using FSFV.Gameplanner.Common;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FSFV.Gameplanner.Service.RuleBased.Rules;
+namespace FSFV.Gameplanner.Service.RuleBased.Rules.ZkStartAndEnd;
 
 /// <summary>
 /// Checks after a game day, if it starts 
 /// </summary>
 internal class ZkStartAndEndFilter : AbstractSlotRule
 {
+    private const string ConfigKeyZkTeams = "ZkTeams";
+
     private readonly ILogger<ZkStartAndEndFilter> logger;
     private readonly Random rng;
+    private readonly HashSet<string> zkTeams;
 
-    public ZkStartAndEndFilter(int priority, ILogger<ZkStartAndEndFilter> logger, Random rng) : base(priority)
+    public ZkStartAndEndFilter(int priority, IConfiguration configuration, ILogger<ZkStartAndEndFilter> logger, Random rng) : base(priority)
     {
         this.logger = logger;
         this.rng = rng;
+
+        var teams = configuration.GetSection(ConfigKeyZkTeams).Get<string[]>();
+        zkTeams = new HashSet<string>(teams);
     }
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
@@ -35,7 +42,7 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
         {
             var earliestStartTime = pitches.Select(x => x.StartTime).Min();
             var earlyPitches = pitches.Where(p => p.StartTime == earliestStartTime && p.Games.Any());
-            var isZkStarting = earlyPitches.Select(p => p.Games.First()).Any(g => g.Home.IsZK || g.Away.IsZK);
+            var isZkStarting = earlyPitches.Select(p => p.Games.First()).Any(g => g.HasZk(zkTeams));
             if (!isZkStarting)
             {
                 // search for a ZK in game in the same grouptype, then exchange 
@@ -48,7 +55,7 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
                         for (int i = 0; i < p2.Games.Count; ++i)
                         {
                             var candidate = p2.Games[i];
-                            if ((candidate.Home.IsZK || candidate.Away.IsZK) && candidate.Group.Type.Name == first.Group.Type.Name)
+                            if (candidate.HasZk(zkTeams) && candidate.Group.Type.Name == first.Group.Type.Name)
                             {
                                 p.Games[0] = candidate;
                                 p2.Games[i] = first;
@@ -74,9 +81,11 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
 
         void l_HandleZkEnd(List<Pitch> pitches)
         {
+            // TODO: dont switch with first games for gamedays where there is only one ZK team present
+
             var latestEndTime = pitches.Select(p => p.EndTime).Max();
             var latestPitches = pitches.Where(p => p.EndTime == latestEndTime && p.Games.Any());
-            var isZkEnding = latestPitches.Select(p => p.Games.Last()).Any(g => g.Home.IsZK || g.Away.IsZK);
+            var isZkEnding = latestPitches.Select(p => p.Games.Last()).Any(g => g.HasZk(zkTeams));
 
             if (!isZkEnding)
             {
@@ -89,7 +98,7 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
                         for (int i = p2.Games.Count - 1; i >= 0; --i)
                         {
                             var candidate = p2.Games[i];
-                            if ((candidate.Home.IsZK || candidate.Away.IsZK) && candidate.Group.Type.Name == last.Group.Type.Name)
+                            if ((candidate.HasZk(zkTeams)) && candidate.Group.Type.Name == last.Group.Type.Name)
                             {
                                 p.Games[^1] = candidate;
                                 p2.Games[i] = last;

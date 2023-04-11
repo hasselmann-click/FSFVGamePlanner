@@ -6,5 +6,4 @@ public class Team
     public int RefereeCommitment { get; set; }
     public int MorningGames { get; set; }
     public int EveningGames { get; set; }
-    public bool IsZK { get; set; } = false;
 }

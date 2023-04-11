@@ -12,13 +12,16 @@ class Program
 
     private static readonly Random RNG = new(23432546);
 
-    static Task Main(string[] args)
+    static async Task Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build();
         var serviceProvider = ConfigureServices(configuration);
-        return serviceProvider.GetRequiredService<Runner>().Run(args);
+        await serviceProvider.GetRequiredService<Runner>().Run(args);
+        
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
     }
 
     private static ServiceProvider ConfigureServices(IConfigurationRoot configuration)

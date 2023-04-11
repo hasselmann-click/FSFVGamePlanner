@@ -1,5 +1,7 @@
 ﻿using FSFV.Gameplanner.Service.RuleBased.Rules;
+using FSFV.Gameplanner.Service.RuleBased.Rules.ZkStartAndEnd;
 using FSFV.Gameplanner.Service.Rules;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,8 +19,10 @@ public static class ServiceCollectionExtension
             .AddSingleton<ISlotRule>(new MaxParallelPitchesFilter(10_000))
             .AddSingleton<ISlotRule>(new LeagueTogethernessFilter(5000))
             .AddSingleton<ISlotRule>(new LeaguePriorityFilter(1000))
-            //.AddSingleton<ISlotRule>(sp => new ZkStartAndEndFilter(100,
-            //    sp.GetRequiredService<ILogger<ZkStartAndEndFilter>>(), sp.GetRequiredService<Random>()))
+            .AddSingleton<ISlotRule>(sp => new ZkStartAndEndFilter(100,
+                sp.GetRequiredService<IConfiguration>(),
+                sp.GetRequiredService<ILogger<ZkStartAndEndFilter>>(),
+                sp.GetRequiredService<Random>()))
 
             // TODO currently only one sorting rule can be applied
             .AddSingleton<ISlotRule>(new MorningAndEveningGamesSort(1))
