@@ -52,11 +52,11 @@ namespace FSFV.Gameplanner.UI
         {
             m_window = new MainWindow();
 
-            IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(m_window);
-            WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
-            AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
-            appWindow.Resize(LaunchWindowSize);
+            WindowHelper.TrackWindow(m_window);
 
+            var appWindow = WindowHelper.GetAppWindow(m_window);
+            appWindow.Resize(LaunchWindowSize);
+            
             m_window.Activate();
         }
 
