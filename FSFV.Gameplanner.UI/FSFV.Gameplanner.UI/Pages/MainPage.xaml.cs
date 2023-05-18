@@ -4,6 +4,8 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
@@ -20,21 +22,23 @@ namespace FSFV.Gameplanner.UI.Pages;
 public sealed partial class MainPage : Page
 {
 
-    private delegate void FolderPickedHandler(StorageFolder folder);
+    private delegate void FolderPickedHandler(IReadOnlyList<StorageFile> files);
     private event FolderPickedHandler OnFolderPicked;
+
+    public MainPageViewModel ViewModel { get; }
 
     public MainPage()
     {
         this.InitializeComponent();
+        ViewModel = new MainPageViewModel();
+
+        OnFolderPicked += LookingForTeamFiles;
     }
 
     private async void FolderPicker_Click(object sender, RoutedEventArgs e)
     {
-        // Clear previous returned file name, if it exists, between iterations of this scenario
-        FolderName.Text = "";
-
         // Create a folder picker and initialize the folder picker with the window handle (HWND).
-        FolderPicker openPicker = new FolderPicker();
+        FolderPicker openPicker = new();
         var hWnd = WindowHelper.GetWindowHandle(this);
         WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
 
@@ -44,16 +48,31 @@ public sealed partial class MainPage : Page
 
         // Open the picker for the user to pick a folder
         StorageFolder folder = await openPicker.PickSingleFolderAsync();
-        if (folder != null)
-        {
-            StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", folder);
-            FolderName.Text = folder.Name;
-            OnFolderPicked?.Invoke(folder);
-        }
-        else
+        if (folder == null)
         {
             FolderName.Text = "Abgebrochen.";
+            return;
         }
+
+        StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", folder);
+        FolderName.Text = folder.Name;
+
+        var files = await folder.GetFilesAsync();
+        OnFolderPicked?.Invoke(files);
+
     }
+
+    private void LookingForTeamFiles(IReadOnlyList<StorageFile> storageFiles)
+    {
+        var teamFiles = storageFiles.Where(s => s.Name.StartsWith("teams_", StringComparison.InvariantCultureIgnoreCase));
+        if(!teamFiles.Any())
+        {
+            return;
+        }
+
+        ViewModel.TeamFiles = teamFiles;
+        this.Bindings.Update();
+    }
+
 
 }

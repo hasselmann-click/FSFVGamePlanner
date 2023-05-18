@@ -7,7 +7,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:FSFV.Gameplanner.UI.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:storage="using:Windows.Storage"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -59,6 +59,14 @@
                     <TextBlock Text="Looking for teams..." />
 
                     <!-- team files to check for -->
+                    <ListView ItemsSource="{x:Bind ViewModel.TeamFiles}">
+                        <DataTemplate x:DataType="storage:StorageFile">
+                            <StackPanel Orientation="Horizontal">
+                                <SymbolIcon Symbol="Accept" />
+                                <TextBlock Text="{x:Bind Name}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView>
                     <StackPanel Orientation="Horizontal">
                         <SymbolIcon Symbol="Accept" />
                         <TextBlock Text="teams_x.csv" />
