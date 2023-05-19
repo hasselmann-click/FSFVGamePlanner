@@ -2,7 +2,7 @@
 using CsvHelper.Configuration;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
-using FSFV.Gameplanner.Service;
+using FSFV.Gameplanner.Service.Slotting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;

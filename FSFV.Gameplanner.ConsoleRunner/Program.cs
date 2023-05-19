@@ -1,4 +1,4 @@
-﻿using FSFV.Gameplanner.Service.RuleBased.Extensions;
+﻿using FSFV.Gameplanner.Service.Slotting.RuleBased.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

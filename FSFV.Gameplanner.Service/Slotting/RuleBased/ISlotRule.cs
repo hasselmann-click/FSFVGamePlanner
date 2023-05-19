@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FSFV.Gameplanner.Service.Rules;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased;
 
 public interface ISlotRule
 {

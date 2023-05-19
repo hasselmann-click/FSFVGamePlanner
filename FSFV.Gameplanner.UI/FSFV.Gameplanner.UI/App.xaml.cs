@@ -1,6 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
+using FSFV.Gameplanner.Fixtures;
+using FSFV.Gameplanner.Service.Serialization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -33,7 +38,13 @@ namespace FSFV.Gameplanner.UI
     public partial class App : Application
     {
 
+        public new static App Current => (App)Application.Current;
+
+        public IServiceProvider Services { get; }
+
         private static readonly SizeInt32 LaunchWindowSize = new SizeInt32(600, 800);
+
+        private Window m_window;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -42,6 +53,7 @@ namespace FSFV.Gameplanner.UI
         public App()
         {
             this.InitializeComponent();
+            Services = ConfigureServices();
         }
 
         /// <summary>
@@ -56,10 +68,25 @@ namespace FSFV.Gameplanner.UI
 
             var appWindow = WindowHelper.GetAppWindow(m_window);
             appWindow.Resize(LaunchWindowSize);
-            
+
             m_window.Activate();
         }
 
-        private Window m_window;
+        private IServiceProvider ConfigureServices()
+        {
+            return new ServiceCollection()
+                .AddLogging(config =>
+                {
+                    config.ClearProviders();
+                    config.AddConsole();
+                })
+                .AddTransient<GeneratorService>()
+                .AddTransient<FsfvCustomSerializerService>()
+                .BuildServiceProvider(new ServiceProviderOptions
+                {
+                    ValidateOnBuild = true
+                });
+        }
+
     }
 }

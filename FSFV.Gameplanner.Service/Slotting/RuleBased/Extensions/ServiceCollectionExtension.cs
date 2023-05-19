@@ -1,12 +1,12 @@
-﻿using FSFV.Gameplanner.Service.RuleBased.Rules;
-using FSFV.Gameplanner.Service.RuleBased.Rules.ZkStartAndEnd;
-using FSFV.Gameplanner.Service.Rules;
+﻿using FSFV.Gameplanner.Service.Slotting;
+using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
+using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ZkStartAndEnd;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace FSFV.Gameplanner.Service.RuleBased.Extensions;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Extensions;
 
 public static class ServiceCollectionExtension
 {

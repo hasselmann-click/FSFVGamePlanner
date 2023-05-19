@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FSFV.Gameplanner.Service.Util
+namespace FSFV.Gameplanner.Service.Serialization
 {
     public static class FsfvJsonSerializer
     {

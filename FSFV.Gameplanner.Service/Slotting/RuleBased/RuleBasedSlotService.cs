@@ -1,10 +1,11 @@
 ﻿using FSFV.Gameplanner.Common;
+using FSFV.Gameplanner.Service.Slotting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FSFV.Gameplanner.Service.Rules;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased;
 
 public class RuleBasedSlotService : AbstractSlotService
 {

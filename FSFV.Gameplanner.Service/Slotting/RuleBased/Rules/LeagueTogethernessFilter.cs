@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FSFV.Gameplanner.Service.RuleBased.Rules;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 
 /// <summary>
 /// Filters by the last slotted league. If no games are left from this league, nothing is filtered.

@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
+using FSFV.Gameplanner.Fixtures;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
@@ -56,23 +58,50 @@ public sealed partial class MainPage : Page
 
         StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", folder);
         FolderName.Text = folder.Name;
+        ViewModel.WorkDir = folder;
 
         var files = await folder.GetFilesAsync();
         OnFolderPicked?.Invoke(files);
-
     }
 
     private void LookingForTeamFiles(IReadOnlyList<StorageFile> storageFiles)
     {
-        var teamFiles = storageFiles.Where(s => s.Name.StartsWith("teams_", StringComparison.InvariantCultureIgnoreCase));
-        if(!teamFiles.Any())
+        ViewModel.TeamFiles.Clear();
+        var teamFiles = storageFiles
+            .Where(s => s.Name.StartsWith("teams_", StringComparison.InvariantCultureIgnoreCase))
+            ;
+        if (!teamFiles.Any())
         {
+            GenerateFixtursButton.IsEnabled = false;
             return;
         }
-
-        ViewModel.TeamFiles = teamFiles;
-        this.Bindings.Update();
+        foreach (var file in teamFiles)
+        {
+            ViewModel.TeamFiles.Add(file);
+        }
+        GenerateFixtursButton.IsEnabled = true;
     }
 
+    private async void GenerateFixtursButton_Click(object sender, RoutedEventArgs e)
+    {
+        // TODO teams file list doesn't apply page resource style
+        GenerateFixtursButton_Loading.IsActive = true;
+        GenerateFixtursButton_Done.Visibility = Visibility.Collapsed;
 
+        var fixtureGenerator = App.Current.Services.GetRequiredService<GeneratorService>();
+        foreach (var file in ViewModel.TeamFiles)
+        {
+            var teams = await FileIO.ReadLinesAsync(file);
+            var fixtures = fixtureGenerator.Fix(teams.ToArray());
+            var csv = fixtures.Select(g => g.GameDay + "," + g.Home + "," + g.Away);
+
+            var fixtureFile = await ViewModel.WorkDir.CreateFileAsync(
+                "Fixtures_" + Path.ChangeExtension(file.Name, "csv"),
+                CreationCollisionOption.ReplaceExisting);
+            await FileIO.WriteLinesAsync(fixtureFile, csv);
+        }
+
+        GenerateFixtursButton_Loading.IsActive = false;
+        GenerateFixtursButton_Done.Visibility = Visibility.Visible;
+    }
 }

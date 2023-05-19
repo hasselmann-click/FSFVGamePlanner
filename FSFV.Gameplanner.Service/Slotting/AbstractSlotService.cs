@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FSFV.Gameplanner.Service
+namespace FSFV.Gameplanner.Service.Slotting
 {
     public abstract class AbstractSlotService : ISlotService
     {

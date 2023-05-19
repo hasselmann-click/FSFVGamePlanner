@@ -13,7 +13,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj
 EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "FSFV.Gameplanner.UI (Package)", "FSFV.Gameplanner.UI\FSFV.Gameplanner.UI (Package)\FSFV.Gameplanner.UI (Package).wapproj", "{6C82B0FB-86AB-4416-8880-6AAB0B78F0A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSFV.Gameplanner.UI", "FSFV.Gameplanner.UI\FSFV.Gameplanner.UI\FSFV.Gameplanner.UI.csproj", "{73B95ACD-639B-46F4-9E16-1F0E3B77DB0B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.UI", "FSFV.Gameplanner.UI\FSFV.Gameplanner.UI\FSFV.Gameplanner.UI.csproj", "{73B95ACD-639B-46F4-9E16-1F0E3B77DB0B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSFV.Gameplanner.Fixtures", "FSFV.Gameplanner.Fixtures\FSFV.Gameplanner.Fixtures.csproj", "{1A4254C5-F808-4F2F-AD76-7C1FE816A037}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{79AFA22D-34FC-4AEB-90DC-4B185E5FADC5}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,6 +138,22 @@ Global
 		{73B95ACD-639B-46F4-9E16-1F0E3B77DB0B}.Release|x64.Build.0 = Release|x64
 		{73B95ACD-639B-46F4-9E16-1F0E3B77DB0B}.Release|x86.ActiveCfg = Release|x86
 		{73B95ACD-639B-46F4-9E16-1F0E3B77DB0B}.Release|x86.Build.0 = Release|x86
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Debug|arm64.Build.0 = Debug|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Debug|x64.Build.0 = Debug|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Debug|x86.Build.0 = Debug|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Release|arm64.ActiveCfg = Release|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Release|arm64.Build.0 = Release|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Release|x64.ActiveCfg = Release|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Release|x64.Build.0 = Release|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Release|x86.ActiveCfg = Release|Any CPU
+		{1A4254C5-F808-4F2F-AD76-7C1FE816A037}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

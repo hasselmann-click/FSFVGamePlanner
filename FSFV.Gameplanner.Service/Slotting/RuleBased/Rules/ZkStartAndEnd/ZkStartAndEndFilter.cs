@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FSFV.Gameplanner.Service.RuleBased.Rules.ZkStartAndEnd;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ZkStartAndEnd;
 
 /// <summary>
 /// Checks after a game day, if it starts 
@@ -98,7 +98,7 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
                         for (int i = p2.Games.Count - 1; i >= 0; --i)
                         {
                             var candidate = p2.Games[i];
-                            if ((candidate.HasZk(zkTeams)) && candidate.Group.Type.Name == last.Group.Type.Name)
+                            if (candidate.HasZk(zkTeams) && candidate.Group.Type.Name == last.Group.Type.Name)
                             {
                                 p.Games[^1] = candidate;
                                 p2.Games[i] = last;

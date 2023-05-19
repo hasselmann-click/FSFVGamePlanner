@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FSFV.Gameplanner.Service.RuleBased.Rules;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 
 internal class MaxParallelPitchesFilter : AbstractSlotRule
 {

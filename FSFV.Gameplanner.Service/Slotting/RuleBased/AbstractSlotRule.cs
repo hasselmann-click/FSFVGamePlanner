@@ -1,8 +1,7 @@
 ﻿using FSFV.Gameplanner.Common;
-using FSFV.Gameplanner.Service.Rules;
 using System.Collections.Generic;
 
-namespace FSFV.Gameplanner.Service.RuleBased;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased;
 
 internal abstract class AbstractSlotRule : ISlotRule
 {

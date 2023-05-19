@@ -1,7 +1,7 @@
 ﻿using FSFV.Gameplanner.Common;
 using System.Collections.Generic;
 
-namespace FSFV.Gameplanner.Service
+namespace FSFV.Gameplanner.Service.Slotting
 {
     public interface ISlotService
     {

@@ -1,7 +1,7 @@
 ﻿using FSFV.Gameplanner.Common;
 using System.Collections.Generic;
 
-namespace FSFV.Gameplanner.Service.RuleBased.Rules.ZkStartAndEnd;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ZkStartAndEnd;
 
 public static class GameExtensions
 {

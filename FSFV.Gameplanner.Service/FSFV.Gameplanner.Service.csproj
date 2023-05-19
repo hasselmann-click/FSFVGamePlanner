@@ -7,6 +7,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\FSFV.Gameplanner.Common\FSFV.Gameplanner.Common.csproj" />
+		<ProjectReference Include="..\FSFV.Gameplanner.Fixtures\FSFV.Gameplanner.Fixtures.csproj" />
 	</ItemGroup>
 
 </Project>
