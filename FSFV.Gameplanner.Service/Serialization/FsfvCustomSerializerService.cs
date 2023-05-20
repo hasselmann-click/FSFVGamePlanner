@@ -10,12 +10,15 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.Service.Serialization;
 
 public class FsfvCustomSerializerService
 {
+
+    private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
     private readonly ILogger<FsfvCustomSerializerService> logger;
 
@@ -24,13 +27,14 @@ public class FsfvCustomSerializerService
         this.logger = logger;
     }
 
-    public async Task<Dictionary<string, GroupTypeDto>> ParseGroupTypesAsync(string filePath)
+    public async Task<Dictionary<string, GroupTypeDto>> ParseGroupTypesAsync(Func<Task<Stream>> fileStreamProvider)
     {
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
             MissingFieldFound = null
         };
-        using var reader = new StreamReader(filePath);
+        await using var fileStream = await fileStreamProvider();
+        using var reader = new StreamReader(fileStream, DefaultEncoding);
         using var csv = new CsvReader(reader, config);
         var records = csv.GetRecordsAsync<GroupTypeDto>();
 
@@ -42,26 +46,27 @@ public class FsfvCustomSerializerService
         return groupTypes;
     }
 
-    public async Task<List<Game>> ParseFixturesAsync(Dictionary<string, GroupTypeDto> groupTypes,
-        string[] fixtureFiles)
+    public async Task<List<Game>> ParseFixturesAsync(Dictionary<string, GroupTypeDto> groupTypes, IEnumerable<(string FileName, Func<Task<Stream>> StreamProvider)> files)
     {
+        var count = files.Count();
         // ed. guess: fixtures for 6 game days à 5 matches
-        List<Game> games = new(fixtureFiles.Length * 6 * 5);
+        List<Game> games = new(count * 6 * 5);
         // ed. guess: 10 teams per group
-        Dictionary<string, Team> teams = new(fixtureFiles.Length * 10);
-        foreach (var file in fixtureFiles)
+        Dictionary<string, Team> teams = new(count * 10);
+        foreach (var file in files)
         {
             // requirement: file has to be called "*_[GroupType]_[Group].*"
-            var name = Path.GetFileNameWithoutExtension(file).Split('_');
+            var name = Path.GetFileNameWithoutExtension(file.FileName).Split('_');
             if (name.Length < 2 || !groupTypes.TryGetValue(name[^2], out var type))
-                throw new ArgumentException($"Could not get group type from file {file}");
+                throw new ArgumentException($"Could not get group type from file {file.FileName}");
 
             var group = new Group { Name = name[^1], Type = type };
             var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = false
             };
-            using var reader = new StreamReader(file);
+            await using var fileStream = await file.StreamProvider();
+            using var reader = new StreamReader(fileStream);
             using var csv = new CsvReader(reader, csvConfig);
             var fixtures = csv.GetRecordsAsync<FixtureDto>();
 
@@ -103,9 +108,16 @@ public class FsfvCustomSerializerService
         }
     }
 
-    public async Task<List<Pitch>> ParsePitchesAsync(string pitchesFile, char separator = ',')
+    public async Task<List<Pitch>> ParsePitchesAsync(Func<Task<Stream>> pitchesStreamProvider, char separator = ',')
     {
-        var lines = await File.ReadAllLinesAsync(pitchesFile, Encoding.UTF8);
+        await using var stream = await pitchesStreamProvider();
+        using var reader = new StreamReader(stream, DefaultEncoding);
+        var lines = new List<string>(4 + 1); // 4 pitches + header
+        string line;
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            lines.Add(line);
+        }
 
         // first row: Date,R2,R6....        
         var headers = lines[0].Split(separator);
@@ -116,8 +128,8 @@ public class FsfvCustomSerializerService
         }
 
         // educated guess: 4 pitches
-        List<Pitch> pitches = new(lines.Length * 4);
-        for (int i = 1; i < lines.Length; ++i)
+        List<Pitch> pitches = new(lines.Count * 4);
+        for (int i = 1; i < lines.Count; ++i)
         {
             // following rows: 08.05.22,10:00-18:00,10:00-18:00,...
             var fields = lines[i].Split(separator);
@@ -155,11 +167,46 @@ public class FsfvCustomSerializerService
         return pitches;
     }
 
-    public static async Task WriteCsvGameplan(string filePath, List<GameDay> gameDays, string dateFormat = "dd.MM.yy")
+    public class GameplanGameDto
+    {
+        public int GameDay { get; set; }
+        public string Pitch { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string Home { get; set; }
+        public string Away { get; set; }
+        public string Referee { get; set; }
+        public string Group { get; set; }
+        public string League { get; set; }
+    }
+
+    public async Task<List<GameplanGameDto>> ParseGameplanAsync(Func<Task<Stream>> streamProvider)
+    {
+        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            MissingFieldFound = null
+        };
+
+        await using var stream = await streamProvider();
+        using var reader = new StreamReader(stream, DefaultEncoding);
+        using var csv = new CsvReader(reader, config);
+
+        // hypothetically it's possible that the stream is inifinitely large. We could use
+        // a timeout or a maximum limit of records to read. But for now, this will suffice.
+        var records = csv.GetRecordsAsync<GameplanGameDto>(); ;
+        var dtos = new List<GameplanGameDto>(100);
+        await foreach (var record in records)
+        {
+            dtos.Add(record);
+        }
+        return dtos;
+    }
+
+    public async Task WriteCsvGameplanAsync(Func<Task<Stream>> writeStreamProvider, List<GameDay> gameDays, string dateFormat = "dd.MM.yy")
     {
         // write csv
-        using var csvStream = File.OpenWrite(filePath);
-        using var csvWriter = new StreamWriter(csvStream, Encoding.UTF8);
+        await using var csvStream = await writeStreamProvider();
+        using var csvWriter = new StreamWriter(csvStream, DefaultEncoding);
         await csvWriter.WriteLineAsync(string.Join(",", new string[]
         {
                     "GameDay",
@@ -210,34 +257,13 @@ public class FsfvCustomSerializerService
         csvWriter.Close();
     }
 
-    public static async Task WriteCsvStats(string filePath, List<Game> games)
+    public class TeamStatsDto
     {
-        using var csvStream = File.OpenWrite(filePath);
-        using var csvWriter = new StreamWriter(csvStream, Encoding.UTF8);
-        await csvWriter.WriteLineAsync(string.Join(",", new string[]
-        {
-                    "League",
-                    "Team",
-                    "Referee",
-                    "Morning",
-                    "Evening"
-        }));
-        var teams = games
-            .SelectMany(g => new[] { (League: g.Group.Type.Name, Team: g.Home), (League: g.Group.Type.Name, Team: g.Away) })
-            .DistinctBy(t => t.Team.Name)
-            .OrderBy(t => t.League);
-        foreach (var t in teams)
-        {
-            await csvWriter.WriteLineAsync(string.Join(",", new string[]
-                   {
-                       t.League,
-                       t.Team.Name,
-                       t.Team.RefereeCommitment + "",
-                       t.Team.MorningGames + "",
-                       t.Team.EveningGames + ""
-                   }));
-        }
-        csvWriter.Close();
+        public string League { get; set; }
+        public string Name { get; set; }
+        public string Referee { get; set; }
+        public int Morning { get; set; }
+        public int Evening { get; set; }
     }
 
 }

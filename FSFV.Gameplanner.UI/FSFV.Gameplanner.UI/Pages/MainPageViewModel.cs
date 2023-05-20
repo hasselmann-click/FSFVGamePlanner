@@ -4,7 +4,7 @@ using Windows.Storage;
 
 namespace FSFV.Gameplanner.UI.Pages;
 
-public class MainPageViewModel
+public partial class MainPageViewModel
 {
 
     public static class FileNamePrefixes
@@ -23,7 +23,8 @@ public class MainPageViewModel
     public StorageFolder WorkDir { get; set; } = null;
     public ObservableCollection<StorageFile> TeamFiles { get; set; } = new(new List<StorageFile>(4));
     public ObservableCollection<StorageFile> FixtureFiles { get; set; } = new(new List<StorageFile>(4));
-    public ObservableCollection<ConfigFileRecord> ConfigFileRecords { get; set; } = new();
+    public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; set; } = new();
+    public StorageFile GameplanFile { get; internal set; }
 
     public void ResetConfigFileRecords()
     {
@@ -34,18 +35,11 @@ public class MainPageViewModel
         }
     }
 
-    private static readonly List<ConfigFileRecord> InitialConfigRecords = new(4 + 2)
+    private static readonly List<ConfigFileRecordViewModel> InitialConfigRecords = new(4 + 2)
     {
-            new ConfigFileRecord { Prefix = FileNamePrefixes.Pitches, IsFound = false },
-            new ConfigFileRecord { Prefix = FileNamePrefixes.LeagueConfigs, IsFound = false },
-            new ConfigFileRecord{Prefix = FileNamePrefixes.Fixtures,IsFound = false},
+            new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.Pitches, IsFound = false },
+            new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.LeagueConfigs, IsFound = false },
+            new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.Fixtures,IsFound = false},
     };
-
-    public class ConfigFileRecord
-    {
-        public string Prefix { get; set; }
-        public bool IsFound { get; set; }
-        public StorageFile ConfigFile { get; set; }
-    }
 
 }

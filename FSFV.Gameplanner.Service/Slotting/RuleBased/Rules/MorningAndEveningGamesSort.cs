@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +9,13 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 internal class MorningAndEveningGamesSort : AbstractSlotRule
 {
 
-    private static readonly TimeSpan MorningUntil = new TimeSpan(11, 00, 00);
-    private static readonly TimeSpan EveningSince = new TimeSpan(15, 30, 00);
+    private readonly TimeSpan EveningSince;
+    private readonly TimeSpan MorningUntil;
 
-    public MorningAndEveningGamesSort(int priority) : base(priority)
+    public MorningAndEveningGamesSort(int priority, IConfiguration configuration) : base(priority)
     {
+        MorningUntil = configuration.GetValue<TimeSpan>("Schedule:MorningUntil");
+        EveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
     }
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)

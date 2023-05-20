@@ -3,28 +3,12 @@
 
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Service.Serialization;
+using FSFV.Gameplanner.Service.Slotting.RuleBased.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.UI;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Graphics;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -42,6 +26,7 @@ namespace FSFV.Gameplanner.UI
 
         public IServiceProvider Services { get; }
 
+        private static readonly Random RNG = new(23432546);
         private static readonly SizeInt32 LaunchWindowSize = new SizeInt32(600, 800);
 
         private Window m_window;
@@ -66,20 +51,30 @@ namespace FSFV.Gameplanner.UI
 
             WindowHelper.TrackWindow(m_window);
 
+            // TODO resizing not working as expected > make scrollable?
             var appWindow = WindowHelper.GetAppWindow(m_window);
             appWindow.Resize(LaunchWindowSize);
 
             m_window.Activate();
         }
 
-        private IServiceProvider ConfigureServices()
+        private static IServiceProvider ConfigureServices()
         {
+            var configuration = new ConfigurationBuilder()
+                // TODO make this configurable in app. Especially for the ZK teams rule!
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                .Build();
+
             return new ServiceCollection()
+                .AddSingleton(RNG)
+                .AddSingleton<IConfiguration>(configuration)
                 .AddLogging(config =>
                 {
                     config.ClearProviders();
+                    config.AddConfiguration(configuration.GetSection("Logging"));
                     config.AddConsole();
                 })
+                .AddRuleBasedSlotting()
                 .AddTransient<GeneratorService>()
                 .AddTransient<FsfvCustomSerializerService>()
                 .BuildServiceProvider(new ServiceProviderOptions

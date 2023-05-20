@@ -25,7 +25,8 @@ public static class ServiceCollectionExtension
                 sp.GetRequiredService<Random>()))
 
             // TODO currently only one sorting rule can be applied
-            .AddSingleton<ISlotRule>(new MorningAndEveningGamesSort(1))
+            .AddSingleton<ISlotRule>(sp => new MorningAndEveningGamesSort(1,
+                sp.GetRequiredService<IConfiguration>()))
             ;
     }
 }
