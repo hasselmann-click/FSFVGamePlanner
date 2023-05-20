@@ -64,12 +64,58 @@ public sealed partial class MainPage : Page
         OnFolderPicked?.Invoke(files);
     }
 
+    #region Config Files
+
+    private void LookingForConfigFiles(IReadOnlyList<StorageFile> storageFiles)
+    {
+        ViewModel.ResetConfigFileRecords();
+        var enablePlanGeneratorButton = true;
+
+        var pitchesFile = storageFiles.FirstOrDefault(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Pitches, StringComparison.InvariantCultureIgnoreCase));
+        if (pitchesFile != null)
+        {
+            var record = ViewModel.ConfigFileRecords.FirstOrDefault(r => r.Prefix == MainPageViewModel.FileNamePrefixes.Pitches);
+            record.IsFound = true;
+            record.ConfigFile = pitchesFile;
+        }
+        else
+        {
+            enablePlanGeneratorButton = false;
+        }
+
+        var leagueConfigsFile = storageFiles.FirstOrDefault(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.LeagueConfigs, StringComparison.InvariantCultureIgnoreCase));
+        if (leagueConfigsFile != null)
+        {
+            var record = ViewModel.ConfigFileRecords.FirstOrDefault(r => r.Prefix == MainPageViewModel.FileNamePrefixes.LeagueConfigs);
+            record.IsFound = true;
+            record.ConfigFile = leagueConfigsFile;
+        }
+        else
+        {
+            enablePlanGeneratorButton = false;
+        }
+
+        var fixtureFiles = storageFiles.Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Fixtures, StringComparison.InvariantCultureIgnoreCase));
+        if (fixtureFiles.Any())
+        {
+            foreach (var file in fixtureFiles)
+            {
+                ViewModel.FixtureFiles.Add(file);
+            }
+        }
+        else
+        {
+            enablePlanGeneratorButton = false;
+        }
+
+    }
+    #endregion
+
+    #region Team Files
     private void LookingForTeamFiles(IReadOnlyList<StorageFile> storageFiles)
     {
         ViewModel.TeamFiles.Clear();
-        var teamFiles = storageFiles
-            .Where(s => s.Name.StartsWith("teams_", StringComparison.InvariantCultureIgnoreCase))
-            ;
+        var teamFiles = storageFiles.Where(s => s.Name.StartsWith("teams_", StringComparison.InvariantCultureIgnoreCase));
         if (!teamFiles.Any())
         {
             GenerateFixtursButton.IsEnabled = false;
@@ -104,4 +150,5 @@ public sealed partial class MainPage : Page
         GenerateFixtursButton_Loading.IsActive = false;
         GenerateFixtursButton_Done.Visibility = Visibility.Visible;
     }
+    #endregion
 }

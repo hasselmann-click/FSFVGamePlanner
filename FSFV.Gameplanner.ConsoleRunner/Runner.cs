@@ -97,7 +97,7 @@ public class Runner
 
     private async Task WriteStatsCsv(string workDirPath, List<Game> games)
     {
-        using var csvStream = File.OpenWrite(Path.Combine(workDirPath, 
+        using var csvStream = File.OpenWrite(Path.Combine(workDirPath,
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "-" + StatisticsCsv));
         using var csvWriter = new StreamWriter(csvStream, Encoding.UTF8);
         await csvWriter.WriteLineAsync(string.Join(",", new string[]

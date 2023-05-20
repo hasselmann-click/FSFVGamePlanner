@@ -19,7 +19,7 @@ class Program
                 .Build();
         var serviceProvider = ConfigureServices(configuration);
         await serviceProvider.GetRequiredService<Runner>().Run(args);
-        
+
         Console.WriteLine("Press any key to exit...");
         Console.ReadKey();
     }

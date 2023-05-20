@@ -9,7 +9,7 @@ public class Game
     public Team Away { get; set; }
     public Team Referee { get; set; }
     public TimeSpan MinDuration { get; set; }
-    
+
     private Group group;
     public Group Group
     {

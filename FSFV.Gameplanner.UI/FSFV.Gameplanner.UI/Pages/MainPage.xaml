@@ -90,6 +90,9 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Looking for pitches, fixtures and configs..." />
 
+                    
+                    
+                    
                     <!-- files to check for -->
                     <StackPanel Orientation="Horizontal">
                         <SymbolIcon Symbol="Accept" />
