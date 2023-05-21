@@ -5,6 +5,7 @@ using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
@@ -16,9 +17,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using Windows.ApplicationModel.Background;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
+using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
+using static FSFV.Gameplanner.UI.Pages.MainPage;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -30,6 +34,8 @@ namespace FSFV.Gameplanner.UI.Pages;
 /// </summary>
 public sealed partial class MainPage : Page
 {
+    private const string FolderAccessToken = "PickedFolderToken";
+
     private const string GamesPlaceholder = "SPIELFREI";
 
     private delegate void FilesChangedHandler(IReadOnlyList<StorageFile> files);
@@ -45,8 +51,37 @@ public sealed partial class MainPage : Page
 
         OnFolderPicked += LookingForTeamFiles;
         OnFolderPicked += LookingForConfigFiles;
+        OnFolderPicked += LookingForGameplanFiles;
 
         OnFixturesGenerated += LookingForConfigFiles;
+    }
+
+    private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)
+    {
+        // TODO make gameplan file selectable?
+        var gameplanCandidates = files
+            .Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Gameplan, StringComparison.InvariantCultureIgnoreCase))
+            .ToList();
+
+        // this sorting is horrible but there is no other way to get the latest file
+        // since getting the properties is an async operation
+        var propTasks = new List<(StorageFile File, Task<BasicProperties> PropTask)>(files.Count);
+        foreach (var file in gameplanCandidates)
+        {
+            propTasks.Add((file, file.GetBasicPropertiesAsync().AsTask()));
+        }
+        await Task.WhenAll(propTasks.Select(p => p.PropTask));
+
+        var gameplanFile = propTasks
+            .Where(p => p.PropTask.Result.Size > 0)
+            .OrderByDescending(p => p.PropTask.Result.DateModified)
+            .Select(p => p.File)
+            .FirstOrDefault();
+
+        if (gameplanFile != null)
+        {
+            ViewModel.GameplanFile = gameplanFile;
+        }
     }
 
     private async void FolderPicker_Click(object sender, RoutedEventArgs e)
@@ -64,12 +99,10 @@ public sealed partial class MainPage : Page
         StorageFolder folder = await openPicker.PickSingleFolderAsync();
         if (folder == null)
         {
-            FolderName.Text = "Abgebrochen.";
             return;
         }
 
-        StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", folder);
-        FolderName.Text = folder.Name;
+        StorageApplicationPermissions.FutureAccessList.AddOrReplace(FolderAccessToken, folder);
         ViewModel.WorkDir = folder;
 
         var files = await folder.GetFilesAsync();
@@ -140,7 +173,7 @@ public sealed partial class MainPage : Page
         var pitchesFile = ViewModel.ConfigFileRecords.First(r => r.Prefix == MainPageViewModel.FileNamePrefixes.Pitches).ConfigFile;
         var pitchesTask = serializer.ParsePitchesAsync(() => pitchesFile.OpenStreamForReadAsync());
         // parse fixtures to games
-        var groupTypes = await groupTypesTask; 
+        var groupTypes = await groupTypesTask;
         var fixtureFiles = ViewModel.FixtureFiles.Select<StorageFile, (string FileName, Func<Task<Stream>> StreamProvider)>(f => (f.Name, () => f.OpenStreamForReadAsync()));
         var fixtureTask = serializer.ParseFixturesAsync(groupTypes, fixtureFiles);
 
@@ -173,10 +206,10 @@ public sealed partial class MainPage : Page
             });
 
             // gamplan dtos for statistics
-            foreach(var pitch in slottedPitches)
+            foreach (var pitch in slottedPitches)
             {
                 var name = pitch.Name;
-                foreach(var slot in pitch.Slots)
+                foreach (var slot in pitch.Slots)
                 {
                     var game = slot.Game;
                     gameplanDtos.Add(new FsfvCustomSerializerService.GameplanGameDto
@@ -196,7 +229,7 @@ public sealed partial class MainPage : Page
         }
 
         // write to file
-        ViewModel.GameplanFile = await ViewModel.WorkDir.CreateFileAsync("matchplan.csv", CreationCollisionOption.GenerateUniqueName);
+        ViewModel.GameplanFile = await ViewModel.WorkDir.CreateFileAsync(MainPageViewModel.FileNamePrefixes.Gameplan + ".csv", CreationCollisionOption.GenerateUniqueName);
         await serializer.WriteCsvGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForWriteAsync(), gameDays);
         await GenerateStatsAsync(serializer, gameplanDtos);
 
@@ -208,18 +241,52 @@ public sealed partial class MainPage : Page
     #region stats
     private async void GenerateStatsButton_Click(object sender, RoutedEventArgs e)
     {
+        GenerateStatsButton_Done.Visibility = Visibility.Collapsed;
+        GenerateStatsButton_Done_Loading.IsActive = true;
+
         var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
-        
         var gameDtos = await serializer.ParseGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForReadAsync());
         await GenerateStatsAsync(serializer, gameDtos);
+
+        GenerateStatsButton_Done_Loading.IsActive = false;
+        GenerateStatsButton_Done.Visibility = Visibility.Visible;
     }
 
     private async Task GenerateStatsAsync(FsfvCustomSerializerService serializer, IEnumerable<FsfvCustomSerializerService.GameplanGameDto> gameDtos)
     {
-        // TODO write statistics
-        //var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + "_stats.csv";
-        //var statsFile = await ViewModel.WorkDir.CreateFileAsync("stats.csv", CreationCollisionOption.GenerateUniqueName);
-        //await serializer.WriteCsvStatsAsync(() => statsFile.OpenStreamForWriteAsync(), gameDtos);
+
+        var configuration = App.Current.Services.GetRequiredService<IConfiguration>();
+        var morningUntil = configuration.GetValue<TimeSpan>("Schedule:MorningUntil");
+        var eveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
+
+        var teams = gameDtos
+            .SelectMany(g => new[] { new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Home }, new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Away } })
+            .DistinctBy(x => x.Name)
+            .ToDictionary(x => x.Name, x => x);
+
+        foreach (var game in gameDtos)
+        {
+            if (game.Referee != null && teams.TryGetValue(game.Referee, out var refTeam))
+            {
+                // refs are sometimes optional or have a placeholder name
+                refTeam.Referee++;
+            }
+
+            if (game.StartTime.TimeOfDay < morningUntil)
+            {
+                teams[game.Home].MorningGames++;
+                teams[game.Away].MorningGames++;
+            }
+            else if (game.EndTime.TimeOfDay < eveningSince)
+            {
+                teams[game.Home].EveningGames++;
+                teams[game.Away].EveningGames++;
+            }
+        }
+
+        var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + "_stats.csv";
+        var statsFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.GenerateUniqueName);
+        await serializer.WriteCsvStatsAsync(() => statsFile.OpenStreamForWriteAsync(), teams.Values);
     }
     #endregion
 

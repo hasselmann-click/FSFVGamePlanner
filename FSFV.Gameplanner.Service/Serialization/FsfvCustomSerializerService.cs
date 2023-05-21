@@ -167,19 +167,6 @@ public class FsfvCustomSerializerService
         return pitches;
     }
 
-    public class GameplanGameDto
-    {
-        public int GameDay { get; set; }
-        public string Pitch { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public string Home { get; set; }
-        public string Away { get; set; }
-        public string Referee { get; set; }
-        public string Group { get; set; }
-        public string League { get; set; }
-    }
-
     public async Task<List<GameplanGameDto>> ParseGameplanAsync(Func<Task<Stream>> streamProvider)
     {
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -257,13 +244,52 @@ public class FsfvCustomSerializerService
         csvWriter.Close();
     }
 
+    public async Task WriteCsvStatsAsync(Func<Task<Stream>> writeStreamProvider, IEnumerable<TeamStatsDto> teamStatsDto)
+    {
+        await using var csvStream = await writeStreamProvider();
+        using var csvWriter = new StreamWriter(csvStream, DefaultEncoding);
+        await csvWriter.WriteLineAsync(string.Join(",", new string[]
+        {
+                    "League",
+                    "Name",
+                    "Referee",
+                    "MorningGames",
+                    "EveningGames"
+        }));
+        foreach (var teamStat in teamStatsDto)
+        {
+            await csvWriter.WriteLineAsync(string.Join(",", new string[]
+            {
+                    teamStat.League,
+                    teamStat.Name,
+                    teamStat.Referee.ToString(),
+                    teamStat.MorningGames.ToString(),
+                    teamStat.EveningGames.ToString()
+            }));
+        }
+        csvWriter.Close();
+    }
+
+    public class GameplanGameDto
+    {
+        public int GameDay { get; set; }
+        public string Pitch { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string Home { get; set; }
+        public string Away { get; set; }
+        public string Referee { get; set; }
+        public string Group { get; set; }
+        public string League { get; set; }
+    }
+
     public class TeamStatsDto
     {
         public string League { get; set; }
         public string Name { get; set; }
-        public string Referee { get; set; }
-        public int Morning { get; set; }
-        public int Evening { get; set; }
+        public int Referee { get; set; }
+        public int MorningGames { get; set; }
+        public int EveningGames { get; set; }
     }
 
 }

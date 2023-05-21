@@ -53,7 +53,7 @@
         <!-- work folder picker -->
         <Border>
             <StackPanel Orientation="Vertical" >
-                <TextBox x:Name="FolderName" Text="No folder selected" />
+                <TextBox x:Name="FolderName" PlaceholderText="No folder selected" Text="{x:Bind ViewModel.WorkDirPath, Mode=OneWay}" />
                 <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
             </StackPanel>
         </Border>
@@ -128,8 +128,17 @@
         <!-- stats generation -->
         <Border>
             <StackPanel Orientation="Vertical">
-                <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" />
-                <!-- TODO add hyperlink to generated document -->
+                <StackPanel Orientation="Horizontal" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}">
+                    <!-- TODO dont apply these styles locally -->
+                    <SymbolIcon Symbol="Accept" Foreground="Green" />
+                    <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Padding="0">
+                    <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" IsEnabled="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
+                    <SymbolIcon x:Name="GenerateStatsButton_Done" Symbol="Accept" Visibility="Collapsed" />
+                    <ProgressRing x:Name="GenerateStatsButton_Done_Loading" IsActive="False" />
+                    <!-- TODO add hyperlink to generated document -->
+                </StackPanel>
             </StackPanel>
         </Border>
     </StackPanel>
