@@ -42,7 +42,7 @@ public sealed partial class MainPage : Page
     private event FilesChangedHandler OnFolderPicked;
     private event FilesChangedHandler OnFixturesGenerated;
 
-    public MainPageViewModel ViewModel { get; }
+    public MainPageViewModel ViewModel { get; internal set; }
 
     public MainPage()
     {
@@ -54,6 +54,34 @@ public sealed partial class MainPage : Page
         OnFolderPicked += LookingForGameplanFiles;
 
         OnFixturesGenerated += LookingForConfigFiles;
+    }
+
+    private async void FolderPicker_Click(object sender, RoutedEventArgs e)
+    {
+        // Create a folder picker and initialize the folder picker with the window handle (HWND).
+        FolderPicker openPicker = new();
+        var hWnd = WindowHelper.GetWindowHandle(this);
+        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+        // Set options for your folder picker
+        openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+        openPicker.FileTypeFilter.Add("*");
+
+        // Open the picker for the user to pick a folder
+        StorageFolder folder = await openPicker.PickSingleFolderAsync();
+        if (folder == null)
+        {
+            return;
+        }
+
+        // reset view model
+        ViewModel.GenerateFixtursButton_HasGenerated = false;
+        ViewModel.GenerateGameplanButton_HasGenerated = false;
+
+        StorageApplicationPermissions.FutureAccessList.AddOrReplace(FolderAccessToken, folder);
+        var files = await folder.GetFilesAsync();
+        ViewModel.WorkDir = folder;
+        OnFolderPicked?.Invoke(files);
     }
 
     private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)
@@ -84,48 +112,18 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private async void FolderPicker_Click(object sender, RoutedEventArgs e)
-    {
-        // Create a folder picker and initialize the folder picker with the window handle (HWND).
-        FolderPicker openPicker = new();
-        var hWnd = WindowHelper.GetWindowHandle(this);
-        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
-
-        // Set options for your folder picker
-        openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
-        openPicker.FileTypeFilter.Add("*");
-
-        // Open the picker for the user to pick a folder
-        StorageFolder folder = await openPicker.PickSingleFolderAsync();
-        if (folder == null)
-        {
-            return;
-        }
-
-        StorageApplicationPermissions.FutureAccessList.AddOrReplace(FolderAccessToken, folder);
-        ViewModel.WorkDir = folder;
-
-        var files = await folder.GetFilesAsync();
-        OnFolderPicked?.Invoke(files);
-    }
-
     #region Config Files
     private void LookingForConfigFiles(IReadOnlyList<StorageFile> storageFiles)
     {
         ViewModel.ResetConfigFileRecords();
         ViewModel.FixtureFiles.Clear();
 
-        var enablePlanGeneratorButton = true;
         var pitchesFile = storageFiles.FirstOrDefault(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Pitches, StringComparison.InvariantCultureIgnoreCase));
         if (pitchesFile != null)
         {
             var record = ViewModel.ConfigFileRecords.FirstOrDefault(r => r.Prefix == MainPageViewModel.FileNamePrefixes.Pitches);
             record.IsFound = true;
             record.ConfigFile = pitchesFile;
-        }
-        else
-        {
-            enablePlanGeneratorButton = false;
         }
 
         var leagueConfigsFile = storageFiles.FirstOrDefault(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.LeagueConfigs, StringComparison.InvariantCultureIgnoreCase));
@@ -134,10 +132,6 @@ public sealed partial class MainPage : Page
             var record = ViewModel.ConfigFileRecords.FirstOrDefault(r => r.Prefix == MainPageViewModel.FileNamePrefixes.LeagueConfigs);
             record.IsFound = true;
             record.ConfigFile = leagueConfigsFile;
-        }
-        else
-        {
-            enablePlanGeneratorButton = false;
         }
 
         var fixtureFiles = storageFiles.Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Fixtures, StringComparison.InvariantCultureIgnoreCase));
@@ -149,21 +143,17 @@ public sealed partial class MainPage : Page
                 ViewModel.FixtureFiles.Add(file);
             }
         }
-        else
-        {
-            enablePlanGeneratorButton = false;
-        }
 
-        GeneratePlanButton.IsEnabled = enablePlanGeneratorButton;
+        ViewModel.GenerateGameplanButton_IsEnabled = ViewModel.ConfigFileRecords.All(r => r.IsFound)
+            && fixtureFiles.Any();
     }
 
     private async void GeneratePlanButton_Click(object sender, RoutedEventArgs e)
     {
-
         // TODO ERROR HANDLING > Show error message on exception?
 
-        GeneratePlanButton_Done.Visibility = Visibility.Collapsed;
-        GeneratePlanButton_Done_Loading.IsActive = true;
+        ViewModel.GenerateGameplanButton_HasGenerated = false;
+        ViewModel.GenerateGameplanButton_IsGenerating = true;
 
         var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
         // parse league configs to group type dto
@@ -233,8 +223,8 @@ public sealed partial class MainPage : Page
         await serializer.WriteCsvGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForWriteAsync(), gameDays);
         await GenerateStatsAsync(serializer, gameplanDtos);
 
-        GeneratePlanButton_Done_Loading.IsActive = false;
-        GeneratePlanButton_Done.Visibility = Visibility.Visible;
+        ViewModel.GenerateGameplanButton_IsGenerating = false;
+        ViewModel.GenerateGameplanButton_HasGenerated = true;
     }
     #endregion
 
@@ -295,23 +285,17 @@ public sealed partial class MainPage : Page
     {
         ViewModel.TeamFiles.Clear();
         var teamFiles = storageFiles.Where(s => s.Name.StartsWith("teams_", StringComparison.InvariantCultureIgnoreCase));
-        if (!teamFiles.Any())
-        {
-            GenerateFixtursButton.IsEnabled = false;
-            return;
-        }
         foreach (var file in teamFiles)
         {
             ViewModel.TeamFiles.Add(file);
         }
-        GenerateFixtursButton.IsEnabled = true;
+        ViewModel.GenerateFixtursButton_IsEnabled = ViewModel.TeamFiles.Any();
     }
 
     private async void GenerateFixtursButton_Click(object sender, RoutedEventArgs e)
     {
-        // TODO teams file list doesn't apply page resource style
-        GenerateFixtursButton_Loading.IsActive = true;
-        GenerateFixtursButton_Done.Visibility = Visibility.Collapsed;
+        ViewModel.GenerateFixtursButton_HasGenerated = false;
+        ViewModel.GenerateFixtursButton_IsGenerating = true;
 
         var fixtureGenerator = App.Current.Services.GetRequiredService<GeneratorService>();
         foreach (var file in ViewModel.TeamFiles)
@@ -326,8 +310,8 @@ public sealed partial class MainPage : Page
             await FileIO.WriteLinesAsync(fixtureFile, csv);
         }
 
-        GenerateFixtursButton_Loading.IsActive = false;
-        GenerateFixtursButton_Done.Visibility = Visibility.Visible;
+        ViewModel.GenerateFixtursButton_IsGenerating = false;
+        ViewModel.GenerateFixtursButton_HasGenerated = true;
 
         var updatedFiles = await ViewModel.WorkDir.GetFilesAsync();
         OnFixturesGenerated?.Invoke(updatedFiles);

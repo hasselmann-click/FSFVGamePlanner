@@ -1,12 +1,30 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Windows.Storage;
 
 namespace FSFV.Gameplanner.UI.Pages;
 
 public partial class MainPageViewModel : INotifyPropertyChanged
 {
+
+    /// <summary>
+    /// Stolen from <see cref="MvvmHelpers.ObservableObject.SetProperty{T}(ref T, T, string)"/>.<br/>
+    /// <seealso cref="https://github.com/CommunityToolkit/dotnet/blob/main/src/CommunityToolkit.Mvvm/ComponentModel/ObservableObject.cs"/>
+    /// </summary>
+    protected bool SetProperty<T>([NotNullIfNotNull(nameof(newValue))] ref T field, T newValue, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, newValue))
+        {
+            return false;
+        }
+
+        field = newValue;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        return true;
+    }
 
     public event PropertyChangedEventHandler PropertyChanged;
 
@@ -26,15 +44,17 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
     private StorageFile gameplanFile;
     private StorageFolder workDir;
+    private bool generateFixtursButton_IsEnabled;
+    private bool generateFixtursButton_IsGenerating;
+    private bool generateFixtursButton_HasGenerated;
+    private bool generateGameplanButton_IsEnabled;
+    private bool generateGameplanButton_IsGenerating;
+    private bool generateGameplanButton_HasGenerated;
+
     public StorageFolder WorkDir
     {
         get => workDir;
-        set
-        {
-            workDir = value;
-            //PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WorkDir)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WorkDirPath)));
-        }
+        set => SetProperty(ref workDir, value, nameof(WorkDirPath));
     }
     public string WorkDirPath => WorkDir?.Path;
 
@@ -43,8 +63,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => gameplanFile;
         set
         {
-            gameplanFile = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasGameplanFile)));
+            SetProperty(ref gameplanFile, value, nameof(HasGameplanFile));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GameplanFileName)));
         }
     }
@@ -54,6 +73,38 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     public ObservableCollection<StorageFile> TeamFiles { get; set; } = new(new List<StorageFile>(4));
     public ObservableCollection<StorageFile> FixtureFiles { get; set; } = new(new List<StorageFile>(4));
     public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; set; } = new();
+
+    public bool GenerateFixtursButton_IsEnabled
+    {
+        get => generateFixtursButton_IsEnabled;
+        set => SetProperty(ref generateFixtursButton_IsEnabled, value);
+    }
+    public bool GenerateFixtursButton_IsGenerating
+    {
+        get => generateFixtursButton_IsGenerating;
+        set => SetProperty(ref generateFixtursButton_IsGenerating, value);
+    }
+    public bool GenerateFixtursButton_HasGenerated
+    {
+        get => generateFixtursButton_HasGenerated;
+        set => SetProperty(ref generateFixtursButton_HasGenerated, value);
+    }
+
+    public bool GenerateGameplanButton_IsEnabled
+    {
+        get => generateGameplanButton_IsEnabled;
+        set => SetProperty(ref generateGameplanButton_IsEnabled, value);
+    }
+    public bool GenerateGameplanButton_IsGenerating
+    {
+        get => generateGameplanButton_IsGenerating;
+        set => SetProperty(ref generateGameplanButton_IsGenerating, value);
+    }
+    public bool GenerateGameplanButton_HasGenerated
+    {
+        get => generateGameplanButton_HasGenerated;
+        set => SetProperty(ref generateGameplanButton_HasGenerated, value);
+    }
 
     public void ResetConfigFileRecords()
     {

@@ -9,8 +9,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:storage="using:Windows.Storage"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    >
     <Page.Resources>
         <Style TargetType="Page">
             <Setter Property="FontStyle" Value="Normal" />
@@ -48,98 +48,107 @@
         </Style>
     </Page.Resources>
 
-    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <ScrollViewer 
+            ZoomMode="Enabled"
+            HorizontalScrollMode="Auto" 
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollMode="Enabled" 
+            VerticalScrollBarVisibility="Auto">
 
-        <!-- work folder picker -->
-        <Border>
-            <StackPanel Orientation="Vertical" >
-                <TextBox x:Name="FolderName" PlaceholderText="No folder selected" Text="{x:Bind ViewModel.WorkDirPath, Mode=OneWay}" />
-                <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
-            </StackPanel>
-        </Border>
-
-        <!-- team files to check for and fixture generation -->
-        <Border>
-            <StackPanel Orientation="Vertical">
-                <!-- TODO make text resource managed -->
-                <TextBox Text="Looking for teams..." />
-
-                <!-- TODO make these a custom control -->
-                <ListView ItemsSource="{x:Bind ViewModel.TeamFiles}">
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="storage:StorageFile">
-                            <StackPanel Orientation="Horizontal">
-                                <!-- TODO dont apply these styles locally -->
-                                <SymbolIcon Symbol="Accept" Foreground="Green" />
-                                <TextBox Text="{x:Bind Name}" Margin="10" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-
-                <StackPanel Orientation="Horizontal" Padding="0">
-                    <Button x:Name="GenerateFixtursButton" Content="Generate Fixtures" Click="GenerateFixtursButton_Click" />
-                    <SymbolIcon x:Name="GenerateFixtursButton_Done" Symbol="Accept" Visibility="Collapsed" />
-                    <ProgressRing x:Name="GenerateFixtursButton_Loading" IsActive="False" />
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- work folder picker -->
+            <Border>
+                <StackPanel Orientation="Vertical" >
+                    <TextBox x:Name="FolderName" PlaceholderText="No folder selected" Text="{x:Bind ViewModel.WorkDirPath, Mode=OneWay}" />
+                    <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
                 </StackPanel>
-            </StackPanel>
-        </Border>
+            </Border>
 
-        <!-- config files to check for and plan generation -->
-        <Border>
-            <StackPanel Orientation="Vertical">
-                <TextBox Text="Looking for pitches, fixtures and configs..." />
+            <!-- team files to check for and fixture generation -->
+            <Border>
+                <StackPanel Orientation="Vertical">
+                    <!-- TODO make text resource managed -->
+                    <TextBox Text="Looking for teams..." />
 
-                <!-- config records -->
-                <ListView ItemsSource="{x:Bind ViewModel.ConfigFileRecords}">
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
-                            <StackPanel Orientation="Horizontal">
-                                <!-- TODO dont apply these styles locally -->
-                                <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind NotIsFound}" />
-                                <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
-                                <TextBox Text="{x:Bind DisplayName}" Margin="10" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                    <!-- TODO make these a custom control -->
+                    <ListView ItemsSource="{x:Bind ViewModel.TeamFiles}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="storage:StorageFile">
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- TODO dont apply these styles locally -->
+                                    <SymbolIcon Symbol="Accept" Foreground="Green" />
+                                    <TextBox Text="{x:Bind Name}" Margin="10" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
 
-                <!-- fixture files -->
-                <ListView ItemsSource="{x:Bind ViewModel.FixtureFiles}">
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="storage:StorageFile">
-                            <StackPanel Orientation="Horizontal">
-                                <!-- TODO dont apply these styles locally -->
-                                <SymbolIcon Symbol="Accept" Foreground="Green" />
-                                <TextBox Text="{x:Bind Name}" Margin="10" IsReadOnly="True" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-
-                <StackPanel Orientation="Horizontal" Padding="0">
-                    <Button x:Name="GeneratePlanButton" Content="Generate Plan" Click="GeneratePlanButton_Click" IsEnabled="False" />
-                    <SymbolIcon x:Name="GeneratePlanButton_Done" Symbol="Accept" Visibility="Collapsed" />
-                    <ProgressRing x:Name="GeneratePlanButton_Done_Loading" IsActive="False" />
+                    <StackPanel Orientation="Horizontal" Padding="0">
+                        <Button x:Name="GenerateFixtursButton" Content="Generate Fixtures" Click="GenerateFixtursButton_Click" 
+                            IsEnabled="{x:Bind ViewModel.GenerateFixtursButton_IsEnabled, Mode=OneWay}"/>
+                        <SymbolIcon x:Name="GenerateFixtursButton_Done" Symbol="Accept" 
+                                Visibility="{x:Bind ViewModel.GenerateFixtursButton_HasGenerated, Mode=OneWay}" />
+                        <ProgressRing x:Name="GenerateFixtursButton_Loading" IsActive="{x:Bind ViewModel.GenerateFixtursButton_IsGenerating, Mode=OneWay}" />
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
-        </Border>
+            </Border>
 
-        <!-- stats generation -->
-        <Border>
-            <StackPanel Orientation="Vertical">
-                <StackPanel Orientation="Horizontal" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}">
-                    <!-- TODO dont apply these styles locally -->
-                    <SymbolIcon Symbol="Accept" Foreground="Green" />
-                    <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+            <!-- config files to check for and plan generation -->
+            <Border>
+                <StackPanel Orientation="Vertical">
+                    <TextBox Text="Looking for pitches, fixtures and configs..." />
+
+                    <!-- config records -->
+                    <ListView ItemsSource="{x:Bind ViewModel.ConfigFileRecords}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- TODO dont apply these styles locally -->
+                                    <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind NotIsFound}" />
+                                    <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
+                                    <TextBox Text="{x:Bind DisplayName}" Margin="10" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <!-- fixture files -->
+                    <ListView ItemsSource="{x:Bind ViewModel.FixtureFiles}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="storage:StorageFile">
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- TODO dont apply these styles locally -->
+                                    <SymbolIcon Symbol="Accept" Foreground="Green" />
+                                    <TextBox Text="{x:Bind Name}" Margin="10" IsReadOnly="True" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <StackPanel Orientation="Horizontal" Padding="0">
+                        <Button x:Name="GeneratePlanButton" Content="Generate Plan" Click="GeneratePlanButton_Click" IsEnabled="False" />
+                        <SymbolIcon x:Name="GeneratePlanButton_Done" Symbol="Accept" Visibility="Collapsed" />
+                        <ProgressRing x:Name="GeneratePlanButton_Done_Loading" IsActive="False" />
+                    </StackPanel>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Padding="0">
-                    <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" IsEnabled="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
-                    <SymbolIcon x:Name="GenerateStatsButton_Done" Symbol="Accept" Visibility="Collapsed" />
-                    <ProgressRing x:Name="GenerateStatsButton_Done_Loading" IsActive="False" />
-                    <!-- TODO add hyperlink to generated document -->
+            </Border>
+
+            <!-- stats generation -->
+            <Border>
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}">
+                        <!-- TODO dont apply these styles locally -->
+                        <SymbolIcon Symbol="Accept" Foreground="Green" />
+                        <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Padding="0">
+                        <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" IsEnabled="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
+                        <SymbolIcon x:Name="GenerateStatsButton_Done" Symbol="Accept" Visibility="Collapsed" />
+                        <ProgressRing x:Name="GenerateStatsButton_Done_Loading" IsActive="False" />
+                        <!-- TODO add hyperlink to generated document -->
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
-        </Border>
-    </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </Page>
