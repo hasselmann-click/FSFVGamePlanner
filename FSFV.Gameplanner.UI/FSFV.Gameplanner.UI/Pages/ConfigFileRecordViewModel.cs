@@ -4,8 +4,8 @@ namespace FSFV.Gameplanner.UI.Pages;
 
 public class ConfigFileRecordViewModel
 {
-    public string Prefix { get; set; }
-    public string DisplayName => ConfigFile?.Name ?? Prefix + ".*";
+    public string PreviewDisplayName { get; set; }
+    public string DisplayName => File?.Name ?? PreviewDisplayName;
     public bool IsFound { get; set; }
     /// <summary>
     /// Inverse of <see cref="IsFound"/>.<br/>
@@ -13,5 +13,5 @@ public class ConfigFileRecordViewModel
     /// A markup extension or converter could be used instead. But this is plain and simple.
     /// </summary>
     public bool NotIsFound => !IsFound;
-    public StorageFile ConfigFile { get; set; }
+    public StorageFile File { get; set; }
 }

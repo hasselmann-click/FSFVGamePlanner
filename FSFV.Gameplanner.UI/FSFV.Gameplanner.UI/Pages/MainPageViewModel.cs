@@ -33,14 +33,25 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     {
         public const string Pitches = "pitches";
         public const string LeagueConfigs = "league_configs";
-        public const string Teams = "teams_";
-        public const string Fixtures = "fixtures_";
+        public const string Teams = "teams";
+        public const string Fixtures = "fixtures";
         public const string Gameplan = "matchplan";
+
+        public static class DisplayNames
+        {
+            public const string Teams = "teams*[League]_[Group].csv";
+            public const string Fixtures = "fixtures*[League]_[Group].csv";
+            public const string Gameplan = "matchplan*.csv";
+            public const string Pitches = "pitches.csv";
+            public const string LeagueConfigs = "league_configs.csv";
+
+        }
     }
 
     public MainPageViewModel(DispatcherQueue dispatcher)
     {
         ResetConfigFileRecords();
+        ResetTeamFiles();
         Dispatcher = dispatcher;
     }
 
@@ -71,17 +82,18 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
             // all properties that are affected by the change of this property
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasGameplanFile)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotHasGameplanFile)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GameplanFileName)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateStatsButton_IsEnabled)));
         }
     }
-
+    public bool NotHasGameplanFile => !HasGameplanFile;
     public bool HasGameplanFile => GameplanFile != null;
-    public string GameplanFileName => GameplanFile?.Name;
+    public string GameplanFileName => GameplanFile?.Name ?? FileNamePrefixes.DisplayNames.Gameplan;
 
-    public ObservableCollection<StorageFile> TeamFiles { get; set; } = new(new List<StorageFile>(4));
-    public ObservableCollection<StorageFile> FixtureFiles { get; set; } = new(new List<StorageFile>(4));
-    public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; set; } = new();
+    public ObservableCollection<ConfigFileRecordViewModel> TeamFiles { get; } = new();
+    public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; } = new();
+    public ObservableCollection<StorageFile> FixtureFiles { get; } = new(new List<StorageFile>(4));
 
     public bool GenerateFixtursButton_IsEnabled
     {
@@ -141,10 +153,17 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
     private static List<ConfigFileRecordViewModel> CreateInitialConfigRecords => new(4 + 2)
     {
-        new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.Pitches, IsFound = false },
-        new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.LeagueConfigs, IsFound = false },
-        new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.Fixtures, IsFound = false},
+        new ConfigFileRecordViewModel { PreviewDisplayName = FileNamePrefixes.DisplayNames.Pitches, IsFound = false },
+        new ConfigFileRecordViewModel { PreviewDisplayName = FileNamePrefixes.DisplayNames.LeagueConfigs, IsFound = false },
+        new ConfigFileRecordViewModel { PreviewDisplayName = FileNamePrefixes.DisplayNames.Fixtures, IsFound = false},
     };
 
+    public void ResetTeamFiles()
+    {
+        TeamFiles.Clear();
+        TeamFiles.Add(new ConfigFileRecordViewModel { PreviewDisplayName = FileNamePrefixes.DisplayNames.Teams, IsFound = false });
+    }
+
     public DispatcherQueue Dispatcher { get; }
+    public bool IsPreventRescanForGameplanFile { get; internal set; }
 }
