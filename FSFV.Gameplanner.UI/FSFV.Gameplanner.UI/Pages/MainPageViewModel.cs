@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.UI.Dispatching;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -37,9 +38,10 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         public const string Gameplan = "matchplan";
     }
 
-    public MainPageViewModel()
+    public MainPageViewModel(DispatcherQueue dispatcher)
     {
         ResetConfigFileRecords();
+        Dispatcher = dispatcher;
     }
 
     private StorageFile gameplanFile;
@@ -50,6 +52,8 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     private bool generateGameplanButton_IsEnabled;
     private bool generateGameplanButton_IsGenerating;
     private bool generateGameplanButton_HasGenerated;
+    private bool generateStatsButton_IsGenerating;
+    private bool generateStatsButton_HasGenerated;
 
     public StorageFolder WorkDir
     {
@@ -63,10 +67,15 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => gameplanFile;
         set
         {
-            SetProperty(ref gameplanFile, value, nameof(HasGameplanFile));
+            SetProperty(ref gameplanFile, value, nameof(GameplanFile));
+
+            // all properties that are affected by the change of this property
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasGameplanFile)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GameplanFileName)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateStatsButton_IsEnabled)));
         }
     }
+
     public bool HasGameplanFile => GameplanFile != null;
     public string GameplanFileName => GameplanFile?.Name;
 
@@ -105,21 +114,37 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => generateGameplanButton_HasGenerated;
         set => SetProperty(ref generateGameplanButton_HasGenerated, value);
     }
+    public bool GenerateStatsButton_IsEnabled => HasGameplanFile && !GenerateStatsButton_IsGenerating;
+    public bool GenerateStatsButton_IsGenerating
+    {
+        get => generateStatsButton_IsGenerating;
+        set
+        {
+            SetProperty(ref generateStatsButton_IsGenerating, value);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateStatsButton_IsEnabled)));
+        }
+    }
+    public bool GenerateStatsButton_HasGenerated
+    {
+        get => generateStatsButton_HasGenerated;
+        set => SetProperty(ref generateStatsButton_HasGenerated, value);
+    }
 
     public void ResetConfigFileRecords()
     {
         ConfigFileRecords.Clear();
-        foreach (var record in InitialConfigRecords)
+        foreach (var record in CreateInitialConfigRecords)
         {
             ConfigFileRecords.Add(record);
         }
     }
 
-    private static readonly List<ConfigFileRecordViewModel> InitialConfigRecords = new(4 + 2)
+    private static List<ConfigFileRecordViewModel> CreateInitialConfigRecords => new(4 + 2)
     {
-            new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.Pitches, IsFound = false },
-            new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.LeagueConfigs, IsFound = false },
-            new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.Fixtures,IsFound = false},
+        new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.Pitches, IsFound = false },
+        new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.LeagueConfigs, IsFound = false },
+        new ConfigFileRecordViewModel { Prefix = FileNamePrefixes.Fixtures, IsFound = false},
     };
 
+    public DispatcherQueue Dispatcher { get; }
 }

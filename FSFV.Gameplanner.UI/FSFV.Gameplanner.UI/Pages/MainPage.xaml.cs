@@ -8,21 +8,22 @@ using FSFV.Gameplanner.Service.Slotting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
-using Windows.ApplicationModel.Background;
-using Windows.Foundation;
+using Windows.ApplicationModel.Core;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
-using static FSFV.Gameplanner.UI.Pages.MainPage;
+using Windows.Storage.Search;
+using Windows.UI.Core;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -37,6 +38,8 @@ public sealed partial class MainPage : Page
     private const string FolderAccessToken = "PickedFolderToken";
 
     private const string GamesPlaceholder = "SPIELFREI";
+    private const string StatsFileSuffix = "_stats.csv";
+    private const int FolderContentsChangedEventDebounceDuration = 500;
 
     private delegate void FilesChangedHandler(IReadOnlyList<StorageFile> files);
     private event FilesChangedHandler OnFolderPicked;
@@ -47,14 +50,18 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         this.InitializeComponent();
-        ViewModel = new MainPageViewModel();
+        ViewModel = new MainPageViewModel(DispatcherQueue.GetForCurrentThread());
 
         OnFolderPicked += LookingForTeamFiles;
         OnFolderPicked += LookingForConfigFiles;
         OnFolderPicked += LookingForGameplanFiles;
 
-        OnFixturesGenerated += LookingForConfigFiles;
+        //OnFixturesGenerated += LookingForConfigFiles;
     }
+
+    #region Folder Picker
+    private StorageFileQueryResult query = null;
+    private Timer debounceFolderContentChanged  = null;
 
     private async void FolderPicker_Click(object sender, RoutedEventArgs e)
     {
@@ -73,44 +80,35 @@ public sealed partial class MainPage : Page
         {
             return;
         }
-
-        // reset view model
-        ViewModel.GenerateFixtursButton_HasGenerated = false;
-        ViewModel.GenerateGameplanButton_HasGenerated = false;
-
         StorageApplicationPermissions.FutureAccessList.AddOrReplace(FolderAccessToken, folder);
-        var files = await folder.GetFilesAsync();
+
+        query = folder.CreateFileQuery();
+        query.ContentsChanged += OnFolderContentChangedAsync;
+        await query.GetFilesAsync(); // trigger contents changed event
         ViewModel.WorkDir = folder;
-        OnFolderPicked?.Invoke(files);
     }
 
-    private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)
+    private async void OnFolderContentChangedAsync(IStorageQueryResultBase sender, object args)
     {
-        // TODO make gameplan file selectable?
-        var gameplanCandidates = files
-            .Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Gameplan, StringComparison.InvariantCultureIgnoreCase))
-            .ToList();
-
-        // this sorting is horrible but there is no other way to get the latest file
-        // since getting the properties is an async operation
-        var propTasks = new List<(StorageFile File, Task<BasicProperties> PropTask)>(files.Count);
-        foreach (var file in gameplanCandidates)
+        if(debounceFolderContentChanged != null)
         {
-            propTasks.Add((file, file.GetBasicPropertiesAsync().AsTask()));
+            await debounceFolderContentChanged.DisposeAsync();
         }
-        await Task.WhenAll(propTasks.Select(p => p.PropTask));
 
-        var gameplanFile = propTasks
-            .Where(p => p.PropTask.Result.Size > 0)
-            .OrderByDescending(p => p.PropTask.Result.DateModified)
-            .Select(p => p.File)
-            .FirstOrDefault();
-
-        if (gameplanFile != null)
+        debounceFolderContentChanged = new Timer((object state) =>
         {
-            ViewModel.GameplanFile = gameplanFile;
-        }
+            dynamic s = state;
+            var folder = (StorageFolder) s.Folder;
+            var onFolderPickedEventHandler = (FilesChangedHandler) s.OnFolderPicked;
+            var dispatcher = (DispatcherQueue) s.Dispatcher;
+            dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
+            {
+                var files = await folder.GetFilesAsync();
+                onFolderPickedEventHandler?.Invoke(files);
+            });
+        }, new { sender.Folder, OnFolderPicked, ViewModel.Dispatcher }, FolderContentsChangedEventDebounceDuration, Timeout.Infinite);
     }
+    #endregion
 
     #region Config Files
     private void LookingForConfigFiles(IReadOnlyList<StorageFile> storageFiles)
@@ -144,6 +142,7 @@ public sealed partial class MainPage : Page
             }
         }
 
+        // TODO refactor to property dependency in view model
         ViewModel.GenerateGameplanButton_IsEnabled = ViewModel.ConfigFileRecords.All(r => r.IsFound)
             && fixtureFiles.Any();
     }
@@ -154,6 +153,7 @@ public sealed partial class MainPage : Page
 
         ViewModel.GenerateGameplanButton_HasGenerated = false;
         ViewModel.GenerateGameplanButton_IsGenerating = true;
+        ViewModel.GenerateGameplanButton_IsEnabled = false;
 
         var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
         // parse league configs to group type dto
@@ -225,21 +225,53 @@ public sealed partial class MainPage : Page
 
         ViewModel.GenerateGameplanButton_IsGenerating = false;
         ViewModel.GenerateGameplanButton_HasGenerated = true;
+        ViewModel.GenerateGameplanButton_IsEnabled = true;
     }
     #endregion
 
-    #region stats
+    #region Stats
+
+    private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)
+    {
+        ViewModel.GenerateGameplanButton_HasGenerated = false;
+
+        // TODO make gameplan file selectable?
+        var gameplanCandidates = files
+            .Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Gameplan, StringComparison.InvariantCultureIgnoreCase))
+            .Where(s => !s.Name.EndsWith(StatsFileSuffix))
+            .ToList();
+
+        // TODO use common file query options
+        // this sorting is horrible but there is no other way to get the latest file
+        // since getting the properties is an async operation
+        var propTasks = new List<(StorageFile File, Task<BasicProperties> PropTask)>(files.Count);
+        foreach (var file in gameplanCandidates)
+        {
+            propTasks.Add((file, file.GetBasicPropertiesAsync().AsTask()));
+        }
+        await Task.WhenAll(propTasks.Select(p => p.PropTask));
+
+        var gameplanFile = propTasks
+            .Where(p => p.PropTask.Result.Size > 0)
+            .OrderByDescending(p => p.PropTask.Result.DateModified)
+            .Select(p => p.File)
+            .FirstOrDefault();
+
+        ViewModel.GameplanFile = gameplanFile;
+    }
+
     private async void GenerateStatsButton_Click(object sender, RoutedEventArgs e)
     {
-        GenerateStatsButton_Done.Visibility = Visibility.Collapsed;
-        GenerateStatsButton_Done_Loading.IsActive = true;
+        ViewModel.GenerateGameplanButton_HasGenerated = false;
+        ViewModel.GenerateStatsButton_IsGenerating = true;
 
         var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
         var gameDtos = await serializer.ParseGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForReadAsync());
         await GenerateStatsAsync(serializer, gameDtos);
 
-        GenerateStatsButton_Done_Loading.IsActive = false;
-        GenerateStatsButton_Done.Visibility = Visibility.Visible;
+        ViewModel.GenerateGameplanButton_HasGenerated = true;
+        ViewModel.GenerateStatsButton_IsGenerating = false;
+
     }
 
     private async Task GenerateStatsAsync(FsfvCustomSerializerService serializer, IEnumerable<FsfvCustomSerializerService.GameplanGameDto> gameDtos)
@@ -274,8 +306,8 @@ public sealed partial class MainPage : Page
             }
         }
 
-        var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + "_stats.csv";
-        var statsFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.GenerateUniqueName);
+        var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + StatsFileSuffix;
+        var statsFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
         await serializer.WriteCsvStatsAsync(() => statsFile.OpenStreamForWriteAsync(), teams.Values);
     }
     #endregion
@@ -283,12 +315,15 @@ public sealed partial class MainPage : Page
     #region Team Files
     private void LookingForTeamFiles(IReadOnlyList<StorageFile> storageFiles)
     {
+        ViewModel.GenerateFixtursButton_HasGenerated = false;
         ViewModel.TeamFiles.Clear();
+
         var teamFiles = storageFiles.Where(s => s.Name.StartsWith("teams_", StringComparison.InvariantCultureIgnoreCase));
         foreach (var file in teamFiles)
         {
             ViewModel.TeamFiles.Add(file);
         }
+
         ViewModel.GenerateFixtursButton_IsEnabled = ViewModel.TeamFiles.Any();
     }
 

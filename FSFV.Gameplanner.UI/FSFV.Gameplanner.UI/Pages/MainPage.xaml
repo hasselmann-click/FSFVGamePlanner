@@ -126,9 +126,9 @@
                     </ListView>
 
                     <StackPanel Orientation="Horizontal" Padding="0">
-                        <Button x:Name="GeneratePlanButton" Content="Generate Plan" Click="GeneratePlanButton_Click" IsEnabled="False" />
-                        <SymbolIcon x:Name="GeneratePlanButton_Done" Symbol="Accept" Visibility="Collapsed" />
-                        <ProgressRing x:Name="GeneratePlanButton_Done_Loading" IsActive="False" />
+                        <Button x:Name="GeneratePlanButton" Content="Generate Plan" Click="GeneratePlanButton_Click" IsEnabled="{x:Bind ViewModel.GenerateGameplanButton_IsEnabled, Mode=OneWay}" />
+                        <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateGameplanButton_HasGenerated, Mode=OneWay}" />
+                        <ProgressRing IsActive="{x:Bind ViewModel.GenerateGameplanButton_IsGenerating, Mode=OneWay}" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -142,9 +142,9 @@
                         <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Padding="0">
-                        <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" IsEnabled="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
-                        <SymbolIcon x:Name="GenerateStatsButton_Done" Symbol="Accept" Visibility="Collapsed" />
-                        <ProgressRing x:Name="GenerateStatsButton_Done_Loading" IsActive="False" />
+                        <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" IsEnabled="{x:Bind ViewModel.GenerateStatsButton_IsEnabled, Mode=OneWay}" />
+                        <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateStatsButton_HasGenerated, Mode=OneWay}" />
+                        <ProgressRing IsActive="{x:Bind ViewModel.GenerateStatsButton_IsGenerating, Mode=OneWay}" />
                         <!-- TODO add hyperlink to generated document -->
                     </StackPanel>
                 </StackPanel>

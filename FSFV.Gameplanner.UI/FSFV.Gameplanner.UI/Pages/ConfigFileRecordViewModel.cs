@@ -5,7 +5,7 @@ namespace FSFV.Gameplanner.UI.Pages;
 public class ConfigFileRecordViewModel
 {
     public string Prefix { get; set; }
-    public string DisplayName => Prefix + ".*";
+    public string DisplayName => ConfigFile?.Name ?? Prefix + ".*";
     public bool IsFound { get; set; }
     /// <summary>
     /// Inverse of <see cref="IsFound"/>.<br/>
