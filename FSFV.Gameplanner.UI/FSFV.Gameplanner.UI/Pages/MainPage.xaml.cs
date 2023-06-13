@@ -37,7 +37,7 @@ public sealed partial class MainPage : Page
 
     private const string GamesPlaceholder = "SPIELFREI";
     private const string StatsFileSuffix = "_stats.csv";
-    private const int FolderContentsChangedEventThrottleDuration = 1000;
+    private const int FolderContentsChangedEventThrottleDuration = 10_000;
 
     private delegate void FilesChangedHandler(IReadOnlyList<StorageFile> files);
     private event FilesChangedHandler OnFolderPicked;
@@ -147,10 +147,10 @@ public sealed partial class MainPage : Page
 
         var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
         // parse league configs to group type dto
-        var leagueConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.LeagueConfigs).File;
+        var leagueConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.LeagueConfigs).File;
         var groupTypesTask = serializer.ParseGroupTypesAsync(() => leagueConfigs.OpenStreamForReadAsync());
         // parse pitches to pitches
-        var pitchesFile = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.Pitches).File;
+        var pitchesFile = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.Pitches).File;
         var pitchesTask = serializer.ParsePitchesAsync(() => pitchesFile.OpenStreamForReadAsync());
         // parse fixtures to games
         var groupTypes = await groupTypesTask;
@@ -222,6 +222,12 @@ public sealed partial class MainPage : Page
     #region Team Files
     private void LookingForTeamFiles(IReadOnlyList<StorageFile> storageFiles)
     {
+        if(ViewModel.IsPreventRescanForTeamFiles)
+        {
+            ViewModel.IsPreventRescanForTeamFiles = false;
+            return;
+        }
+
         ViewModel.GenerateFixtursButton_HasGenerated = false;
         ViewModel.TeamFiles.Clear();
 
@@ -263,6 +269,7 @@ public sealed partial class MainPage : Page
 
         ViewModel.GenerateFixtursButton_IsGenerating = false;
         ViewModel.GenerateFixtursButton_HasGenerated = true;
+        ViewModel.IsPreventRescanForTeamFiles = true;
     }
     #endregion
 
@@ -350,7 +357,7 @@ public sealed partial class MainPage : Page
 
         var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + StatsFileSuffix;
         var statsFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
-        await serializer.WriteCsvStatsAsync(() => statsFile.OpenStreamForWriteAsync(), teams.Values);
+        await serializer.WriteCsvStatsAsync(() => statsFile.OpenStreamForWriteAsync(), teams.Values.OrderBy(v => v.League).ThenBy(v => v.Name));
 
         ViewModel.IsPreventRescanForGameplanFile = true;
     }

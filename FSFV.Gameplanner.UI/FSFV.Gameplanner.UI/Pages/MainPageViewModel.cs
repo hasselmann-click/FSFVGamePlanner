@@ -166,4 +166,5 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
     public DispatcherQueue Dispatcher { get; }
     public bool IsPreventRescanForGameplanFile { get; internal set; }
+    public bool IsPreventRescanForTeamFiles { get; internal set; }
 }

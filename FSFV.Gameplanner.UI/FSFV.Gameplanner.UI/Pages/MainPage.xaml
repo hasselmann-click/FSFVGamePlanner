@@ -25,6 +25,7 @@
         <Style TargetType="Button">
             <Setter Property="Margin" Value="10" />
             <Setter Property="IsEnabled" Value="False" />
+            <Setter Property="Width" Value="150" />
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="BorderThickness" Value="0" />
@@ -90,9 +91,9 @@
 
                         <StackPanel Orientation="Horizontal" Padding="0">
                             <Button x:Name="GenerateFixtursButton" Content="Generate Fixtures" Click="GenerateFixtursButton_Click" 
-                            IsEnabled="{x:Bind ViewModel.GenerateFixtursButton_IsEnabled, Mode=OneWay}"/>
+                                    IsEnabled="{x:Bind ViewModel.GenerateFixtursButton_IsEnabled, Mode=OneWay}"/>
                             <SymbolIcon x:Name="GenerateFixtursButton_Done" Symbol="Accept" 
-                                Visibility="{x:Bind ViewModel.GenerateFixtursButton_HasGenerated, Mode=OneWay}" />
+                                    Visibility="{x:Bind ViewModel.GenerateFixtursButton_HasGenerated, Mode=OneWay}" />
                             <ProgressRing x:Name="GenerateFixtursButton_Loading" IsActive="{x:Bind ViewModel.GenerateFixtursButton_IsGenerating, Mode=OneWay}" />
                         </StackPanel>
                     </StackPanel>
@@ -153,7 +154,7 @@
                             <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
                             <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
                         </StackPanel>
-                        <Button x:Name="OpenGameplanButton" Content="Open Gameplan" Click="OpenGameplanButton_Click" IsEnabled="True" />
+                        <Button x:Name="OpenGameplanButton" Content="Select Gameplan" Click="OpenGameplanButton_Click" IsEnabled="True" />
                         <StackPanel Orientation="Horizontal" Padding="0">
                             <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" IsEnabled="{x:Bind ViewModel.GenerateStatsButton_IsEnabled, Mode=OneWay}" />
                             <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateStatsButton_HasGenerated, Mode=OneWay}" />

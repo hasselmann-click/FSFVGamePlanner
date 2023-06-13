@@ -27,7 +27,7 @@ namespace FSFV.Gameplanner.UI
         public IServiceProvider Services { get; }
 
         private static readonly Random RNG = new(23432546);
-        private static readonly SizeInt32 LaunchWindowSize = new SizeInt32(600, 800);
+        private static readonly SizeInt32 LaunchWindowSize = new SizeInt32(1000, 1400);
 
         private Window m_window;
 
@@ -51,7 +51,6 @@ namespace FSFV.Gameplanner.UI
 
             WindowHelper.TrackWindow(m_window);
 
-            // TODO resizing not working as expected > make scrollable?
             var appWindow = WindowHelper.GetAppWindow(m_window);
             appWindow.Resize(LaunchWindowSize);
 
