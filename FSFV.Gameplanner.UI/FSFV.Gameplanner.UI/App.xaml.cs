@@ -72,6 +72,7 @@ namespace FSFV.Gameplanner.UI
                     config.ClearProviders();
                     config.AddConfiguration(configuration.GetSection("Logging"));
                     config.AddConsole();
+                    config.AddEventLog();
                 })
                 .AddRuleBasedSlotting()
                 .AddTransient<GeneratorService>()

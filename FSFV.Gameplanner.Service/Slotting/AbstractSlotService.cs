@@ -10,7 +10,8 @@ namespace FSFV.Gameplanner.Service.Slotting
     {
 
         protected static readonly Game PLACEHOLDER = new() { Group = new() { Type = new() { MinDurationMinutes = 0 } } };
-        protected static readonly TimeSpan MaxBreak = TimeSpan.FromMinutes(30);
+        // TODO: make configurable
+        protected static readonly TimeSpan MaxSlotTime = TimeSpan.FromMinutes(120);
 
         private readonly ILogger logger;
         private readonly Random rng;
@@ -42,9 +43,7 @@ namespace FSFV.Gameplanner.Service.Slotting
                 var additionalBreak = numberOfBreaks > 0 ? timeLeft.Divide(numberOfBreaks) : TimeSpan.Zero;
                 if (additionalBreak < TimeSpan.Zero)
                     additionalBreak = TimeSpan.Zero;
-                else if (additionalBreak > MaxBreak)
-                    additionalBreak = MaxBreak;
-                else
+                else  
                     // round to nearest 5
                     additionalBreak = TimeSpan.FromMinutes(
                         Math.Floor(additionalBreak.TotalMinutes / 5.0) * 5);
@@ -54,12 +53,13 @@ namespace FSFV.Gameplanner.Service.Slotting
                 int parallel = 1;
                 int i = 0;
                 var firstGame = pitch.Games[i++];
+                var slottime = firstGame.MinDuration.Add(additionalBreak);
                 pitch.Slots = new List<TimeSlot>(pitch.Games.Count)
                 {
                     new TimeSlot
                     {
                         StartTime = pitch.StartTime,
-                        EndTime = pitch.StartTime.Add(firstGame.MinDuration).Add(additionalBreak),
+                        EndTime = pitch.StartTime.Add(slottime > MaxSlotTime ? MaxSlotTime : slottime),
                         Game = firstGame
                     }
                 };
