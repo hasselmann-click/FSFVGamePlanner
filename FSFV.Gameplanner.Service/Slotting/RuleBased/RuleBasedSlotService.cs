@@ -68,7 +68,15 @@ public class RuleBasedSlotService : AbstractSlotService
                     continue;
                 }
 
-                var scheduledGame = slotCandidates.First();
+                // check for time left at pitch
+                var scheduledGame = slotCandidates.Where(g => g.MinDuration <= nextPitch.TimeLeft).FirstOrDefault();
+                if (scheduledGame == null)
+                {
+                    logger.LogDebug("Not enough time left at pitch {pitch}", nextPitch.Name);
+                    continue;
+                }
+
+                // update rules
                 foreach (var rule in rules)
                 {
                     rule.Update(nextPitch, scheduledGame);
@@ -110,6 +118,7 @@ public class RuleBasedSlotService : AbstractSlotService
         return pitches;
     }
 
+    // TODO: refactor; missing commentary why this is overriden from abstract class
     protected override void BuildTimeSlots(List<Pitch> pitches)
     {
         foreach (var pitch in pitches)
@@ -121,31 +130,33 @@ public class RuleBasedSlotService : AbstractSlotService
                 continue;
             }
 
+            // "blow up" pitch time by adding breaks
             var timeLeft = pitch.TimeLeft;
             var numberOfBreaks = pitch.Games.Count - 1;
             var additionalBreak = numberOfBreaks > 0 ? timeLeft.Divide(numberOfBreaks) : TimeSpan.Zero;
             if (additionalBreak < TimeSpan.Zero)
                 additionalBreak = TimeSpan.Zero;
-            else if (additionalBreak > MaxBreak)
-                additionalBreak = MaxBreak;
             else
                 // round to nearest 5
                 additionalBreak = TimeSpan.FromMinutes(
                     Math.Floor(additionalBreak.TotalMinutes / 5.0) * 5);
 
+            // add first game separately, because it's the only one with a fixed start time
             int parallel = 1;
             int i = 0;
             var firstGame = pitch.Games[i++];
+            var slottime = firstGame.MinDuration.Add(additionalBreak);
             pitch.Slots = new List<TimeSlot>(pitch.Games.Count)
                 {
                     new TimeSlot
                     {
                         StartTime = pitch.StartTime,
-                        EndTime = pitch.StartTime.Add(firstGame.MinDuration).Add(additionalBreak),
+                        EndTime = pitch.StartTime.Add(slottime > MaxSlotTime ? MaxSlotTime : slottime),
                         Game = firstGame
                     }
                 };
 
+            // add remaining games
             for (; i < pitch.Games.Count; ++i)
             {
                 var prev = pitch.Slots[i - 1];
@@ -164,10 +175,11 @@ public class RuleBasedSlotService : AbstractSlotService
 
                 // don't add break to last timeslot
                 var breakToAdd = i == pitch.Games.Count - 1 ? TimeSpan.Zero : additionalBreak;
+                slottime = game.MinDuration.Add(breakToAdd);
                 pitch.Slots.Add(new TimeSlot
                 {
                     StartTime = start,
-                    EndTime = start.Add(game.MinDuration).Add(breakToAdd),
+                    EndTime = start.Add(slottime > MaxSlotTime ? MaxSlotTime : slottime),
                     Game = game
                 });
             }
