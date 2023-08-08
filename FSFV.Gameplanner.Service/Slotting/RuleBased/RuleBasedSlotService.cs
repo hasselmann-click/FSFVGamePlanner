@@ -50,11 +50,12 @@ public class RuleBasedSlotService : AbstractSlotService
             foreach (var nextPitch in orderedPitches)
             {
                 // slot games only for pitches which are in 30 minutes of each other.
-                if (nextPitch.NextStartTime.Subtract(currentStartTime) > SlotBuffer)
-                {
-                    logger.LogDebug("Stopping placing at pitch {pitch}", nextPitch.Name);
-                    break;
-                }
+                // i have no idea what this was for...
+                //if (nextPitch.NextStartTime.Subtract(currentStartTime) > SlotBuffer)
+                //{
+                //    logger.LogDebug("Stopping placing at pitch {pitch}", nextPitch.Name);
+                //    break;
+                //}
 
                 IEnumerable<Game> slotCandidates = games;
                 foreach (var rule in rules) // rules are ordered by their priority
@@ -98,7 +99,7 @@ public class RuleBasedSlotService : AbstractSlotService
                 {
                     var tempPitch = pitches.OrderByDescending(p => p.TimeLeft).First();
                     tempPitch.Games.AddRange(games);
-                    logger.LogError("Could not slot any games multiple times on game day {day} at {date}. Adding" +
+                    logger.LogError("Could not slot any games for the second time now on game day {day} at {date}. Adding" +
                         " to {cnt} games to pitch {pitch}", gameDate.GameDay, gameDate.Date, currentGamesCount, tempPitch.Name);
                     break;
                 }
@@ -118,7 +119,7 @@ public class RuleBasedSlotService : AbstractSlotService
         return pitches;
     }
 
-    // TODO: refactor; missing commentary why this is overriden from abstract class
+    // TODO: missing commentary why this is overriden from abstract class
     protected override void BuildTimeSlots(List<Pitch> pitches)
     {
         foreach (var pitch in pitches)
@@ -141,6 +142,7 @@ public class RuleBasedSlotService : AbstractSlotService
                 additionalBreak = TimeSpan.FromMinutes(
                     Math.Floor(additionalBreak.TotalMinutes / 5.0) * 5);
 
+            // todo: refactor to single time slot creation method
             // add first game separately, because it's the only one with a fixed start time
             int parallel = 1;
             int i = 0;

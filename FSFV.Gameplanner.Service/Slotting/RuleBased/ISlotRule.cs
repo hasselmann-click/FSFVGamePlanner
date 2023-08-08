@@ -15,10 +15,10 @@ public interface ISlotRule
     /// Applies the rule to the game candidates.
     /// </summary>
     /// <param name="pitch">The current pitch to slot</param>
-    /// <param name="games">The candidate games</param>
+    /// <param name="gameCandidates">The candidate games</param>
     /// <param name="pitches">All pitches in their current state</param>
     /// <returns></returns>
-    public IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches);
+    public IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> gameCandidates, List<Pitch> pitches);
     /// <summary>
     /// Runs after a the game was chosen to be placed next on the current pitch.
     /// </summary>

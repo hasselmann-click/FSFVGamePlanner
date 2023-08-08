@@ -24,9 +24,9 @@ public static class ServiceCollectionExtension
                 sp.GetRequiredService<ILogger<ZkStartAndEndFilter>>(),
                 sp.GetRequiredService<Random>()))
 
-            // TODO currently only one sorting rule can be applied
-            .AddSingleton<ISlotRule>(sp => new MorningAndEveningGamesSort(1,
-                sp.GetRequiredService<IConfiguration>()))
+            // Attention: Multiple sorts are kind of useless, because the last one will always win
+            .AddSingleton<ISlotRule>(sp => new MorningAndEveningGamesSort(50, sp.GetRequiredService<IConfiguration>()))
+            .AddSingleton<ISlotRule>(sp => new ManualSortRule(10))
             ;
     }
 }
