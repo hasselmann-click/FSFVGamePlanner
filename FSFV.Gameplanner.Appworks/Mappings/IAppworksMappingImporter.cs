@@ -2,6 +2,6 @@
 
 public interface IAppworksMappingImporter
 {
-    AppworksMappings ImportMappings();
+    Task<AppworksMappings> ImportMappings();
 
 }

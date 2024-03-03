@@ -2,7 +2,6 @@
 using CsvHelper.Configuration;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
-using FSFV.Gameplanner.Fixtures;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,13 +9,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.Service.Serialization;
 
 public class FsfvCustomSerializerService
 {
+    public const string DateFormat = "dd.MM.yy";
 
     private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
@@ -171,7 +170,7 @@ public class FsfvCustomSerializerService
     {
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            MissingFieldFound = null
+            MissingFieldFound = null,
         };
 
         await using var stream = await streamProvider();
@@ -180,7 +179,7 @@ public class FsfvCustomSerializerService
 
         // hypothetically it's possible that the stream is inifinitely large. We could use
         // a timeout or a maximum limit of records to read. But for now, this will suffice.
-        var records = csv.GetRecordsAsync<GameplanGameDto>(); ;
+        var records = csv.GetRecordsAsync<GameplanGameDto>();
         var dtos = new List<GameplanGameDto>(100);
         await foreach (var record in records)
         {
@@ -189,7 +188,7 @@ public class FsfvCustomSerializerService
         return dtos;
     }
 
-    public async Task WriteCsvGameplanAsync(Func<Task<Stream>> writeStreamProvider, List<GameDay> gameDays, string dateFormat = "dd.MM.yy")
+    public async Task WriteCsvGameplanAsync(Func<Task<Stream>> writeStreamProvider, List<GameDay> gameDays, string dateFormat = DateFormat)
     {
         // write csv
         await using var csvStream = await writeStreamProvider();
@@ -281,6 +280,7 @@ public class FsfvCustomSerializerService
         public string Referee { get; set; }
         public string Group { get; set; }
         public string League { get; set; }
+        public DateOnly Date { get; set; }
     }
 
     public class TeamStatsDto
