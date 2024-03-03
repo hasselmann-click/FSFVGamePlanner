@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSFV.Gameplanner.Appworks.Mappings;
+namespace FSFV.Gameplanner.Appworks;
 public class AppworksTransformer
 {
 
