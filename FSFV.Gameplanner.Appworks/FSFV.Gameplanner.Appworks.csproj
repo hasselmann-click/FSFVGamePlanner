@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FSFV.Gameplanner.Common\FSFV.Gameplanner.Common.csproj" />
+    <ProjectReference Include="..\FSFV.Gameplanner.Service\FSFV.Gameplanner.Service.csproj" />
   </ItemGroup>
 
 </Project>

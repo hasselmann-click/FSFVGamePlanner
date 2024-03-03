@@ -22,9 +22,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSFV.Gameplanner.Appworks", "FSFV.Gameplanner.Appworks\FSFV.Gameplanner.Appworks.csproj", "{5D2BF753-0D33-42C9-BCE1-EF92AA19E1A2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.Appworks", "FSFV.Gameplanner.Appworks\FSFV.Gameplanner.Appworks.csproj", "{5D2BF753-0D33-42C9-BCE1-EF92AA19E1A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSFV.Gameplanner.Tests", "FSFV.Gameplanner.AppworksTests\FSFV.Gameplanner.Tests.csproj", "{E81EE922-EF6A-4C74-B7F4-C91E1AB99562}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.Tests", "FSFV.Gameplanner.AppworksTests\FSFV.Gameplanner.Tests.csproj", "{E81EE922-EF6A-4C74-B7F4-C91E1AB99562}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
