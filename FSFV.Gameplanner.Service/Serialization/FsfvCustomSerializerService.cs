@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
 using Microsoft.Extensions.Logging;
@@ -176,6 +177,9 @@ public class FsfvCustomSerializerService
         await using var stream = await streamProvider();
         using var reader = new StreamReader(stream, DefaultEncoding);
         using var csv = new CsvReader(reader, config);
+
+        var options = new TypeConverterOptions { Formats = [DateFormat] };
+        csv.Context.TypeConverterOptionsCache.AddOptions<DateOnly>(options);
 
         // hypothetically it's possible that the stream is inifinitely large. We could use
         // a timeout or a maximum limit of records to read. But for now, this will suffice.

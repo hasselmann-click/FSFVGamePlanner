@@ -1,6 +1,7 @@
 ﻿using FSFV.Gameplanner.Appworks;
 using FSFV.Gameplanner.Appworks.Mappings;
 using FSFV.Gameplanner.Service.Serialization;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Globalization;
 
@@ -65,13 +66,15 @@ public class AppworksTransformerTests
         var importer = new Mock<IAppworksMappingImporter>();
         importer.Setup(i => i.ImportMappings(tournament)).ReturnsAsync(mappings);
 
+        var logger = new Mock<ILogger<AppworksTransformer>>();
+
         // ACT
-        var transformer = new AppworksTransformer(importer.Object);
-        var records = await transformer.Transform(gamePlan).ContinueWith(t => t.Result.ToList());
+        var transformer = new AppworksTransformer(logger.Object, importer.Object);
+        var recordsDic = await transformer.Transform(gamePlan);
+        var records = recordsDic[tournament];
 
         // ASSERT
         Assert.AreEqual(expectedRecords.Count, records.Count);
         CollectionAssert.AreEqual(expectedRecords, records);
-
     }
 }

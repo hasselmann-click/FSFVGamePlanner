@@ -1,11 +1,15 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
+using System.Text;
 
 namespace FSFV.Gameplanner.Appworks.Mappings.File;
 
 public class AppworksMappingFileImporter(string filePath) : IAppworksMappingImporter
 {
+
+    private static readonly Encoding DefaultEncoding = Encoding.UTF8;
+
     public Task<AppworksIdMappings> ImportMappings(string tournament)
     {
         return ParseCsvToMappingsAsync(filePath, tournament);
@@ -25,7 +29,7 @@ public class AppworksMappingFileImporter(string filePath) : IAppworksMappingImpo
             IgnoreBlankLines = true
         };
 
-        using var reader = new StreamReader(filePath);
+        using var reader = new StreamReader(filePath, DefaultEncoding);
         using var csv = new CsvReader(reader, config);
 
         string? section = null;
