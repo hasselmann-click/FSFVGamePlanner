@@ -1,7 +1,9 @@
-﻿namespace FSFV.Gameplanner.Appworks.Mappings;
+﻿using System.Net.NetworkInformation;
+
+namespace FSFV.Gameplanner.Appworks.Mappings;
 
 public interface IAppworksMappingImporter
 {
-    Task<AppworksMappings> ImportMappings();
+    Task<AppworksIdMappings> ImportMappings(string tournament);
 
 }

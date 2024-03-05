@@ -17,14 +17,13 @@ public class AppworksTransformerTests
 
         // INPUT
         var tournament = "M";
-
-        Dictionary<string, int> locations = new() { { "location1", 5 }, { "location2", 6 }, { "location7", 7 } };
+        Dictionary<string, int> locations = new() { { "R1", 5 }, { "R2", 6 }, { "R7", 7 } };
         Dictionary<string, int> teams = new() { { "team1", 10 }, { "team2", 24 }, { "team3", 90 }, { "team4", 112 } };
-        Dictionary<string, int> divisions = new() { { "division1", 5 }, { "division2", 9 } };
-        Dictionary<string, int> matchdays = new() { { "matchday1", 12 }, { "matchday2", 13 } };
-        var mappings = new AppworksMappings(locations, teams, divisions, matchdays);
+        Dictionary<string, int> divisions = new() { { "A", 5 }, { "B", 9 } };
+        Dictionary<string, int> matchdays = new() { { "01.01.", 12 }, { "01.02.", 13 } };
+        var mappings = new AppworksIdMappings(locations, teams, divisions, matchdays, tournament);
 
-        // matchplan.csv, parsed by serializer service "FsfvCustomSerializerService.ParseGameplanAsync"
+        // matchplan.csv, parsed by "FsfvCustomSerializerService.ParseGameplanAsync"
         var gamePlan = new List<FsfvCustomSerializerService.GameplanGameDto>() 
         {
             new()
@@ -33,11 +32,11 @@ public class AppworksTransformerTests
                 Away = "team1",
                 Referee = "team3",
                 GameDay = 1,
-                StartTime = DateTime.Parse("10:00"),
-                EndTime = DateTime.Parse("12:00"),
-                Group = "1",
+                StartTime = DateTime.Parse("01.01.22 10:00"),
+                EndTime = DateTime.Parse("01.01.22 12:00"),
+                Group = "A",
                 League = "M",
-                Pitch = "2",
+                Pitch = "R2",
                 Date = DateOnly.ParseExact("01.01.22", FsfvCustomSerializerService.DateFormat, CultureInfo.InvariantCulture),
             },
             new()
@@ -46,11 +45,11 @@ public class AppworksTransformerTests
                 Away = "team4",
                 Referee = "team2",
                 GameDay = 1,
-                StartTime = DateTime.Parse("14:00"),
-                EndTime = DateTime.Parse("16:00"),
-                Group = "2",
+                StartTime = DateTime.Parse("01.01.22 14:00"),
+                EndTime = DateTime.Parse("01.01.22 16:00"),
+                Group = "B",
                 League = "M",
-                Pitch = "7",
+                Pitch = "R7",
                 Date = DateOnly.ParseExact("01.01.22", FsfvCustomSerializerService.DateFormat, CultureInfo.InvariantCulture),
             }
         };
@@ -64,15 +63,15 @@ public class AppworksTransformerTests
 
         // MOCK
         var importer = new Mock<IAppworksMappingImporter>();
-        importer.Setup(i => i.ImportMappings()).ReturnsAsync(mappings);
+        importer.Setup(i => i.ImportMappings(tournament)).ReturnsAsync(mappings);
 
         // ACT
         var transformer = new AppworksTransformer(importer.Object);
-        var records = await transformer.Transform(gamePlan);
+        var records = await transformer.Transform(gamePlan).ContinueWith(t => t.Result.ToList());
 
         // ASSERT
-        Assert.Equals(expectedRecords.Count, records.Count);
+        Assert.AreEqual(expectedRecords.Count, records.Count);
+        CollectionAssert.AreEqual(expectedRecords, records);
 
-        Assert.Fail();
     }
 }
