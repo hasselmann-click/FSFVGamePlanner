@@ -197,8 +197,8 @@ public class FsfvCustomSerializerService
         // write csv
         await using var csvStream = await writeStreamProvider();
         using var csvWriter = new StreamWriter(csvStream, DefaultEncoding);
-        await csvWriter.WriteLineAsync(string.Join(",", new string[]
-        {
+        await csvWriter.WriteLineAsync(string.Join(",",
+        [
                     "GameDay",
                     "Pitch",
                     "StartTime",
@@ -209,7 +209,7 @@ public class FsfvCustomSerializerService
                     "Group",
                     "League",
                     "Date"
-        }));
+        ]));
         foreach (var gameDay in gameDays)
         {
             var slots = gameDay.Pitches

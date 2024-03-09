@@ -7,7 +7,6 @@ namespace FSFV.Gameplanner.Appworks.Mappings.File;
 
 public class AppworksMappingFileImporter(string filePath) : IAppworksMappingImporter
 {
-
     private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
     public Task<AppworksIdMappings> ImportMappings(string tournament)
@@ -49,7 +48,7 @@ public class AppworksMappingFileImporter(string filePath) : IAppworksMappingImpo
             }
 
             var id = int.Parse(firstColumn);
-            var name = !string.IsNullOrEmpty(csv[2]) ? csv[2] : csv[1]
+            var name = (!string.IsNullOrEmpty(csv[2]) ? csv[2] : csv[1])
                 ?? throw new InvalidOperationException("Was not expecting empty Appworks name in section " + section);
 
             switch (section)
@@ -58,7 +57,7 @@ public class AppworksMappingFileImporter(string filePath) : IAppworksMappingImpo
                     divisions[name] = id;
                     break;
                 case "Matchdays":
-                    matchdays[name] = id;
+                    matchdays[DateOnly.Parse(name).ToString(IAppworksMappingImporter.MatchdayDateFormat)] = id;
                     break;
                 case "Locations":
                     locations[name] = id;

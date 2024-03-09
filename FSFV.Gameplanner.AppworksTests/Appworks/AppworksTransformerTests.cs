@@ -10,6 +10,7 @@ namespace FSFV.Gameplanner.Tests.Appworks;
 [TestClass()]
 public class AppworksTransformerTests
 {
+
     [TestMethod()]
     public async Task TransformTest_HappyCaseAsync()
     {
@@ -19,7 +20,9 @@ public class AppworksTransformerTests
         // INPUT
         var tournament = "M";
         Dictionary<string, int> locations = new() { { "R1", 5 }, { "R2", 6 }, { "R7", 7 } };
-        Dictionary<string, int> teams = new() { { "team1", 10 }, { "team2", 24 }, { "team3", 90 }, { "team4", 112 } };
+        Dictionary<string, int> teams = new() { { "team1", 10 }, { "team2", 24 }, { "team3", 90 }, 
+            // team4 needs to be mapped via Levenshtein distance    
+            { "FC teamThatNeedsToBeMapped", 112 } };
         Dictionary<string, int> divisions = new() { { "A", 5 }, { "B", 9 } };
         Dictionary<string, int> matchdays = new() { { "01.01.", 12 }, { "01.02.", 13 } };
         var mappings = new AppworksIdMappings(locations, teams, divisions, matchdays, tournament);
@@ -43,7 +46,7 @@ public class AppworksTransformerTests
             new()
             {
                 Home = "team3",
-                Away = "team4",
+                Away = "teamThatNeedsToBeMapped",
                 Referee = "team2",
                 GameDay = 1,
                 StartTime = DateTime.Parse("01.01.22 14:00"),
@@ -66,10 +69,10 @@ public class AppworksTransformerTests
         var importer = new Mock<IAppworksMappingImporter>();
         importer.Setup(i => i.ImportMappings(tournament)).ReturnsAsync(mappings);
 
-        var logger = new Mock<ILogger<AppworksTransformer>>();
+        var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AppworksTransformer>();
 
         // ACT
-        var transformer = new AppworksTransformer(logger.Object, importer.Object);
+        var transformer = new AppworksTransformer(logger, importer.Object);
         var recordsDic = await transformer.Transform(gamePlan);
         var records = recordsDic[tournament];
 
@@ -77,4 +80,24 @@ public class AppworksTransformerTests
         Assert.AreEqual(expectedRecords.Count, records.Count);
         CollectionAssert.AreEqual(expectedRecords, records);
     }
+
+    [TestMethod()]
+    public void LevenshteinDistanceTest()
+    {
+        // ARRANGE
+        var logger = new Mock<ILogger<AppworksTransformer>>();
+        var importer = new Mock<IAppworksMappingImporter>();
+        var transformer = new AppworksTransformer(logger.Object, importer.Object);
+
+        string a = "kitten";
+        string b = "sitting";
+        int expectedDistance = 3;
+
+        // ACT
+        int actualDistance = transformer.LevenshteinDistance(a, b);
+
+        // ASSERT
+        Assert.AreEqual(expectedDistance, actualDistance);
+    }
+
 }
