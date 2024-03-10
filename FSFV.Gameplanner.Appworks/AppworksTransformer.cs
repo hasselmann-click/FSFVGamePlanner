@@ -6,21 +6,21 @@ namespace FSFV.Gameplanner.Appworks;
 public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksMappingImporter importer)
 {
 
-    public async Task<Dictionary<string, List<AppworksImportRecord>>> Transform(List<FsfvCustomSerializerService.GameplanGameDto> gamePlan)
+    public async Task<Dictionary<string, List<AppworksImportRecord>>> Transform(List<FsfvCustomSerializerService.GameplanGameDto> gamePlan, string tournament = null)
     {
-        var tournaments = gamePlan.Select(x => x.League).Distinct().ToList();
+        var tournaments = string.IsNullOrEmpty(tournament) ? gamePlan.Select(x => x.League).Distinct().ToList() : [tournament];
         logger.LogDebug("Found {TournamentCount} tournaments", tournaments.Count);
 
         var recordsPerTournament = new Dictionary<string, List<AppworksImportRecord>>(tournaments.Count);
-        foreach (var tournament in tournaments)
+        foreach (var t in tournaments)
         {
-            var mappings = await importer.ImportMappings(tournament);
-            UpdateTeamMappings(mappings, gamePlan, tournament);
+            var mappings = await importer.ImportMappings(t);
+            UpdateTeamMappings(mappings, gamePlan, t);
 
-            var games = gamePlan.Where(g => g.League == tournament).ToList();
+            var games = gamePlan.Where(g => g.League == t).ToList();
             var records = new List<AppworksImportRecord>(games.Count);
 
-            bool hasError = false;
+            List<string> errors = [];
             foreach (var game in games)
             {
                 try
@@ -31,21 +31,23 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
                     var matchdayId = mappings.Matchdays[game.Date.ToString(IAppworksMappingImporter.MatchdayDateFormat)];
                     var divisionId = mappings.Divisions[game.Group];
                     var locationId = mappings.Locations[game.Pitch];
-                    var record = new AppworksImportRecord(matchdayId, divisionId, locationId, homeId, awayId, game.StartTime, refereeId);
+                    var startTime = game.Date.ToDateTime(TimeOnly.FromDateTime(game.StartTime));
+                    var record = new AppworksImportRecord(matchdayId, divisionId, locationId, homeId, awayId, startTime, refereeId);
                     records.Add(record);
                 }
                 catch (KeyNotFoundException e)
                 {
-                    logger.LogError(e, "Could not find mapping");
-                    hasError = true;
+                    errors.Add(e.Message);
                 }
             }
-            if (hasError)
+            
+            if (errors.Count != 0)
             {
-                throw new KeyNotFoundException("Could not find mappings. Is the input file in UTF-8 encoding?");
+                logger.LogError("Errors while transforming games for tournament {Tournament}: {Errors}", t, string.Join("\n", errors));
+                throw new Exception("Errors while transforming games");
             }
 
-            recordsPerTournament.Add(tournament, records);
+            recordsPerTournament.Add(t, records);
         }
 
         return recordsPerTournament;
@@ -74,7 +76,7 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
         }
     }
 
-    public int LevenshteinDistance(string a, string b)
+    public static int LevenshteinDistance(string a, string b)
     {
         if (string.IsNullOrEmpty(a))
         {

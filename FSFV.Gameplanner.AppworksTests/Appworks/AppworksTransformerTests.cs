@@ -94,7 +94,7 @@ public class AppworksTransformerTests
         int expectedDistance = 3;
 
         // ACT
-        int actualDistance = transformer.LevenshteinDistance(a, b);
+        int actualDistance = AppworksTransformer.LevenshteinDistance(a, b);
 
         // ASSERT
         Assert.AreEqual(expectedDistance, actualDistance);

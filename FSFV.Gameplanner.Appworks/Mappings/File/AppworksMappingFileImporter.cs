@@ -1,11 +1,12 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Text;
 
 namespace FSFV.Gameplanner.Appworks.Mappings.File;
 
-public class AppworksMappingFileImporter(string filePath) : IAppworksMappingImporter
+public class AppworksMappingFileImporter(ILogger<AppworksMappingFileImporter> logger, string filePath) : IAppworksMappingImporter
 {
     private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
@@ -25,7 +26,8 @@ public class AppworksMappingFileImporter(string filePath) : IAppworksMappingImpo
         {
             HasHeaderRecord = false,
             Delimiter = ",",
-            IgnoreBlankLines = true
+            IgnoreBlankLines = true,
+            MissingFieldFound = null,
         };
 
         using var reader = new StreamReader(filePath, DefaultEncoding);
@@ -47,7 +49,11 @@ public class AppworksMappingFileImporter(string filePath) : IAppworksMappingImpo
                 continue;
             }
 
-            var id = int.Parse(firstColumn);
+            if(!int.TryParse(firstColumn, out int id)) { 
+                logger.LogDebug("Skipping what a appears to be a header row: {row}", string.Join(", ", csv));
+                continue;
+            }
+
             var name = (!string.IsNullOrEmpty(csv[2]) ? csv[2] : csv[1])
                 ?? throw new InvalidOperationException("Was not expecting empty Appworks name in section " + section);
 
