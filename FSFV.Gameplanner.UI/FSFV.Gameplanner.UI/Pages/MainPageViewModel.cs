@@ -65,6 +65,8 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     private bool generateGameplanButton_HasGenerated;
     private bool generateStatsButton_IsGenerating;
     private bool generateStatsButton_HasGenerated;
+    private bool generateAppworksImportButton_IsGenerating;
+    private bool generateAppworksImportButton_HasGenerated;
 
     public StorageFolder WorkDir
     {
@@ -73,6 +75,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     }
     public string WorkDirPath => WorkDir?.Path;
 
+    #region Gameplan
     public StorageFile GameplanFile
     {
         get => gameplanFile;
@@ -94,7 +97,9 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     public ObservableCollection<ConfigFileRecordViewModel> TeamFiles { get; } = new();
     public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; } = new();
     public ObservableCollection<StorageFile> FixtureFiles { get; } = new(new List<StorageFile>(4));
+    #endregion
 
+    #region buttons
     public bool GenerateFixtursButton_IsEnabled
     {
         get => generateFixtursButton_IsEnabled;
@@ -126,6 +131,10 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => generateGameplanButton_HasGenerated;
         set => SetProperty(ref generateGameplanButton_HasGenerated, value);
     }
+
+    #endregion
+
+    #region stats
     public bool GenerateStatsButton_IsEnabled => HasGameplanFile && !GenerateStatsButton_IsGenerating;
     public bool GenerateStatsButton_IsGenerating
     {
@@ -141,7 +150,28 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => generateStatsButton_HasGenerated;
         set => SetProperty(ref generateStatsButton_HasGenerated, value);
     }
+    #endregion
 
+    #region Appworks Import
+    public bool GenerateAppworksImportButton_IsEnabled => HasGameplanFile && !GenerateAppworksImportButton_IsGenerating;
+    public bool GenerateAppworksImportButton_IsGenerating
+    {
+        get => generateAppworksImportButton_IsGenerating;
+        set
+        {
+            SetProperty(ref generateAppworksImportButton_IsGenerating, value);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateAppworksImportButton_IsEnabled)));
+        }
+    }
+    public bool GenerateAppworksImportButton_HasGenerated
+    {
+        get => generateAppworksImportButton_HasGenerated;
+        set => SetProperty(ref generateAppworksImportButton_HasGenerated, value);
+    }
+
+    #endregion
+
+    #region configs 
     public void ResetConfigFileRecords()
     {
         ConfigFileRecords.Clear();
@@ -167,4 +197,6 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     public DispatcherQueue Dispatcher { get; }
     public bool IsPreventRescanForGameplanFile { get; internal set; }
     public bool IsPreventRescanForTeamFiles { get; internal set; }
+
+    #endregion
 }

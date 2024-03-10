@@ -164,6 +164,28 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
+
+            <!-- Appworks import file generation -->
+            <Border>
+                <StackPanel Orientation="Vertical">
+                    <TextBox Text="Appworks" FontWeight="Bold" />
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal" Visibility="Visible">
+                            <!-- TODO dont apply these styles locally -->
+                            <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasGameplanFile, Mode=OneWay}" />
+                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
+                            <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+                        </StackPanel>
+                        <Button x:Name="AppworksOpenGameplanButton" Content="Select Gameplan" Click="AppworksOpenGameplanButton_Click" IsEnabled="True" />
+                        <StackPanel Orientation="Horizontal" Padding="0">
+                            <Button x:Name="GenerateAppworksImportButton" Content="Generate Stats" Click="GenerateAppworksImportButton_Click" IsEnabled="{x:Bind ViewModel.GenerateAppworksImportButton_IsEnabled, Mode=OneWay}" />
+                            <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateAppworksImportButton_HasGenerated, Mode=OneWay}" />
+                            <ProgressRing IsActive="{x:Bind ViewModel.GenerateAppworksImportButton_IsGenerating, Mode=OneWay}" />
+                            <!-- TODO add hyperlink to generated document -->
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>
