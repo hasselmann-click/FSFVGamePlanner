@@ -85,10 +85,6 @@ public class AppworksTransformerTests
     public void LevenshteinDistanceTest()
     {
         // ARRANGE
-        var logger = new Mock<ILogger<AppworksTransformer>>();
-        var importer = new Mock<IAppworksMappingImporter>();
-        var transformer = new AppworksTransformer(logger.Object, importer.Object);
-
         string a = "kitten";
         string b = "sitting";
         int expectedDistance = 3;
