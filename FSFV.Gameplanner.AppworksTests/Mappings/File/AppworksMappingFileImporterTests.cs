@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Appworks.Mappings.File;
+using Microsoft.Extensions.Logging;
 
 namespace FSFV.Gameplanner.Tests.Mappings.File;
 
@@ -20,7 +21,8 @@ public class AppworksMappingFileImporterTests
         // skip teams
 
         // ACT
-        var importer = new AppworksMappingFileImporter(filePath);
+        var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AppworksMappingFileImporter>();
+        var importer = new AppworksMappingFileImporter(logger, filePath);
         var mappings = await importer.ImportMappings(tournament);
 
         // ASSERT
