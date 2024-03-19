@@ -75,6 +75,7 @@
                     <TextBox Text="Team Files" FontWeight="Bold" />
                     <StackPanel Orientation="Vertical">
                         <TextBox Text="Looking for files named..." />
+                        
                         <!-- TODO make these a custom control -->
                         <ListView ItemsSource="{x:Bind ViewModel.TeamFiles}">
                             <ListView.ItemTemplate>
@@ -176,14 +177,22 @@
                             <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
                             <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Visibility="Visible">
-                            <!-- TODO dont apply these styles locally -->
-                            <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasAppworksMappingsFile, Mode=OneWay}" />
-                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasAppworksMappingsFile, Mode=OneWay}" />
-                            <TextBox Text="{x:Bind ViewModel.AppworksMappingsFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
-                        </StackPanel>
+
+                        <!-- mappings files -->
+                        <ListView ItemsSource="{x:Bind ViewModel.AppworksMappingsFiles}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- TODO dont apply these styles locally -->
+                                        <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{Binding NotIsFound}" />
+                                        <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
+                                        <TextBox Text="{x:Bind DisplayName}" Margin="10" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
                         <Button x:Name="AppworksOpenGameplanButton" Content="Select Gameplan" Click="AppworksOpenGameplanButton_Click" IsEnabled="True" />
-                        <Button x:Name="AppworksOpenMappingsButton" Content="Select Mappings" Click="AppworksOpenMappingsButton_Click" IsEnabled="True" />
                         <StackPanel Orientation="Horizontal" Padding="0">
                             <Button x:Name="GenerateAppworksImportButton" Content="Generate Appworks" Click="GenerateAppworksImportButton_Click" 
                                     IsEnabled="{x:Bind ViewModel.GenerateAppworksImportButton_IsEnabled, Mode=OneWay}" />

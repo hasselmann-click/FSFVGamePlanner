@@ -57,7 +57,7 @@ public sealed partial class MainPage : Page
         OnFolderPicked += LookingForTeamFiles;
         OnFolderPicked += LookingForConfigFiles;
         OnFolderPicked += LookingForGameplanFiles;
-        OnFolderPicked += LookingForAppworksMappingsFile;
+        OnFolderPicked += LookingForAppworksMappingsFiles;
     }
 
     #region Folder Picker
@@ -217,7 +217,7 @@ public sealed partial class MainPage : Page
         // write to file
         ViewModel.GameplanFile = await ViewModel.WorkDir.CreateFileAsync(MainPageViewModel.FileNamePrefixes.Gameplan + ".csv", CreationCollisionOption.GenerateUniqueName);
         await serializer.WriteCsvGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForWriteAsync(), gameDays);
-        
+
         // todo bhas test this
         await GenerateStatsAsync();
 
@@ -306,7 +306,7 @@ public sealed partial class MainPage : Page
         var eveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
 
         var teams = gameDtos
-            .SelectMany(g => new[] { new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Home }, 
+            .SelectMany(g => new[] { new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Home },
                 new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Away } })
             .DistinctBy(x => x.Name)
             .ToDictionary(x => x.Name, x => x);
@@ -341,7 +341,7 @@ public sealed partial class MainPage : Page
 
     #region Appworks
 
-    private void LookingForAppworksMappingsFile(IReadOnlyList<StorageFile> files)
+    private void LookingForAppworksMappingsFiles(IReadOnlyList<StorageFile> files)
     {
         if (ViewModel.IsPreventRescanForAppworksMappings)
         {
@@ -350,24 +350,24 @@ public sealed partial class MainPage : Page
         }
 
         ViewModel.GenerateAppworksImportButton_HasGenerated = false;
+        ViewModel.AppworksMappingsFiles.Clear();
 
-        var appworksMappingsFile = files
-            .Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.AppworksMappings, StringComparison.InvariantCultureIgnoreCase))
-            .FirstOrDefault();
-
-        ViewModel.AppworksMappingsFile = appworksMappingsFile;
-    }
-
-    private async void AppworksOpenMappingsButton_Click(object sender, RoutedEventArgs e)
-    {
-        var file = await OpenFilePicker();
-        if (file == null)
+        var teamFiles = files.Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.AppworksMappings, StringComparison.InvariantCultureIgnoreCase));
+        foreach (var file in teamFiles)
         {
-            return;
+            ViewModel.AppworksMappingsFiles.Add(new ConfigFileRecordViewModel
+            {
+                IsFound = true,
+                File = file,
+            });
         }
 
-        ViewModel.AppworksMappingsFile = file;
-        ViewModel.IsPreventRescanForAppworksMappings = true;
+        var hasMappingsFiles = ViewModel.AppworksMappingsFiles.Any();
+        ViewModel.GenerateAppworksImportButton_IsEnabled = hasMappingsFiles;
+        if (!hasMappingsFiles)
+        {
+            ViewModel.ResetMappingsFiles();
+        }
     }
 
     private void AppworksOpenGameplanButton_Click(object sender, RoutedEventArgs e)
@@ -386,27 +386,41 @@ public sealed partial class MainPage : Page
         ViewModel.GenerateAppworksImportButton_IsGenerating = false;
     }
 
+
+    /// <summary>
+    /// Generates the Appworks import file. 
+    /// This method reads the gameplan file and the appworks mappings files, and generates an import 
+    /// file per mappings file (a.k.a. "tournament").
+    /// </summary>
     private async Task GenerateAppworksImportFile()
     {
-        // todo bhas make this configurable
-        string tournament = null; // "M";
-        string filePath = "";
-
         var services = App.Current.Services;
 
         var gamePlanParser = services.GetRequiredService<FsfvCustomSerializerService>();
         var gamePlan = await gamePlanParser.ParseGameplanAsync(ViewModel.GameplanFile.OpenStreamForReadAsync);
 
-        var transformer = services.GetRequiredService<AppworksTransformerFactory>().CreateTransformer(filePath);
-        var transformedRecordsByTournament = await transformer.Transform(gamePlan, tournament);
+        foreach (var mappings in ViewModel.AppworksMappingsFiles)
+        {
+            var mappingsFilePath = mappings.File.Path;
+            var fileName = Path.GetFileNameWithoutExtension(mappingsFilePath);
+            var fileNameAr = fileName.Split('_');
+            if (fileNameAr.Length < 2)
+            {
+                // TODO: Add error handling for invalid mappings file name
+                continue;
+            }
+            var tournament = fileNameAr[1];
 
-        var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + AppworksImportFileSuffix;
-        var importFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
+            var transformer = services.GetRequiredService<AppworksTransformerFactory>().CreateTransformer(mappingsFilePath);
+            var transformedRecordsByTournament = await transformer.Transform(gamePlan, tournament);
 
-        var serializer = services.GetRequiredService<IAppworksSerializer>();
-        await serializer.WriteCsvImportFile(importFile.OpenStreamForWriteAsync, transformedRecordsByTournament[tournament]);
+            var name = String.Join('_', Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name), tournament, AppworksImportFileSuffix);
+            var importFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
+
+            var serializer = services.GetRequiredService<IAppworksSerializer>();
+            await serializer.WriteCsvImportFile(importFile.OpenStreamForWriteAsync, transformedRecordsByTournament[tournament]);
+        }
     }
-
 
     #endregion
 
@@ -488,6 +502,6 @@ public sealed partial class MainPage : Page
         ViewModel.WorkDir = newFolder;
     }
 
-   
+
 
 }

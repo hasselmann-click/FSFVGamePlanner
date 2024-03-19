@@ -45,7 +45,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             public const string Gameplan = "matchplan*.csv";
             public const string Pitches = "pitches.csv";
             public const string LeagueConfigs = "league_configs.csv";
-            public const string AppworksMappings = "mappings*.csv";
+            public const string AppworksMappings = "mappings*_[League].csv";
         }
     }
 
@@ -53,11 +53,13 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     {
         ResetConfigFileRecords();
         ResetTeamFiles();
+        ResetMappingsFiles();
         Dispatcher = dispatcher;
     }
 
     private StorageFile gameplanFile;
     private StorageFolder workDir;
+
     private bool generateFixtursButton_IsEnabled;
     private bool generateFixtursButton_IsGenerating;
     private bool generateFixtursButton_HasGenerated;
@@ -68,6 +70,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     private bool generateStatsButton_HasGenerated;
     private bool generateAppworksImportButton_IsGenerating;
     private bool generateAppworksImportButton_HasGenerated;
+    private bool generateAppworksImportButton_IsEnabled;
 
     public StorageFolder WorkDir
     {
@@ -118,7 +121,6 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => generateFixtursButton_HasGenerated;
         set => SetProperty(ref generateFixtursButton_HasGenerated, value);
     }
-
     public bool GenerateGameplanButton_IsEnabled
     {
         get => generateGameplanButton_IsEnabled;
@@ -156,7 +158,11 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     #endregion
 
     #region Appworks Import
-    public bool GenerateAppworksImportButton_IsEnabled => HasGameplanFile && HasAppworksMappingsFile && !GenerateAppworksImportButton_IsGenerating;
+    public bool GenerateAppworksImportButton_IsEnabled
+    {
+        get => generateAppworksImportButton_IsEnabled;
+        set => SetProperty(ref generateAppworksImportButton_IsEnabled, value);
+    }
     public bool GenerateAppworksImportButton_IsGenerating
     {
         get => generateAppworksImportButton_IsGenerating;
@@ -172,24 +178,13 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         set => SetProperty(ref generateAppworksImportButton_HasGenerated, value);
     }
 
-    private StorageFile appworksMappingsFile;
-    public StorageFile AppworksMappingsFile
-    {
-        get => appworksMappingsFile;
-        set
-        {
-            SetProperty(ref appworksMappingsFile, value, nameof(AppworksMappingsFile));
+    public ObservableCollection<ConfigFileRecordViewModel> AppworksMappingsFiles { get; } = [];
 
-            // all properties that are affected by the change of this property
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasAppworksMappingsFile)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotHasAppworksMappingsFile)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AppworksMappingsFileName)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateAppworksImportButton_IsEnabled)));
-        }
+    public void ResetMappingsFiles()
+    {
+        AppworksMappingsFiles.Clear();
+        AppworksMappingsFiles.Add(new ConfigFileRecordViewModel { PreviewDisplayName = FileNamePrefixes.DisplayNames.AppworksMappings, IsFound = false });
     }
-    public bool NotHasAppworksMappingsFile => !HasAppworksMappingsFile;
-    public bool HasAppworksMappingsFile => appworksMappingsFile != null;
-    public string AppworksMappingsFileName => appworksMappingsFile?.Name ?? FileNamePrefixes.DisplayNames.AppworksMappings;
 
     #endregion
 
