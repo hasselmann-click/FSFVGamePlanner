@@ -11,6 +11,15 @@
 		<UseWinUI>true</UseWinUI>
 		<EnableMsixTooling>true</EnableMsixTooling>
 		<PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
+		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+		<PackageCertificateKeyFile>FSFV.Gameplanner.UI_TemporaryKey.pfx</PackageCertificateKeyFile>
+		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+		<GenerateTestArtifacts>True</GenerateTestArtifacts>
+		<AppxBundle>Never</AppxBundle>
+		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 
 	</PropertyGroup>
 	<ItemGroup>
