@@ -48,7 +48,7 @@ namespace FSFV.Gameplanner.Service.Slotting
                     additionalBreak = TimeSpan.FromMinutes(
                         Math.Floor(additionalBreak.TotalMinutes / 5.0) * 5);
 
-                pitch.Games = pitch.Games.OrderByDescending(g => g.Group.Type.Priority).ToList();
+                pitch.Games = [.. pitch.Games.OrderByDescending(g => g.Group.Type.Priority)];
 
                 int parallel = 1;
                 int i = 0;

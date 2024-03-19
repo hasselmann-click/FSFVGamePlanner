@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
@@ -56,6 +57,7 @@ public sealed partial class MainPage : Page
         OnFolderPicked += LookingForTeamFiles;
         OnFolderPicked += LookingForConfigFiles;
         OnFolderPicked += LookingForGameplanFiles;
+        OnFolderPicked += LookingForAppworksMappingsFile;
     }
 
     #region Folder Picker
@@ -180,7 +182,7 @@ public sealed partial class MainPage : Page
         foreach (var gameDayPitches in pitchesOrdered)
         {
             var slottedPitches = slotService.SlotGameDay(
-                gameDayPitches.ToList(),
+                [.. gameDayPitches],
                 games.Where(g => g.GameDay == gameDayPitches.Key).ToList()
             );
             gameDays.Add(new GameDay
@@ -264,7 +266,7 @@ public sealed partial class MainPage : Page
         foreach (var file in ViewModel.TeamFiles.Select(tf => tf.File))
         {
             var teams = await FileIO.ReadLinesAsync(file);
-            var fixtures = fixtureGenerator.Fix(teams.ToArray(), GamesPlaceholder);
+            var fixtures = fixtureGenerator.Fix([.. teams], GamesPlaceholder);
             var csv = fixtures.Select(g => g.GameDay + "," + g.Home + "," + g.Away);
 
             var fixtureFile = await ViewModel.WorkDir.CreateFileAsync(
@@ -339,6 +341,35 @@ public sealed partial class MainPage : Page
 
     #region Appworks
 
+    private void LookingForAppworksMappingsFile(IReadOnlyList<StorageFile> files)
+    {
+        if (ViewModel.IsPreventRescanForAppworksMappings)
+        {
+            ViewModel.IsPreventRescanForAppworksMappings = false;
+            return;
+        }
+
+        ViewModel.GenerateAppworksImportButton_HasGenerated = false;
+
+        var appworksMappingsFile = files
+            .Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.AppworksMappings, StringComparison.InvariantCultureIgnoreCase))
+            .FirstOrDefault();
+
+        ViewModel.AppworksMappingsFile = appworksMappingsFile;
+    }
+
+    private async void AppworksOpenMappingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var file = await OpenFilePicker();
+        if (file == null)
+        {
+            return;
+        }
+
+        ViewModel.AppworksMappingsFile = file;
+        ViewModel.IsPreventRescanForAppworksMappings = true;
+    }
+
     private void AppworksOpenGameplanButton_Click(object sender, RoutedEventArgs e)
     {
         OpenGameplanButton_Click(sender, e);
@@ -358,20 +389,21 @@ public sealed partial class MainPage : Page
     private async Task GenerateAppworksImportFile()
     {
         // todo bhas make this configurable
-        var tournament = "M";
+        string tournament = null; // "M";
+        string filePath = "";
 
         var services = App.Current.Services;
 
         var gamePlanParser = services.GetRequiredService<FsfvCustomSerializerService>();
         var gamePlan = await gamePlanParser.ParseGameplanAsync(ViewModel.GameplanFile.OpenStreamForReadAsync);
 
-        var transformer = services.GetRequiredService<AppworksTransformer>();
+        var transformer = services.GetRequiredService<AppworksTransformerFactory>().CreateTransformer(filePath);
         var transformedRecordsByTournament = await transformer.Transform(gamePlan, tournament);
 
         var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + AppworksImportFileSuffix;
         var importFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
 
-        var serializer = services.GetRequiredService<AppworksSerializer>();
+        var serializer = services.GetRequiredService<IAppworksSerializer>();
         await serializer.WriteCsvImportFile(importFile.OpenStreamForWriteAsync, transformedRecordsByTournament[tournament]);
     }
 
@@ -415,16 +447,8 @@ public sealed partial class MainPage : Page
 
     private async void OpenGameplanButton_Click(object sender, RoutedEventArgs e)
     {
-        FileOpenPicker openPicker = new();
-        var hWnd = WindowHelper.GetWindowHandle(this);
-        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
-
-        // Set options for your folder picker
-        openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
-        openPicker.FileTypeFilter.Add(".csv");
-
-        // Open the picker for the user to pick a folder
-        StorageFile file = await openPicker.PickSingleFileAsync();
+        StorageFile file = await OpenFilePicker();
+        // TODO validate picked file?
         if (file == null)
         {
             return;
@@ -438,6 +462,20 @@ public sealed partial class MainPage : Page
         ViewModel.GenerateStatsButton_HasGenerated = false;
     }
 
+    private IAsyncOperation<StorageFile> OpenFilePicker(string fileTypeFilter = ".csv")
+    {
+        FileOpenPicker openPicker = new();
+        var hWnd = WindowHelper.GetWindowHandle(this);
+        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+        // Set options for your folder picker
+        openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+        openPicker.FileTypeFilter.Add(fileTypeFilter);
+
+        // Open the picker for the user to pick a folder
+        return openPicker.PickSingleFileAsync();
+    }
+
     private async Task ChangeWorkFolder(StorageFolder newFolder)
     {
         query = newFolder.CreateFileQuery();
@@ -449,5 +487,7 @@ public sealed partial class MainPage : Page
         OnFolderContentChanged(query, null);
         ViewModel.WorkDir = newFolder;
     }
+
+   
 
 }

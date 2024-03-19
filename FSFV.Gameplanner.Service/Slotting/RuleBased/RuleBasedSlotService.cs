@@ -9,7 +9,7 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased;
 
 public class RuleBasedSlotService : AbstractSlotService
 {
-    private static readonly List<Game> EmptyList = new(0);
+    private static readonly List<Game> EmptyList = [];
     private static readonly TimeSpan SlotBuffer = TimeSpan.FromMinutes(30);
 
     private readonly IEnumerable<ISlotRule> rules;

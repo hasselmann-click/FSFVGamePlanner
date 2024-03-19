@@ -6,7 +6,7 @@ namespace FSFV.Gameplanner.Appworks;
 public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksMappingImporter importer)
 {
 
-    public async Task<Dictionary<string, List<AppworksImportRecord>>> Transform(List<FsfvCustomSerializerService.GameplanGameDto> gamePlan, string tournament = null)
+    public async Task<Dictionary<string, List<AppworksImportRecord>>> Transform(List<FsfvCustomSerializerService.GameplanGameDto> gamePlan, string? tournament = null)
     {
         var tournaments = string.IsNullOrEmpty(tournament) ? gamePlan.Select(x => x.League).Distinct().ToList() : [tournament];
         logger.LogDebug("Found {TournamentCount} tournaments", tournaments.Count);

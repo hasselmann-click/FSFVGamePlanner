@@ -65,6 +65,6 @@ namespace FSFV.Gameplanner.UI
 
         static public List<Window> ActiveWindows { get { return _activeWindows; } }
 
-        static private List<Window> _activeWindows = new List<Window>();
+        static private List<Window> _activeWindows = [];
     }
 }

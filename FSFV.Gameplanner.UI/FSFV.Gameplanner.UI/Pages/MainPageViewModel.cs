@@ -36,6 +36,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         public const string Teams = "teams";
         public const string Fixtures = "fixtures";
         public const string Gameplan = "matchplan";
+        public const string AppworksMappings = "mappings";
 
         public static class DisplayNames
         {
@@ -44,7 +45,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             public const string Gameplan = "matchplan*.csv";
             public const string Pitches = "pitches.csv";
             public const string LeagueConfigs = "league_configs.csv";
-
+            public const string AppworksMappings = "mappings*.csv";
         }
     }
 
@@ -87,15 +88,17 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasGameplanFile)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotHasGameplanFile)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GameplanFileName)));
+
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateStatsButton_IsEnabled)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateAppworksImportButton_IsEnabled)));
         }
     }
     public bool NotHasGameplanFile => !HasGameplanFile;
     public bool HasGameplanFile => GameplanFile != null;
     public string GameplanFileName => GameplanFile?.Name ?? FileNamePrefixes.DisplayNames.Gameplan;
 
-    public ObservableCollection<ConfigFileRecordViewModel> TeamFiles { get; } = new();
-    public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; } = new();
+    public ObservableCollection<ConfigFileRecordViewModel> TeamFiles { get; } = [];
+    public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; } = [];
     public ObservableCollection<StorageFile> FixtureFiles { get; } = new(new List<StorageFile>(4));
     #endregion
 
@@ -153,7 +156,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     #endregion
 
     #region Appworks Import
-    public bool GenerateAppworksImportButton_IsEnabled => HasGameplanFile && !GenerateAppworksImportButton_IsGenerating;
+    public bool GenerateAppworksImportButton_IsEnabled => HasGameplanFile && HasAppworksMappingsFile && !GenerateAppworksImportButton_IsGenerating;
     public bool GenerateAppworksImportButton_IsGenerating
     {
         get => generateAppworksImportButton_IsGenerating;
@@ -168,6 +171,25 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => generateAppworksImportButton_HasGenerated;
         set => SetProperty(ref generateAppworksImportButton_HasGenerated, value);
     }
+
+    private StorageFile appworksMappingsFile;
+    public StorageFile AppworksMappingsFile
+    {
+        get => appworksMappingsFile;
+        set
+        {
+            SetProperty(ref appworksMappingsFile, value, nameof(AppworksMappingsFile));
+
+            // all properties that are affected by the change of this property
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasAppworksMappingsFile)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotHasAppworksMappingsFile)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AppworksMappingsFileName)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateAppworksImportButton_IsEnabled)));
+        }
+    }
+    public bool NotHasAppworksMappingsFile => !HasAppworksMappingsFile;
+    public bool HasAppworksMappingsFile => appworksMappingsFile != null;
+    public string AppworksMappingsFileName => appworksMappingsFile?.Name ?? FileNamePrefixes.DisplayNames.AppworksMappings;
 
     #endregion
 
@@ -197,6 +219,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     public DispatcherQueue Dispatcher { get; }
     public bool IsPreventRescanForGameplanFile { get; internal set; }
     public bool IsPreventRescanForTeamFiles { get; internal set; }
+    public bool IsPreventRescanForAppworksMappings { get; internal set; }
 
     #endregion
 }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
+using FSFV.Gameplanner.Appworks;
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Extensions;
@@ -24,10 +25,10 @@ namespace FSFV.Gameplanner.UI
 
         public new static App Current => (App)Application.Current;
 
-        public IServiceProvider Services { get; }
+        public ServiceProvider Services { get; }
 
         private static readonly Random RNG = new(23432546);
-        private static readonly SizeInt32 LaunchWindowSize = new SizeInt32(1000, 1400);
+        private static readonly SizeInt32 LaunchWindowSize = new(1000, 1400);
 
         private Window m_window;
 
@@ -57,7 +58,7 @@ namespace FSFV.Gameplanner.UI
             m_window.Activate();
         }
 
-        private static IServiceProvider ConfigureServices()
+        private static ServiceProvider ConfigureServices()
         {
             var configuration = new ConfigurationBuilder()
                 // TODO make this configurable in app. Especially for the ZK teams rule!
@@ -74,9 +75,12 @@ namespace FSFV.Gameplanner.UI
                     config.AddConsole();
                     config.AddEventLog();
                 })
-                .AddRuleBasedSlotting()
                 .AddTransient<GeneratorService>()
                 .AddTransient<FsfvCustomSerializerService>()
+                
+                .AddRuleBasedSlotting()
+                .AddAppworksServices()
+
                 .BuildServiceProvider(new ServiceProviderOptions
                 {
                     ValidateOnBuild = true
