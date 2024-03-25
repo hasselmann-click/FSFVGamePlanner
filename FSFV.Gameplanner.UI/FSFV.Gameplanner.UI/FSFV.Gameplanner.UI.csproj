@@ -1,27 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<RootNamespace>FSFV.Gameplanner.UI</RootNamespace>
+		
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-		<RootNamespace>FSFV.Gameplanner.UI</RootNamespace>
-		<ApplicationManifest>app.manifest</ApplicationManifest>
-		<Platforms>x86;x64;ARM64</Platforms>
-		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<Platforms>x64</Platforms>
+		<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
 
 		<UseWinUI>true</UseWinUI>
 		<EnableMsixTooling>true</EnableMsixTooling>
-		<PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
+		
+		<WindowsPackageType>None</WindowsPackageType>
+		<WindowsAppSDKSelfContained>True</WindowsAppSDKSelfContained>
+		
 		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-		<PackageCertificateKeyFile>FSFV.Gameplanner.UI_TemporaryKey.pfx</PackageCertificateKeyFile>
-		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
-		<GenerateTestArtifacts>True</GenerateTestArtifacts>
-		<AppxBundle>Never</AppxBundle>
-		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-
 	</PropertyGroup>
+	
 	<ItemGroup>
 		<None Remove="Images\LockScreenLogo.scale-200.png" />
 		<None Remove="Images\SplashScreen.scale-200.png" />
@@ -32,11 +27,6 @@
 		<None Remove="Images\Wide310x150Logo.scale-200.png" />
 		<None Remove="Package.appxmanifest" />
 		<None Remove="Pages\MainPage.xaml" />
-	</ItemGroup>
-	<ItemGroup>
-	  <AppxManifest Include="Package.appxmanifest">
-	    <SubType>Designer</SubType>
-	  </AppxManifest>
 	</ItemGroup>
 	<ItemGroup>
 	  <Content Include="Images\LockScreenLogo.scale-200.png" />
