@@ -2,7 +2,7 @@
   "profiles": {
     "Gameplanner (Unpackaged)": {
       "commandName": "Executable",
-      "executablePath": "C:\\Users\\bj13_\\source\\repos\\FSFVGamePlanner\\FSFV.Gameplanner.UI\\FSFV.Gameplanner.UI\\bin\\x64\\Debug\\net8.0-windows10.0.19041.0\\FSFV.Gameplanner.UI.exe"
+      "executablePath": "$(MSBuildProjectDirectory)\\bin\\x64\\Debug\\net8.0-windows10.0.19041.0\\FSFV.Gameplanner.UI.exe"
     },
     "Gameplanner (Packaged)": {
       "commandName": "MsixPackage",

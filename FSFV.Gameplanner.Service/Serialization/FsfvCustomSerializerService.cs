@@ -17,7 +17,7 @@ namespace FSFV.Gameplanner.Service.Serialization;
 public class FsfvCustomSerializerService
 {
     public const string DateFormat = "dd.MM.yy";
-
+    private const char TimeSeparator = '-';
     private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
     private readonly ILogger<FsfvCustomSerializerService> logger;
@@ -141,7 +141,7 @@ public class FsfvCustomSerializerService
             for (int j = 1; j < fields.Length; ++j)
             {
                 var pitch = new Pitch { Name = pitchNames[j - 1], GameDay = i };
-                var times = fields[j].Split('-');
+                var times = fields[j].Split(TimeSeparator);
                 if (times.Length != 2)
                 {
                     if (string.IsNullOrEmpty(times[0]))

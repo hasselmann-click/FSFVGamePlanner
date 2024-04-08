@@ -36,8 +36,6 @@ namespace FSFV.Gameplanner.UI.Pages;
 /// </summary>
 public sealed partial class MainPage : Page
 {
-    private const string FolderAccessToken = "PickedFolderToken";
-
     private const string GamesPlaceholder = "SPIELFREI";
     private const string StatsFileSuffix = "_stats.csv";
     private const string AppworksImportFileSuffix = "_appworks.csv";
@@ -81,7 +79,6 @@ public sealed partial class MainPage : Page
         {
             return;
         }
-        StorageApplicationPermissions.FutureAccessList.AddOrReplace(FolderAccessToken, folder);
         await ChangeWorkFolder(folder);
     }
 
@@ -324,7 +321,7 @@ public sealed partial class MainPage : Page
                 teams[game.Home].MorningGames++;
                 teams[game.Away].MorningGames++;
             }
-            else if (game.EndTime.TimeOfDay < eveningSince)
+            else if (game.StartTime.TimeOfDay > eveningSince)
             {
                 teams[game.Home].EveningGames++;
                 teams[game.Away].EveningGames++;
@@ -352,7 +349,7 @@ public sealed partial class MainPage : Page
         ViewModel.GenerateAppworksImportButton_HasGenerated = false;
         ViewModel.AppworksMappingsFiles.Clear();
 
-        var teamFiles = files.Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.AppworksMappings, StringComparison.InvariantCultureIgnoreCase));
+        var teamFiles = files.Where(s => s.FileType == ".csv" && s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.AppworksMappings, StringComparison.InvariantCultureIgnoreCase));
         foreach (var file in teamFiles)
         {
             ViewModel.AppworksMappingsFiles.Add(new ConfigFileRecordViewModel
