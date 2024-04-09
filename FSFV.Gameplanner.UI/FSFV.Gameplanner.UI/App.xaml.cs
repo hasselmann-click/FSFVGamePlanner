@@ -5,12 +5,15 @@ using FSFV.Gameplanner.Appworks;
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Extensions;
+using FSFV.Gameplanner.UI.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using System;
+using Windows.ApplicationModel.Core;
 using Windows.Graphics;
+using Windows.UI.Core;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -28,7 +31,6 @@ namespace FSFV.Gameplanner.UI
         public ServiceProvider Services { get; }
 
         private static readonly Random RNG = new(23432546);
-        private static readonly SizeInt32 LaunchWindowSize = new(1000, 1400);
 
         private Window m_window;
 
@@ -40,6 +42,16 @@ namespace FSFV.Gameplanner.UI
         {
             this.InitializeComponent();
             Services = ConfigureServices();
+
+            var logger = Services.GetRequiredService<ILogger<App>>();
+
+            // Handle unhandled exceptions
+            Application.Current.UnhandledException += (sender, e) =>
+            {
+                logger.LogError(e.Exception, "Unhandled exception occurred");
+                e.Handled = true; // Set this to true to prevent the exception from crashing the app
+            };
+
         }
 
         /// <summary>
@@ -49,14 +61,10 @@ namespace FSFV.Gameplanner.UI
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             m_window = new MainWindow();
-
             WindowHelper.TrackWindow(m_window);
-
-            var appWindow = WindowHelper.GetAppWindow(m_window);
-            appWindow.Resize(LaunchWindowSize);
-
             m_window.Activate();
         }
+
 
         private static ServiceProvider ConfigureServices()
         {
@@ -74,10 +82,11 @@ namespace FSFV.Gameplanner.UI
                     config.AddConfiguration(configuration.GetSection("Logging"));
                     config.AddConsole();
                     config.AddEventLog();
+                    config.AddProvider(new UILoggerProvider());
                 })
                 .AddTransient<GeneratorService>()
                 .AddTransient<FsfvCustomSerializerService>()
-                
+
                 .AddRuleBasedSlotting()
                 .AddAppworksServices()
 

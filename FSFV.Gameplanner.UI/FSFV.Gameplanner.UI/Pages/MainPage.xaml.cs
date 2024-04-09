@@ -7,12 +7,14 @@ using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting;
+using FSFV.Gameplanner.UI.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Documents;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -56,6 +58,18 @@ public sealed partial class MainPage : Page
         OnFolderPicked += LookingForConfigFiles;
         OnFolderPicked += LookingForGameplanFiles;
         OnFolderPicked += LookingForAppworksMappingsFiles;
+
+        UILogger.OnMessageLogged += UpdateLog;
+    }
+
+    private void UpdateLog(UILogMessage message)
+    {
+        LogListView.Items.Add(message);
+    }
+
+    private void ClearLogButton_Click(object sender, RoutedEventArgs e)
+    {
+        LogListView.Items.Clear();
     }
 
     #region Folder Picker
@@ -142,12 +156,29 @@ public sealed partial class MainPage : Page
 
     private async void GeneratePlanButton_Click(object sender, RoutedEventArgs e)
     {
-        // TODO ERROR HANDLING > Show error message on exception?
+        try
+        {
+            ViewModel.GenerateGameplanButton_HasGenerated = false;
+            ViewModel.GenerateGameplanButton_IsGenerating = true;
+            ViewModel.GenerateGameplanButton_IsEnabled = false;
 
-        ViewModel.GenerateGameplanButton_HasGenerated = false;
-        ViewModel.GenerateGameplanButton_IsGenerating = true;
-        ViewModel.GenerateGameplanButton_IsEnabled = false;
+            await GenerateGamePlanAsync();
 
+            ViewModel.GenerateGameplanButton_IsGenerating = false;
+            ViewModel.GenerateGameplanButton_HasGenerated = true;
+            ViewModel.GenerateGameplanButton_IsEnabled = true;
+        }
+        catch
+        {
+            ViewModel.GenerateGameplanButton_IsGenerating = false;
+            ViewModel.GenerateGameplanButton_HasGenerated = false;
+            ViewModel.GenerateGameplanButton_IsEnabled = true;
+            throw;
+        }
+    }
+
+    private async Task GenerateGamePlanAsync()
+    {
         var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
         // parse league configs to group type dto
         var leagueConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.LeagueConfigs).File;
@@ -217,10 +248,6 @@ public sealed partial class MainPage : Page
 
         // todo bhas test this
         await GenerateStatsAsync();
-
-        ViewModel.GenerateGameplanButton_IsGenerating = false;
-        ViewModel.GenerateGameplanButton_HasGenerated = true;
-        ViewModel.GenerateGameplanButton_IsEnabled = true;
     }
     #endregion
 
