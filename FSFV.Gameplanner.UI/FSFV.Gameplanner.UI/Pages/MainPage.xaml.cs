@@ -154,6 +154,10 @@ public sealed partial class MainPage : Page
             && fixtureFiles.Any();
     }
 
+    #endregion
+
+    #region Gameplan
+
     private async void GeneratePlanButton_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -401,13 +405,22 @@ public sealed partial class MainPage : Page
 
     private async void GenerateAppworksImportButton_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel.GenerateAppworksImportButton_HasGenerated = false;
-        ViewModel.GenerateAppworksImportButton_IsGenerating = true;
+        try
+        {
+            ViewModel.GenerateAppworksImportButton_HasGenerated = false;
+            ViewModel.GenerateAppworksImportButton_IsGenerating = true;
 
-        await GenerateAppworksImportFile();
 
-        ViewModel.GenerateAppworksImportButton_HasGenerated = true;
-        ViewModel.GenerateAppworksImportButton_IsGenerating = false;
+            await GenerateAppworksImportFile();
+
+            ViewModel.GenerateAppworksImportButton_HasGenerated = true;
+            ViewModel.GenerateAppworksImportButton_IsGenerating = false;
+        }
+        catch
+        {
+            ViewModel.GenerateAppworksImportButton_IsGenerating = false;
+            throw;
+        }
     }
 
 
@@ -423,6 +436,7 @@ public sealed partial class MainPage : Page
         var gamePlanParser = services.GetRequiredService<FsfvCustomSerializerService>();
         var gamePlan = await gamePlanParser.ParseGameplanAsync(ViewModel.GameplanFile.OpenStreamForReadAsync);
 
+        var logger = services.GetRequiredService<ILogger<MainPage>>();
         foreach (var mappings in ViewModel.AppworksMappingsFiles)
         {
             var mappingsFilePath = mappings.File.Path;
@@ -430,11 +444,12 @@ public sealed partial class MainPage : Page
             var fileNameAr = fileName.Split('_');
             if (fileNameAr.Length < 2)
             {
-                // TODO: Add error handling for invalid mappings file name
+                logger.LogError("Invalid mappings file name: {FileName}", fileName);
                 continue;
             }
             var tournament = fileNameAr[1];
 
+            logger.LogInformation("Generating Appworks import file for tournament {Tournament}", tournament);
             var transformer = services.GetRequiredService<AppworksTransformerFactory>().CreateTransformer(mappingsFilePath);
             var transformedRecordsByTournament = await transformer.Transform(gamePlan, tournament);
 

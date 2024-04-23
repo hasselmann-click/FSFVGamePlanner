@@ -27,7 +27,7 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
                 {
                     var homeId = mappings.Teams[game.Home];
                     var awayId = mappings.Teams[game.Away];
-                    var refereeId = mappings.Teams[game.Referee];
+                    int? refereeId = string.IsNullOrEmpty(game.Referee) ? null : mappings.Teams[game.Referee];
                     var matchdayId = mappings.Matchdays[game.Date.ToString(IAppworksMappingImporter.MatchdayDateFormat)];
                     var divisionId = mappings.Divisions[game.Group];
                     var locationId = mappings.Locations[game.Pitch];
@@ -40,7 +40,7 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
                     errors.Add(e.Message);
                 }
             }
-            
+
             if (errors.Count != 0)
             {
                 logger.LogError("Errors while transforming games for tournament {Tournament}: {Errors}", t, string.Join("\n", errors));
@@ -62,7 +62,7 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
     /// <param name="tournament"></param>
     private void UpdateTeamMappings(AppworksIdMappings origMappings, List<FsfvCustomSerializerService.GameplanGameDto> gamePlan, string tournament)
     {
-        var teams = gamePlan.Where(g => g.League == tournament).SelectMany(x => new[] { x.Home, x.Away, x.Referee }).Distinct().ToList();
+        var teams = gamePlan.Where(g => g.League == tournament).SelectMany(x => new[] { x.Home, x.Away, x.Referee }).Distinct().Where(team => !string.IsNullOrEmpty(team)).ToList();
         foreach (var team in teams)
         {
             if (origMappings.Teams.ContainsKey(team))

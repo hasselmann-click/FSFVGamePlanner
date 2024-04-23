@@ -50,7 +50,7 @@ public class AppworksMappingFileImporter(ILogger<AppworksMappingFileImporter> lo
             }
 
             if(!int.TryParse(firstColumn, out int id)) { 
-                logger.LogDebug("Skipping what a appears to be a header row: {row}", string.Join(", ", csv));
+                logger.LogDebug("Skipping what appears to be a header row: {row}", string.Join(",", csv.Parser.RawRecord));
                 continue;
             }
 
