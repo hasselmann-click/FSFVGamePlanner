@@ -15,10 +15,20 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
         foreach (var t in tournaments)
         {
             var mappings = await importer.ImportMappings(t);
-            UpdateTeamMappings(mappings, gamePlan, t);
 
             var games = gamePlan.Where(g => g.League == t).ToList();
             var records = new List<AppworksImportRecord>(games.Count);
+
+            var divisions = games.Select(x => x.Group).Distinct().ToList();
+            foreach (var division in divisions)
+            {
+                if (!mappings.Divisions.ContainsKey(division))
+                {
+                    logger.LogWarning("Ignoring division {Division} for {Tournament}", division, t);
+                    games = games.Where(x => x.Group != division).ToList();
+                }
+            }
+            UpdateTeamMappings(mappings, games, t);
 
             List<string> errors = [];
             foreach (var game in games)
@@ -28,8 +38,8 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
                     var homeId = mappings.Teams[game.Home];
                     var awayId = mappings.Teams[game.Away];
                     int? refereeId = string.IsNullOrEmpty(game.Referee) ? null : mappings.Teams[game.Referee];
-                    var matchdayId = mappings.Matchdays[game.Date.ToString(IAppworksMappingImporter.MatchdayDateFormat)];
                     var divisionId = mappings.Divisions[game.Group];
+                    var matchdayId = mappings.Matchdays[game.Date.ToString(IAppworksMappingImporter.MatchdayDateFormat)];
                     var locationId = mappings.Locations[game.Pitch];
                     var startTime = game.Date.ToDateTime(TimeOnly.FromDateTime(game.StartTime));
                     var record = new AppworksImportRecord(matchdayId, divisionId, locationId, homeId, awayId, startTime, refereeId);
