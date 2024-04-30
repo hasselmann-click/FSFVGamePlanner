@@ -3,6 +3,7 @@
 
 using FSFV.Gameplanner.Appworks;
 using FSFV.Gameplanner.Fixtures;
+using FSFV.Gameplanner.Pdf;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Extensions;
 using FSFV.Gameplanner.UI.Logging;
@@ -86,6 +87,7 @@ namespace FSFV.Gameplanner.UI
                 })
                 .AddTransient<GeneratorService>()
                 .AddTransient<FsfvCustomSerializerService>()
+                .AddTransient<PdfGenerator>()
 
                 .AddRuleBasedSlotting()
                 .AddAppworksServices()

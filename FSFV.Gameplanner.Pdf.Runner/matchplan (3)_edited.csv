@@ -1,0 +1,148 @@
+﻿GameDay,Pitch,StartTime,EndTime,Home,Away,Referee,Group,League,Date
+1,R2,10:00,11:40,Maradonnas,Real Rosé,,A,L,05.05.24
+1,R2,10:00,11:40,Elle Real,Depordivas,,A,L,05.05.24
+1,R6,10:00,11:35,AS Lettenwiese,ZüriUtd,,A,E,05.05.24
+1,R7,10:00,11:35,Inter Mezzo,1. FC Brennivin,,A,E,05.05.24
+1,R11,10:00,11:35,Widerstand Wipkingen,Aurora,Tormotor,A,M,05.05.24
+1,R6,11:35,13:10,AC Tabula Brisant,Zenit Emilie,,A,E,05.05.24
+1,R7,11:35,13:10,El Social FC,A.C. Tabula Entspannt,,A,E,05.05.24
+1,R11,11:35,13:10,Tormotor,Real Cabron,Dynamo Röntgen,A,M,05.05.24
+1,R2,11:40,13:20,Zorras Züri,Zürich United Grrrls,,B,L,05.05.24
+1,R2,11:40,13:20,Femmes Terribles,Rapid Industrie,,B,L,05.05.24
+1,R6,13:10,14:45,Ex Hürlimann,Traktor Emilie,Atletico Bernina,B,M,05.05.24
+1,R7,13:10,14:45,BSC Tram 5,Saints FC,,A,E,05.05.24
+1,R11,13:10,14:45,Dynamo Röntgen,Bund Schöne Rosen,Deportivo,A,M,05.05.24
+1,R2,13:20,15:20,Sputnik,Zwietracht Turicum,Gremio Porto Riesbach,B,M,05.05.24
+1,R6,14:45,16:20,Atletico Bernina,Furttals Finest,Ex Hürlimann,B,M,05.05.24
+1,R7,14:45,16:20,FC Eglisau,Real Azül,Sporting Morgenstern,A,M,05.05.24
+1,R11,14:45,16:20,Deportivo,Olympique Lettenwiese,Schachtjor,A,M,05.05.24
+1,R2,15:20,16:55,Gremio Porto Riesbach,Tabula Rasant,Sputnik,A,M,05.05.24
+1,R6,16:20,17:55,Rotor,C.D. El Clandestino,Furttals Finest,B,M,05.05.24
+1,R7,16:20,17:55,Sporting Morgenstern,Zürich Freestylers,FC Eglisau,B,M,05.05.24
+1,R11,16:20,17:55,Schachtjor,Wacker Selnau,Olympique Lettenwiese,B,M,05.05.24
+2,R2,10:00,12:00,AC Tabula Brisant,A.C. Tabula Entspannt,,A,E,12.05.24
+2,R6,10:00,12:00,Bund Schöne Rosen,Tabula Rasant,C.D. El Clandestino,A,M,12.05.24
+2,R7,10:00,11:35,BSC Tram 5,Zenit Emilie,,A,E,12.05.24
+2,R11,10:00,12:00,Gremio Porto Riesbach,Real Cabron,Wacker Selnau,A,M,12.05.24
+2,R7,11:35,13:10,El Social FC,ZüriUtd,,A,E,12.05.24
+2,R2,12:00,14:00,AS Lettenwiese,1. FC Brennivin,,A,E,12.05.24
+2,R6,12:00,14:00,C.D. El Clandestino,Furttals Finest,Tabula Rasant,B,M,12.05.24
+2,R11,12:00,14:00,Rotor,Wacker Selnau,Zürich Freestylers,B,M,12.05.24
+2,R7,13:10,14:45,Schachtjor,Ex Hürlimann,Dynamo Röntgen,B,M,12.05.24
+2,R2,14:00,16:00,Inter Mezzo,Saints FC,,A,E,12.05.24
+2,R6,14:00,16:00,Sporting Morgenstern,Traktor Emilie,Widerstand Wipkingen,B,M,12.05.24
+2,R11,14:00,16:00,Sputnik,Zürich Freestylers,Aurora,B,M,12.05.24
+2,R7,14:45,16:20,Dynamo Röntgen,Olympique Lettenwiese,Zwietracht Turicum,A,M,12.05.24
+2,R2,16:00,17:35,Deportivo,Real Azül,Traktor Emilie,A,M,12.05.24
+2,R6,16:00,17:35,FC Eglisau,Widerstand Wipkingen,Sporting Morgenstern,A,M,12.05.24
+2,R11,16:00,17:35,Tormotor,Aurora,Sputnik,A,M,12.05.24
+2,R7,16:20,17:55,Atletico Bernina,Zwietracht Turicum,Olympique Lettenwiese,B,M,12.05.24
+3,R2,10:00,11:40,Gleis Elf,Zorras Züri,Zürich United Grrrls,B,L,26.05.24
+3,R2,10:00,11:40,Blutgretchen,Maradonnas,Real Rosé,A,L,26.05.24
+3,R6,10:00,11:35,El Social FC,1. FC Brennivin,,A,E,26.05.24
+3,R7,10:00,11:35,FC Eglisau,Tormotor,Deportivo,A,M,26.05.24
+3,R11,10:00,11:35,Saints FC,Zenit Emilie,,A,E,26.05.24
+3,R6,11:35,13:10,BSC Tram 5,A.C. Tabula Entspannt,,A,E,26.05.24
+3,R7,11:35,13:10,Deportivo,Widerstand Wipkingen,Zürich Freestylers,A,M,26.05.24
+3,R11,11:35,13:10,AC Tabula Brisant,ZüriUtd,,A,E,26.05.24
+3,R2,11:40,13:20,Real Rosé,Elle Real,Blutgretchen,A,L,26.05.24
+3,R2,11:40,13:20,Zürich United Grrrls,Femmes Terribles,Maradonnas,B,L,26.05.24
+3,R6,13:10,14:45,Inter Mezzo,AS Lettenwiese,,A,E,26.05.24
+3,R7,13:10,14:45,Zürich Freestylers,Zwietracht Turicum,Schachtjor,B,M,26.05.24
+3,R11,13:10,14:45,Atletico Bernina,C.D. El Clandestino,Real Azül,B,M,26.05.24
+3,R2,13:20,15:20,Wacker Selnau,Furttals Finest,Rotor,B,M,26.05.24
+3,R6,14:45,16:20,Gremio Porto Riesbach,Aurora,Tabula Rasant,A,M,26.05.24
+3,R7,14:45,16:20,Sporting Morgenstern,Schachtjor,Bund Schöne Rosen,B,M,26.05.24
+3,R11,14:45,16:20,Olympique Lettenwiese,Real Azül,Traktor Emilie,A,M,26.05.24
+3,R2,15:20,16:55,Rotor,Ex Hürlimann,Wacker Selnau,B,M,26.05.24
+3,R6,16:20,17:55,Dynamo Röntgen,Tabula Rasant,Gremio Porto Riesbach,A,M,26.05.24
+3,R7,16:20,17:55,Bund Schöne Rosen,Real Cabron,Sporting Morgenstern,A,M,26.05.24
+3,R11,16:20,17:55,Sputnik,Traktor Emilie,Olympique Lettenwiese,B,M,26.05.24
+4,R2,10:00,11:40,Dynamo Röntgen,Real Azül,Real Cabron,A,M,02.06.24
+4,R6,10:00,11:35,BSC Tram 5,ZüriUtd,,A,E,02.06.24
+4,R7,10:00,11:35,Saints FC,A.C. Tabula Entspannt,,A,E,02.06.24
+4,R11,10:00,12:00,Zürich Freestylers,Furttals Finest,Bund Schöne Rosen,B,M,02.06.24
+4,R6,11:35,13:10,Inter Mezzo,Zenit Emilie,,A,E,02.06.24
+4,R7,11:35,13:10,AC Tabula Brisant,1. FC Brennivin,,A,E,02.06.24
+4,R2,11:40,13:20,Tabula Rasant,Real Cabron,Tormotor,A,M,02.06.24
+4,R11,12:00,14:00,Bund Schöne Rosen,Aurora,C.D. El Clandestino,A,M,02.06.24
+4,R6,13:10,14:45,AS Lettenwiese,El Social FC,,A,E,02.06.24
+4,R7,13:10,14:45,Sputnik,Wacker Selnau,Atletico Bernina,B,M,02.06.24
+4,R2,13:20,15:00,Deportivo,Tormotor,Tabula Rasant,A,M,02.06.24
+4,R11,14:00,16:00,C.D. El Clandestino,Zwietracht Turicum,FC Eglisau,B,M,02.06.24
+4,R6,14:45,16:20,Rotor,Traktor Emilie,Ex Hürlimann,B,M,02.06.24
+4,R7,14:45,16:20,Atletico Bernina,Schachtjor,Widerstand Wipkingen,B,M,02.06.24
+4,R2,15:00,16:20,Depordivas,Blutgretchen,Femmes Terribles,A,L,02.06.24
+4,R2,15:00,16:20,Elle Real,Maradonnas,Zorras Züri,A,L,02.06.24
+4,R11,16:00,17:35,FC Eglisau,Gremio Porto Riesbach,Zwietracht Turicum,A,M,02.06.24
+4,R2,16:20,17:40,Femmes Terribles,Zorras Züri,Maradonnas,B,L,02.06.24
+4,R2,16:20,17:35,Rapid Industrie,Gleis Elf,Elle Real,B,L,02.06.24
+4,R6,16:20,17:55,Sporting Morgenstern,Ex Hürlimann,Rotor,B,M,02.06.24
+4,R7,16:20,17:55,Olympique Lettenwiese,Widerstand Wipkingen,Schachtjor,A,M,02.06.24
+5,R2,10:00,12:00,Rapid Industrie,Zürich United Grrrls,Depordivas,B,L,09.06.24
+5,R2,10:00,12:00,Gleis Elf,Femmes Terribles,Real Rosé,B,L,09.06.24
+5,R6,10:00,12:00,Inter Mezzo,El Social FC,,A,E,09.06.24
+5,R7,10:00,12:00,AS Lettenwiese,AC Tabula Brisant,,A,E,09.06.24
+5,R11,10:00,12:00,Rotor,Olympique Lettenwiese,FC Eglisau,Cup,MCup,09.06.24
+5,R2,12:00,14:00,Depordivas,Real Rosé,Gleis Elf,A,L,09.06.24
+5,R2,12:00,13:15,Blutgretchen,Elle Real,Femmes Terribles,A,L,09.06.24
+5,R6,12:00,14:00,Saints FC,ZüriUtd,,A,E,09.06.24
+5,R7,12:00,14:00,BSC Tram 5,1. FC Brennivin,,A,E,09.06.24
+5,R11,12:00,14:00,FC Eglisau,Bund Schöne Rosen,Aurora,Cup,MCup,09.06.24
+5,R7,14:00,15:35,Zenit Emilie,A.C. Tabula Entspannt,,A,E,09.06.24
+5,R11,14:00,16:00,Aurora,Sporting Morgenstern,Bund Schöne Rosen,Cup,MCup,09.06.24
+5,R11,16:00,17:35,Schachtjor,Zürich Freestylers,Sporting Morgenstern,Cup,MCup,09.06.24
+6,R2,10:00,11:40,Wacker Selnau,Zwietracht Turicum,Schachtjor,B,M,16.06.24
+6,R6,10:00,11:35,Zenit Emilie,ZüriUtd,,A,E,16.06.24
+6,R7,10:00,11:35,Saints FC,1. FC Brennivin,,A,E,16.06.24
+6,R11,10:00,12:00,Sputnik,Ex Hürlimann,FC Eglisau,B,M,16.06.24
+6,R6,11:35,13:10,AS Lettenwiese,BSC Tram 5,,A,E,16.06.24
+6,R7,11:35,13:10,Inter Mezzo,A.C. Tabula Entspannt,,A,E,16.06.24
+6,R2,11:40,13:20,Rotor,Schachtjor,Atletico Bernina,B,M,16.06.24
+6,R11,12:00,14:00,FC Eglisau,Bund Schöne Rosen,Tabula Rasant,A,M,16.06.24
+6,R6,13:10,14:45,Dynamo Röntgen,Real Cabron,Zürich Freestylers,A,M,16.06.24
+6,R7,13:10,14:45,El Social FC,AC Tabula Brisant,,A,E,16.06.24
+6,R2,13:20,15:00,Atletico Bernina,Sporting Morgenstern,Rotor,B,M,16.06.24
+6,R11,14:00,16:00,Tabula Rasant,Aurora,Tormotor,A,M,16.06.24
+6,R6,14:45,16:20,Zürich Freestylers,C.D. El Clandestino,Real Cabron,B,M,16.06.24
+6,R7,14:45,16:20,Deportivo,Gremio Porto Riesbach,Furttals Finest,A,M,16.06.24
+6,R2,15:00,16:20,Zorras Züri,Rapid Industrie,Zürich United Grrrls,B,L,16.06.24
+6,R2,15:00,16:20,Real Rosé,Blutgretchen,Depordivas,A,L,16.06.24
+6,R11,16:00,17:35,Olympique Lettenwiese,Tormotor,Aurora,A,M,16.06.24
+6,R2,16:20,17:40,Maradonnas,Depordivas,Blutgretchen,A,L,16.06.24
+6,R2,16:20,17:35,Zürich United Grrrls,Gleis Elf,Rapid Industrie,B,L,16.06.24
+6,R6,16:20,17:55,Real Azül,Widerstand Wipkingen,C.D. El Clandestino,A,M,16.06.24
+6,R7,16:20,17:55,Traktor Emilie,Furttals Finest,Gremio Porto Riesbach,B,M,16.06.24
+7,R2,10:00,11:15,A1,B2,,HF,L,23.06.24
+7,R2,10:00,11:15,A3,B5,,HF,L,23.06.24
+7,R6,10:00,11:35,Deportivo,Bund Schöne Rosen,Rotor,A,M,23.06.24
+7,R7,10:00,11:35,El Social FC,BSC Tram 5,,A,E,23.06.24
+7,R11,10:00,11:35,Inter Mezzo,AC Tabula Brisant,,A,E,23.06.24
+7,R6,11:35,13:10,Rotor,Sporting Morgenstern,Deportivo,B,M,23.06.24
+7,R7,11:35,13:10,Zenit Emilie,1. FC Brennivin,,A,E,23.06.24
+7,R11,11:35,13:10,A.C. Tabula Entspannt,ZüriUtd,,A,E,23.06.24
+7,R2,11:15,12:30,A2,B1,,HF,L,23.06.24
+7,R2,11:15,12:30,A5,B3,,HF,L,23.06.24
+7,R2,12:30,14:00,A4,B4,,HF,L,23.06.24
+7,R6,13:10,14:45,FC Eglisau,Tabula Rasant,Real Azül,A,M,23.06.24
+7,R7,13:10,14:45,AS Lettenwiese,Saints FC,,A,E,23.06.24
+7,R11,13:10,14:45,Olympique Lettenwiese,Gremio Porto Riesbach,Traktor Emilie,A,M,23.06.24
+7,R2,14:00,15:20,Sputnik,Schachtjor,Atletico Bernina,B,M,23.06.24
+7,R6,14:45,16:20,Real Azül,Tormotor,Ex Hürlimann,A,M,23.06.24
+7,R7,14:45,16:20,Dynamo Röntgen,Widerstand Wipkingen,Real Cabron,A,M,23.06.24
+7,R11,14:45,16:20,Traktor Emilie,Zwietracht Turicum,Wacker Selnau,B,M,23.06.24
+7,R2,16:00,16:55,Atletico Bernina,Zürich Freestylers,Sputnik,B,M,23.06.24
+7,R6,16:20,17:55,Ex Hürlimann,Furttals Finest,Tormotor,B,M,23.06.24
+7,R7,16:20,17:55,Real Cabron,Aurora,Dynamo Röntgen,A,M,23.06.24
+7,R11,16:20,17:55,Wacker Selnau,C.D. El Clandestino,Zwietracht Turicum,B,M,23.06.24
+8,R2,10:00,12:00,Alternatives,Programm,,Cup,LCup,30.06.24
+8,R6,10:00,12:00,A.C. Tabula Entspannt,1. FC Brennivin,,A,E,30.06.24
+8,R7,10:00,12:00,AS Lettenwiese,Zenit Emilie,,A,E,30.06.24
+8,R6,12:00,14:00,El Social FC,Saints FC,,A,E,30.06.24
+8,R7,12:00,13:35,Inter Mezzo,ZüriUtd,,A,E,30.06.24
+8,R6,14:00,15:35,AC Tabula Brisant,BSC Tram 5,,A,E,30.06.24
+9,R6,10:00,11:35,AS Lettenwiese,A.C. Tabula Entspannt,,A,E,06.07.24
+9,R7,10:00,11:35,AC Tabula Brisant,Saints FC,,A,E,06.07.24
+9,R6,11:35,13:10,El Social FC,Zenit Emilie,,A,E,06.07.24
+9,R7,11:35,13:10,ZüriUtd,1. FC Brennivin,,A,E,06.07.24
+9,R6,13:10,14:45,Inter Mezzo,BSC Tram 5,,A,E,06.07.24

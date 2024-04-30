@@ -31,9 +31,6 @@
 		<None Update="Mappings\File\testImport.csv">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="PdfGeneration\matchplan %283%29_edited.csv">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 
 </Project>

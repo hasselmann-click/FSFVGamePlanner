@@ -37,6 +37,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         public const string Fixtures = "fixtures";
         public const string Gameplan = "matchplan";
         public const string AppworksMappings = "mappings";
+        public const string PdfGenerationHolidays = "holidays";
 
         public static class DisplayNames
         {
@@ -46,6 +47,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             public const string Pitches = "pitches.csv";
             public const string LeagueConfigs = "league_configs.csv";
             public const string AppworksMappings = "mappings*_[League].csv";
+            public const string PdfGenerationHolidays = "holidays.csv";
         }
     }
 
@@ -54,6 +56,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         ResetConfigFileRecords();
         ResetTeamFiles();
         ResetMappingsFiles();
+        ResetPdfGenerationsFiles();
         Dispatcher = dispatcher;
     }
 
@@ -71,6 +74,9 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     private bool generateAppworksImportButton_IsGenerating;
     private bool generateAppworksImportButton_HasGenerated;
     private bool generateAppworksImportButton_IsEnabled;
+    private bool generatePdfButton_IsEnabled;
+    private bool generatePdfButton_IsGenerating;
+    private bool generatePdfButton_HasGenerated;
 
     public StorageFolder WorkDir
     {
@@ -188,6 +194,36 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
     #endregion
 
+    #region Pdf Generation
+
+    public bool GeneratePdfButton_IsEnabled
+    {
+        get => generatePdfButton_IsEnabled;
+        set => SetProperty(ref generatePdfButton_IsEnabled, value);
+    }
+    public bool GeneratePdfButton_IsGenerating
+    {
+        get => generatePdfButton_IsGenerating;
+        set
+        {
+            SetProperty(ref generatePdfButton_IsGenerating, value);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GeneratePdfButton_IsEnabled)));
+        }
+    }
+    public bool GeneratePdfButton_HasGenerated
+    {
+        get => generatePdfButton_HasGenerated;
+        set => SetProperty(ref generatePdfButton_HasGenerated, value);
+    }
+    public ObservableCollection<ConfigFileRecordViewModel> PdfGenerationFiles { get; } = [];
+    public void ResetPdfGenerationsFiles()
+    {
+        PdfGenerationFiles.Clear();
+        PdfGenerationFiles.Add(new ConfigFileRecordViewModel { PreviewDisplayName = FileNamePrefixes.DisplayNames.PdfGenerationHolidays, IsFound = false });
+    }
+
+    #endregion
+
     #region configs 
     public void ResetConfigFileRecords()
     {
@@ -215,6 +251,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     public bool IsPreventRescanForGameplanFile { get; internal set; }
     public bool IsPreventRescanForTeamFiles { get; internal set; }
     public bool IsPreventRescanForAppworksMappings { get; internal set; }
+    public bool IsPreventRescanForPdfGenerationFiles { get; internal set; }
 
     #endregion
 }

@@ -5,6 +5,7 @@ using FSFV.Gameplanner.Appworks;
 using FSFV.Gameplanner.Appworks.Serialization;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Fixtures;
+using FSFV.Gameplanner.Pdf;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting;
 using FSFV.Gameplanner.UI.Logging;
@@ -21,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
@@ -58,6 +60,7 @@ public sealed partial class MainPage : Page
         OnFolderPicked += LookingForConfigFiles;
         OnFolderPicked += LookingForGameplanFiles;
         OnFolderPicked += LookingForAppworksMappingsFiles;
+        OnFolderPicked += LookingForPdfGenerationFiles;
 
         UILogger.OnMessageLogged += UpdateLog;
     }
@@ -410,7 +413,6 @@ public sealed partial class MainPage : Page
             ViewModel.GenerateAppworksImportButton_HasGenerated = false;
             ViewModel.GenerateAppworksImportButton_IsGenerating = true;
 
-
             await GenerateAppworksImportFile();
 
             ViewModel.GenerateAppworksImportButton_HasGenerated = true;
@@ -459,6 +461,75 @@ public sealed partial class MainPage : Page
             var serializer = services.GetRequiredService<IAppworksSerializer>();
             await serializer.WriteCsvImportFile(importFile.OpenStreamForWriteAsync, transformedRecordsByTournament[tournament]);
         }
+    }
+
+    #endregion
+
+    #region Pdf Generation
+
+    private void LookingForPdfGenerationFiles(IReadOnlyList<StorageFile> files)
+    {
+        if (ViewModel.IsPreventRescanForPdfGenerationFiles)
+        {
+            ViewModel.IsPreventRescanForPdfGenerationFiles = false;
+            return;
+        }
+
+        ViewModel.GeneratePdfButton_HasGenerated = false;
+        ViewModel.PdfGenerationFiles.Clear();
+
+        var generatePdfFiles = files.Where(s => s.FileType == ".csv" && s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.PdfGenerationHolidays, StringComparison.InvariantCultureIgnoreCase));
+        foreach (var file in generatePdfFiles)
+        {
+            ViewModel.PdfGenerationFiles.Add(new ConfigFileRecordViewModel
+            {
+                IsFound = true,
+                File = file,
+            });
+        }
+
+        var hasMappingsFiles = ViewModel.PdfGenerationFiles.Any();
+        ViewModel.GeneratePdfButton_IsEnabled = hasMappingsFiles;
+        if (!hasMappingsFiles)
+        {
+            ViewModel.ResetPdfGenerationsFiles();
+        }
+    }
+
+    private async void GeneratePdfButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ViewModel.GeneratePdfButton_HasGenerated = false;
+            ViewModel.GeneratePdfButton_IsGenerating = true;
+
+            await GeneratePdfAsync();
+
+            ViewModel.GeneratePdfButton_IsGenerating = false;
+            ViewModel.GeneratePdfButton_HasGenerated = true;
+        }
+        catch
+        {
+            ViewModel.GeneratePdfButton_IsGenerating = false;
+            throw;
+        }
+    }
+
+    private async Task GeneratePdfAsync()
+    {
+        var gamePlanStream = () => ViewModel.GameplanFile.OpenStreamForReadAsync();
+        var holidaysStream = () => ViewModel.PdfGenerationFiles.FirstOrDefault(f => f.IsFound)?.File.OpenStreamForReadAsync();
+
+        var outputFile = await ViewModel.WorkDir.CreateFileAsync("Spielplan.pdf", CreationCollisionOption.ReplaceExisting);
+        var outputStream = () => outputFile.OpenStreamForWriteAsync();
+
+        var pdfGenerator = App.Current.Services.GetRequiredService<PdfGenerator>();
+        await pdfGenerator.GenerateAsync(outputStream, gamePlanStream, holidaysStream);
+    }
+
+    private void PdfOpenGameplanButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenGameplanButton_Click(sender, e);
     }
 
     #endregion

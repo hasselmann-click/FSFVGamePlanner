@@ -14,18 +14,11 @@ using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.Service.Serialization;
 
-public class FsfvCustomSerializerService
+public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> logger)
 {
     public const string DateFormat = "dd.MM.yy";
     private const char TimeSeparator = '-';
     private static readonly Encoding DefaultEncoding = Encoding.UTF8;
-
-    private readonly ILogger<FsfvCustomSerializerService> logger;
-
-    public FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> logger)
-    {
-        this.logger = logger;
-    }
 
     public async Task<Dictionary<string, GroupTypeDto>> ParseGroupTypesAsync(Func<Task<Stream>> fileStreamProvider)
     {
@@ -165,6 +158,20 @@ public class FsfvCustomSerializerService
         }
 
         return pitches;
+    }
+
+    public async Task<Dictionary<DateOnly, string>> ParseHolidaysAsync(Func<Task<Stream>> streamProvider, char separator = ',')
+    {
+        await using var stream = await streamProvider();
+        using var reader = new StreamReader(stream, DefaultEncoding);
+        var holidays = new Dictionary<DateOnly, string>(3); // educated guess
+        string line;
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            var ar = line.Split(separator);
+            holidays.Add(DateOnly.Parse(ar[0]), ar[1]);
+        }
+        return holidays;
     }
 
     public async Task<List<GameplanGameDto>> ParseGameplanAsync(Func<Task<Stream>> streamProvider)
