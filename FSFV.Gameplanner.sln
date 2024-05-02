@@ -26,7 +26,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.Appworks.R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.Pdf", "FSFV.Gameplanner.Pdf\FSFV.Gameplanner.Pdf.csproj", "{EBCE2E4B-FB0F-4B0D-93D8-CAB6C4C03AD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSFV.Gameplanner.Pdf.Runner", "FSFV.Gameplanner.Pdf.Runner\FSFV.Gameplanner.Pdf.Runner.csproj", "{5ABC10E5-CD38-4E73-8081-44B902A4DCC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.Pdf.Runner", "FSFV.Gameplanner.Pdf.Runner\FSFV.Gameplanner.Pdf.Runner.csproj", "{5ABC10E5-CD38-4E73-8081-44B902A4DCC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -200,7 +200,6 @@ Global
 		{5ABC10E5-CD38-4E73-8081-44B902A4DCC6}.Release|arm64.ActiveCfg = Release|Any CPU
 		{5ABC10E5-CD38-4E73-8081-44B902A4DCC6}.Release|arm64.Build.0 = Release|Any CPU
 		{5ABC10E5-CD38-4E73-8081-44B902A4DCC6}.Release|x64.ActiveCfg = Release|Any CPU
-		{5ABC10E5-CD38-4E73-8081-44B902A4DCC6}.Release|x64.Build.0 = Release|Any CPU
 		{5ABC10E5-CD38-4E73-8081-44B902A4DCC6}.Release|x86.ActiveCfg = Release|Any CPU
 		{5ABC10E5-CD38-4E73-8081-44B902A4DCC6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
