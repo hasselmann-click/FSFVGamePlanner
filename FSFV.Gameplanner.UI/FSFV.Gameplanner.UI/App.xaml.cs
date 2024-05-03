@@ -10,8 +10,13 @@ using FSFV.Gameplanner.UI.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.UI.Xaml;
+using QuestPDF.Infrastructure;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using Windows.ApplicationModel.Core;
 using Windows.Graphics;
 using Windows.UI.Core;
@@ -69,10 +74,16 @@ namespace FSFV.Gameplanner.UI
 
         private static ServiceProvider ConfigureServices()
         {
+            // TODO make this configurable in app. Especially for the ZK teams rule!
             var configuration = new ConfigurationBuilder()
-                // TODO make this configurable in app. Especially for the ZK teams rule!
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
                 .Build();
+
+            var pdfConfig = configuration.GetSection("PdfConfig").Get<PdfConfig>();
+            // explicitly convert the dictionary of strings to dictionary of colors
+            // since IConfigurationSections doesn't use custom json converters
+            var pdfConigLeagueColors = configuration.GetSection("PdfConfig:LeagueColors").Get<Dictionary<string, string>>();
+            pdfConfig.LeagueColors = pdfConigLeagueColors.ToDictionary(x => x.Key, x => Color.FromHex(x.Value));
 
             return new ServiceCollection()
                 .AddSingleton(RNG)
@@ -87,6 +98,8 @@ namespace FSFV.Gameplanner.UI
                 })
                 .AddTransient<GeneratorService>()
                 .AddTransient<FsfvCustomSerializerService>()
+
+                .AddSingleton(pdfConfig)
                 .AddTransient<PdfGenerator>()
 
                 .AddRuleBasedSlotting()

@@ -1,17 +1,13 @@
 ﻿using FSFV.Gameplanner.Service.Serialization;
 using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
 
 namespace FSFV.Gameplanner.Pdf;
 
-public class PdfGenerator(ILogger<PdfGenerator> logger, FsfvCustomSerializerService serializer)
+public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCustomSerializerService serializer)
 {
-    private const string HeaderTitle = "FSFV SPIELPLAN FS 2024";
-    private const string FooterDateFormat = "dd.MM.yyyy";
-    private const string GameStartTimeFormat = "HH:mm";
 
     static PdfGenerator()
     {
@@ -89,8 +85,8 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, FsfvCustomSerializerServ
             // Set page styles
             page.PlanPageStyle();
             // Set page header and footer
-            page.Header().Element(ComposeHeader(HeaderTitle));
-            page.Footer().Element(ComposeFooter(gameDay.First().Date.ToString(FooterDateFormat)));
+            page.Header().Element(ComposeHeader(config.HeaderTitle));
+            page.Footer().Element(ComposeFooter(gameDay.First().Date.ToString(config.FooterDateFormat)));
 
             // set page content
             page.Content()
@@ -114,24 +110,16 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, FsfvCustomSerializerServ
 
                     foreach (var game in gameDay.OrderBy(x => x.StartTime))
                     {
-                        // TODO get this via configuration file
-                        string color = game.League switch
-                        {
-                            "L" => "#F3D6B6", // Lachs
-                            "E" => "#C9D6ED", // Blau
-                            "M" => "#FBFBFB", // Weiss
-                            "MCup" => "#ECF1DF", // Grünlich
-                            _ => l_GetDefaultColor()
-                        };
-                        string l_GetDefaultColor()
+
+                        if (!config.LeagueColors.TryGetValue(game.League, out var color))
                         {
                             logger.LogWarning("No color defined for league {League}. Using default color.", game.League);
-                            return "#ECA64F"; // Orange - default color
+                            color = config.LeagueColors["Default"];
                         }
                         t.Cell().RowContainer(row, color);
 
                         t.Cell().Row(row).Column(1).ValueCell().Text(game.Pitch);
-                        t.Cell().Row(row).Column(2).ValueCell().Text(game.StartTime.ToString(GameStartTimeFormat));
+                        t.Cell().Row(row).Column(2).ValueCell().Text(game.StartTime.ToString(config.GameStartTimeFormat));
                         t.Cell().Row(row).Column(3).ValueCell().Text(game.Home);
                         t.Cell().Row(row).Column(4).ValueCell().Text(game.Away);
                         t.Cell().Row(row).Column(5).ValueCell().Text(game.Referee ?? "");
@@ -140,7 +128,6 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, FsfvCustomSerializerServ
                         ++row;
                     }
                 });
-
         };
     }
 
@@ -151,7 +138,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, FsfvCustomSerializerServ
             // Set page styles
             page.PlanPageStyle();
             // Set page header and footer
-            page.Header().Element(ComposeHeader(HeaderTitle));
+            page.Header().Element(ComposeHeader(config.HeaderTitle));
             page.Footer().Element(ComposeFooter(title));
 
             // set page content
