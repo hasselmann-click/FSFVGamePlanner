@@ -10,7 +10,7 @@ namespace FSFV.Gameplanner.Service.Slotting
     {
 
         protected static readonly Game PLACEHOLDER = new() { Group = new() { Type = new() { MinDurationMinutes = 0 } } };
-        // TODO: make configurable
+        // TODO: make configurable. Implement IConfigurationProvider?
         protected static readonly TimeSpan MaxSlotTime = TimeSpan.FromMinutes(120);
 
         private readonly ILogger logger;
@@ -94,6 +94,7 @@ namespace FSFV.Gameplanner.Service.Slotting
 
         protected void AddRefereesToTimeslots(List<Pitch> pitches)
         {
+            // TODO make configurable by league
             // For every pitch group games by league (GroupType)
             foreach (var pitch in pitches)
             {
