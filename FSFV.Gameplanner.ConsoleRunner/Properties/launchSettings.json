@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "FSFV.Gameplanner.ConsoleRunner": {
-      "commandName": "Project",
-      "commandLineArgs": "\"D:\\OneDrive\\FSFV\\FSFV Material für Spielplan\\2022_23\\FS23\""
-    }
-  }
-}
