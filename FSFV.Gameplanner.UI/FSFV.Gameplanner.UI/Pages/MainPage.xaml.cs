@@ -15,17 +15,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Documents;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Windows.Foundation;
 using Windows.Storage;
-using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Search;
@@ -316,14 +313,22 @@ public sealed partial class MainPage : Page
 
     private async void GenerateStatsButton_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel.GenerateStatsButton_HasGenerated = false;
-        ViewModel.GenerateStatsButton_IsGenerating = true;
+        try
+        {
+            ViewModel.GenerateStatsButton_HasGenerated = false;
+            ViewModel.GenerateStatsButton_IsGenerating = true;
 
-        await GenerateStatsAsync();
+            await GenerateStatsAsync();
 
-        ViewModel.GenerateStatsButton_HasGenerated = true;
-        ViewModel.GenerateStatsButton_IsGenerating = false;
-
+            ViewModel.GenerateStatsButton_HasGenerated = true;
+            ViewModel.GenerateStatsButton_IsGenerating = false;
+        }
+        catch
+        {
+            ViewModel.GenerateStatsButton_HasGenerated = false;
+            ViewModel.GenerateStatsButton_IsGenerating = false;
+            throw;
+        }
     }
 
     private async Task GenerateStatsAsync()

@@ -14,6 +14,8 @@
 		<!-- this is needed to start the .exe file in "unpackaged" mode -->
 		<WindowsPackageType>None</WindowsPackageType>
 		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+
+		<ApplicationIcon>Images/fsfv-logo.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<Target Name="RemoveFoldersWithMuiFiles" AfterTargets="Build">

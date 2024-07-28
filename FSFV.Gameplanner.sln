@@ -16,6 +16,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{79AFA22D-34FC-4AEB-90DC-4B185E5FADC5}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSFV.Gameplanner.Appworks", "FSFV.Gameplanner.Appworks\FSFV.Gameplanner.Appworks.csproj", "{5D2BF753-0D33-42C9-BCE1-EF92AA19E1A2}"
