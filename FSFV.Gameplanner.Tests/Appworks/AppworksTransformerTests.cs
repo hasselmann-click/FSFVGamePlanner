@@ -28,7 +28,7 @@ public class AppworksTransformerTests
         var mappings = new AppworksIdMappings(locations, teams, divisions, matchdays, tournament);
 
         // matchplan.csv, parsed by "FsfvCustomSerializerService.ParseGameplanAsync"
-        var gamePlan = new List<FsfvCustomSerializerService.GameplanGameDto>() 
+        var gamePlan = new List<FsfvCustomSerializerService.GameplanGameDto>()
         {
             new()
             {
