@@ -1,0 +1,12 @@
+﻿{
+  "HeaderTitle": "FSFV SPIELPLAN FS 2024",
+  "LeagueColors": {
+    "Default": "#ECA64F",
+    "L": "#F3D6B6",
+    "E": "#C9D6ED",
+    "M": "#FBFBFB",
+    "MCup": "#ECF1DF"
+  },
+  "FooterDateFormat": "dd.MM.yyyy",
+  "GameStartTimeFormat": "HH:mm"
+}

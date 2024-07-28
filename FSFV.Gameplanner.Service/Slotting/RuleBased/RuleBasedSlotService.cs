@@ -9,7 +9,7 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased;
 
 public class RuleBasedSlotService : AbstractSlotService
 {
-    private static readonly List<Game> EmptyList = new(0);
+    private static readonly List<Game> EmptyList = [];
     private static readonly TimeSpan SlotBuffer = TimeSpan.FromMinutes(30);
 
     private readonly IEnumerable<ISlotRule> rules;
@@ -43,7 +43,7 @@ public class RuleBasedSlotService : AbstractSlotService
             // order pitches by their next available starting time 
             var orderedPitches = pitches
                 .Where(p => !pitchesToIgnore.Contains(p.Name))
-                .OrderBy(p => Rng.NextInt64())
+                .OrderBy(p => Rng.NextInt64()) 
                 .OrderBy(op => op.NextStartTime);
             var currentStartTime = orderedPitches.Select(p => p.NextStartTime).First();
             logger.LogDebug("Pitch Order: {pitches}", string.Join(", ", orderedPitches.Select(op => "[" + op.Name + ": " + op.NextStartTime + "]")));

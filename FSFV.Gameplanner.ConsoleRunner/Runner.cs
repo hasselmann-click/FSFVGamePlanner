@@ -1,4 +1,5 @@
-﻿using CsvHelper;
+﻿
+using CsvHelper;
 using CsvHelper.Configuration;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
@@ -81,7 +82,7 @@ public class Runner
         foreach (var gameDayPitches in pitchesOrdered)
         {
             var slottedPitches = slotService.SlotGameDay(
-                gameDayPitches.ToList(),
+                [.. gameDayPitches],
                 games.Where(g => g.GameDay == gameDayPitches.Key).ToList()
             );
             gameDays.Add(new GameDay

@@ -1,0 +1,18 @@
+{
+  "profiles": {
+    "Gameplanner (Unpackaged)": {
+      "commandName": "Executable",
+      "executablePath": "$(MSBuildProjectDirectory)\\bin\\x64\\Debug\\net8.0-windows10.0.19041.0\\FSFV.Gameplanner.UI.exe"
+    },
+    "Gameplanner (Packaged)": {
+      "commandName": "MsixPackage",
+      "alwaysReinstallApp": false,
+      "remoteDebugEnabled": false,
+      "allowLocalNetworkLoopbackProperty": true,
+      "authenticationMode": "Windows",
+      "doNotLaunchApp": false,
+      "remoteDebugMachine": "",
+      "nativeDebugging": false
+    }
+  }
+}

@@ -6,8 +6,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:FSFV.Gameplanner.UI.Pages"
+    xmlns:logging="using:FSFV.Gameplanner.UI.Logging"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:storage="using:Windows.Storage"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:storage="using:Windows.Storage" xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     >
@@ -27,14 +28,6 @@
             <Setter Property="IsEnabled" Value="False" />
             <Setter Property="Width" Value="150" />
         </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="IsReadOnly" Value="True" />
-            <Setter Property="Margin" Value="0,10,0,10" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-        </Style>
         <Style TargetType="Border">
             <Setter Property="Margin" Value="10" />
             <Setter Property="BorderThickness" Value="5" />
@@ -47,123 +40,309 @@
         <Style TargetType="SymbolIcon">
             <Setter Property="Foreground" Value="Green" />
         </Style>
+        <!-- TextBox Styles -->
+        <Style x:Key="DefaultTextBoxStyle" TargetType="TextBox">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="Margin" Value="0,10,0,10" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <!-- implicit base style with only target type inheriting from explicit default style-->
+        <Style TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}" />
+        <Style x:Key="LogMessageTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="Margin" Value="0,0,0,0" />
+        </Style>
+        <logging:LogMessageTemplateSelector x:Key="LogMessageTemplateSelector">
+            <logging:LogMessageTemplateSelector.ErrorTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding Message}" Background="DarkRed" Style="{StaticResource LogMessageTextBoxStyle}" />
+                </DataTemplate>
+            </logging:LogMessageTemplateSelector.ErrorTemplate>
+            <logging:LogMessageTemplateSelector.WarningTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding Message}" Background="YellowGreen" Style="{StaticResource LogMessageTextBoxStyle}" />
+                </DataTemplate>
+            </logging:LogMessageTemplateSelector.WarningTemplate>
+            <logging:LogMessageTemplateSelector.InformationTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding Message}" Background="Transparent" Style="{StaticResource LogMessageTextBoxStyle}" />
+                </DataTemplate>
+            </logging:LogMessageTemplateSelector.InformationTemplate>
+        </logging:LogMessageTemplateSelector>
     </Page.Resources>
 
-    <ScrollViewer 
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <!-- GridSplitter column -->
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- workflow -->
+        <ScrollViewer 
+            Grid.Column="0" Grid.Row="0"
             ZoomMode="Enabled"
             HorizontalScrollMode="Auto" 
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollMode="Enabled" 
             VerticalScrollBarVisibility="Auto">
-
-        <!-- TODO make text resource managed -->
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <!-- work folder picker -->
-            <Border>
-                <StackPanel Orientation="Vertical">
-                    <TextBox Text="Work Folder" FontWeight="Bold" />
-                    <StackPanel Orientation="Vertical" >
-                        <TextBox x:Name="FolderName" PlaceholderText="No folder selected" Text="{x:Bind ViewModel.WorkDirPath, Mode=OneWay}" />
-                        <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <!-- team files to check for and fixture generation -->
-            <Border>
-                <StackPanel Orientation="Vertical">
-                    <TextBox Text="Team Files" FontWeight="Bold" />
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <!-- work folder picker -->
+                <Border>
                     <StackPanel Orientation="Vertical">
-                        <TextBox Text="Looking for files named..." />
-                        <!-- TODO make these a custom control -->
-                        <ListView ItemsSource="{x:Bind ViewModel.TeamFiles}">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
-                                    <StackPanel Orientation="Horizontal">
-                                        <!-- TODO dont apply these styles locally -->
-                                        <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{Binding NotIsFound}" />
-                                        <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
-                                        <TextBox Text="{x:Bind DisplayName}" Margin="10" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+                        <TextBox Text="Work Folder" FontWeight="Bold" />
+                        <StackPanel Orientation="Vertical" >
+                            <TextBox x:Name="FolderName" PlaceholderText="No folder selected" Text="{x:Bind ViewModel.WorkDirPath, Mode=OneWay}" />
+                            <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                        <StackPanel Orientation="Horizontal" Padding="0">
-                            <Button x:Name="GenerateFixtursButton" Content="Generate Fixtures" Click="GenerateFixtursButton_Click" 
+                <!-- team files to check for and fixture generation -->
+                <Border>
+                    <StackPanel Orientation="Vertical">
+                        <TextBox Text="Team Files" FontWeight="Bold" />
+                        <StackPanel Orientation="Vertical">
+                            <TextBox Text="Looking for files named..." />
+
+                            <!-- TODO make these a custom control -->
+                            <ListView ItemsSource="{x:Bind ViewModel.TeamFiles}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- TODO dont apply these styles locally -->
+                                            <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{Binding NotIsFound}" />
+                                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
+                                            <TextBox Text="{x:Bind DisplayName}" Margin="10" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="GenerateFixtursButton" Content="Generate Fixtures" Click="GenerateFixtursButton_Click" 
                                     IsEnabled="{x:Bind ViewModel.GenerateFixtursButton_IsEnabled, Mode=OneWay}"/>
-                            <SymbolIcon x:Name="GenerateFixtursButton_Done" Symbol="Accept" 
+                                <SymbolIcon x:Name="GenerateFixtursButton_Done" Symbol="Accept" 
                                     Visibility="{x:Bind ViewModel.GenerateFixtursButton_HasGenerated, Mode=OneWay}" />
-                            <ProgressRing x:Name="GenerateFixtursButton_Loading" IsActive="{x:Bind ViewModel.GenerateFixtursButton_IsGenerating, Mode=OneWay}" />
+                                <ProgressRing x:Name="GenerateFixtursButton_Loading" IsActive="{x:Bind ViewModel.GenerateFixtursButton_IsGenerating, Mode=OneWay}" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
-                </StackPanel>
-            </Border>
+                </Border>
 
-            <!-- config files to check for and plan generation -->
-            <Border>
-                <StackPanel Orientation="Vertical">
-                    <TextBox Text="Configurations" FontWeight="Bold" />
+                <!-- config files to check for and plan generation -->
+                <Border>
                     <StackPanel Orientation="Vertical">
-                        <TextBox Text="Looking for pitches, fixtures and configs..." />
+                        <TextBox Text="Configurations" FontWeight="Bold" />
+                        <StackPanel Orientation="Vertical">
+                            <TextBox Text="Looking for pitches, fixtures and configs..." />
 
-                        <!-- config records -->
-                        <ListView ItemsSource="{x:Bind ViewModel.ConfigFileRecords}">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
-                                    <StackPanel Orientation="Horizontal">
-                                        <!-- TODO dont apply these styles locally -->
-                                        <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind NotIsFound}" />
-                                        <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
-                                        <TextBox Text="{x:Bind DisplayName}" Margin="10" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+                            <!-- config records -->
+                            <ListView ItemsSource="{x:Bind ViewModel.ConfigFileRecords}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- TODO dont apply these styles locally -->
+                                            <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind NotIsFound}" />
+                                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
+                                            <TextBox Text="{x:Bind DisplayName}" Margin="10" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
 
-                        <!-- fixture files -->
-                        <ListView ItemsSource="{x:Bind ViewModel.FixtureFiles}">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="storage:StorageFile">
-                                    <StackPanel Orientation="Horizontal">
-                                        <!-- TODO dont apply these styles locally -->
-                                        <SymbolIcon Symbol="Accept" Foreground="Green" />
-                                        <TextBox Text="{x:Bind Name}" Margin="10" IsReadOnly="True" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+                            <!-- fixture files -->
+                            <ListView ItemsSource="{x:Bind ViewModel.FixtureFiles}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="storage:StorageFile">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- TODO dont apply these styles locally -->
+                                            <SymbolIcon Symbol="Accept" Foreground="Green" />
+                                            <TextBox Text="{x:Bind Name}" Margin="10" IsReadOnly="True" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
 
-                        <StackPanel Orientation="Horizontal" Padding="0">
-                            <Button x:Name="GeneratePlanButton" Content="Generate Plan" Click="GeneratePlanButton_Click" IsEnabled="{x:Bind ViewModel.GenerateGameplanButton_IsEnabled, Mode=OneWay}" />
-                            <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateGameplanButton_HasGenerated, Mode=OneWay}" />
-                            <ProgressRing IsActive="{x:Bind ViewModel.GenerateGameplanButton_IsGenerating, Mode=OneWay}" />
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="GeneratePlanButton" Content="Generate Plan" Click="GeneratePlanButton_Click" IsEnabled="{x:Bind ViewModel.GenerateGameplanButton_IsEnabled, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateGameplanButton_HasGenerated, Mode=OneWay}" />
+                                <ProgressRing IsActive="{x:Bind ViewModel.GenerateGameplanButton_IsGenerating, Mode=OneWay}" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
-                </StackPanel>
-            </Border>
+                </Border>
 
-            <!-- stats generation -->
-            <Border>
-                <StackPanel Orientation="Vertical">
-                    <TextBox Text="Statistics" FontWeight="Bold" />
+                <!-- stats generation -->
+                <Border>
                     <StackPanel Orientation="Vertical">
-                        <StackPanel Orientation="Horizontal" Visibility="Visible">
-                            <!-- TODO dont apply these styles locally -->
-                            <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasGameplanFile, Mode=OneWay}" />
-                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
-                            <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
-                        </StackPanel>
-                        <Button x:Name="OpenGameplanButton" Content="Select Gameplan" Click="OpenGameplanButton_Click" IsEnabled="True" />
-                        <StackPanel Orientation="Horizontal" Padding="0">
-                            <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" IsEnabled="{x:Bind ViewModel.GenerateStatsButton_IsEnabled, Mode=OneWay}" />
-                            <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateStatsButton_HasGenerated, Mode=OneWay}" />
-                            <ProgressRing IsActive="{x:Bind ViewModel.GenerateStatsButton_IsGenerating, Mode=OneWay}" />
-                            <!-- TODO add hyperlink to generated document -->
+                        <TextBox Text="Statistics" FontWeight="Bold" />
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Visibility="Visible">
+                                <!-- TODO dont apply these styles locally -->
+                                <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasGameplanFile, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
+                                <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+                            </StackPanel>
+                            <Button x:Name="OpenGameplanButton" Content="Select Gameplan" Click="OpenGameplanButton_Click" IsEnabled="True" />
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="GenerateStatsButton" Content="Generate Stats" Click="GenerateStatsButton_Click" IsEnabled="{x:Bind ViewModel.GenerateStatsButton_IsEnabled, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateStatsButton_HasGenerated, Mode=OneWay}" />
+                                <ProgressRing IsActive="{x:Bind ViewModel.GenerateStatsButton_IsGenerating, Mode=OneWay}" />
+                                <!-- TODO add hyperlink to generated document -->
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
-                </StackPanel>
-            </Border>
-        </StackPanel>
-    </ScrollViewer>
+                </Border>
+
+                <!-- Appworks import file generation -->
+                <Border>
+                    <StackPanel Orientation="Vertical">
+                        <TextBox Text="Appworks" FontWeight="Bold" />
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Visibility="Visible">
+                                <!-- TODO dont apply these styles locally -->
+                                <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasGameplanFile, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
+                                <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+                            </StackPanel>
+
+                            <!-- mappings files -->
+                            <ListView ItemsSource="{x:Bind ViewModel.AppworksMappingsFiles}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- TODO dont apply these styles locally -->
+                                            <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{Binding NotIsFound}" />
+                                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
+                                            <TextBox Text="{x:Bind DisplayName}" Margin="10" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <Button x:Name="AppworksOpenGameplanButton" Content="Select Gameplan" Click="AppworksOpenGameplanButton_Click" IsEnabled="True" />
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="GenerateAppworksImportButton" Content="Generate Appworks" Click="GenerateAppworksImportButton_Click" 
+                                    IsEnabled="{x:Bind ViewModel.GenerateAppworksImportButton_IsEnabled, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateAppworksImportButton_HasGenerated, Mode=OneWay}" />
+                                <ProgressRing IsActive="{x:Bind ViewModel.GenerateAppworksImportButton_IsGenerating, Mode=OneWay}" />
+                                <!-- TODO add hyperlink to generated document -->
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Pdf Generation -->
+                <Border>
+                    <StackPanel Orientation="Vertical">
+                        <TextBox Text="Generate PDF" FontWeight="Bold" />
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Visibility="Visible">
+                                <!-- TODO dont apply these styles locally -->
+                                <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasGameplanFile, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
+                                <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+                            </StackPanel>
+
+                            <!-- mappings files -->
+                            <ListView ItemsSource="{x:Bind ViewModel.PdfGenerationFiles}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- TODO dont apply these styles locally -->
+                                            <SymbolIcon Symbol="Clear" Foreground="Blue" Visibility="{Binding NotIsFound}" />
+                                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
+                                            <TextBox Text="{x:Bind DisplayName}" Margin="10" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <Button x:Name="PdfGenerationOpenGameplanButton" Content="Select Gameplan" Click="PdfOpenGameplanButton_Click" IsEnabled="True" />
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="GeneratePdfButton" Content="Generate PDF" Click="GeneratePdfButton_Click" 
+IsEnabled="{x:Bind ViewModel.GeneratePdfButton_IsEnabled, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GeneratePdfButton_HasGenerated, Mode=OneWay}" />
+                                <ProgressRing IsActive="{x:Bind ViewModel.GeneratePdfButton_IsGenerating, Mode=OneWay}" />
+                                <!-- TODO add hyperlink to generated document -->
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- drag and drop resizer -->
+        <controls:GridSplitter Grid.Column="1" CursorBehavior="ChangeOnSplitterHover">
+            <controls:GridSplitter.Template>
+                <ControlTemplate TargetType="controls:GridSplitter">
+                    <Grid>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Gripper"
+                                            Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"
+                                            To="Transparent" Duration="0:0:0.2"/>
+                                        <ColorAnimation Storyboard.TargetName="GripperSymbol"
+                                            Storyboard.TargetProperty="(SymbolIcon.Foreground).(SolidColorBrush.Color)"
+                                            To="Transparent" Duration="0:0:0.2"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Gripper"
+                                            Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"
+                                            To="Gray" Duration="0:0:0.2"/>
+                                        <ColorAnimation Storyboard.TargetName="GripperSymbol"
+                                            Storyboard.TargetProperty="(SymbolIcon.Foreground).(SolidColorBrush.Color)"
+                                            To="Black" Duration="0:0:0.2"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Rectangle x:Name="Gripper" Fill="Transparent" />
+                        <FontIcon   x:Name="GripperSymbol" Glyph="&#xE784;" Foreground="Black"/>
+                    </Grid>
+                </ControlTemplate>
+            </controls:GridSplitter.Template>
+        </controls:GridSplitter>
+
+        <!-- Log Display -->
+        <Border Grid.Column="2" Grid.Row="0" VerticalAlignment="Top">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBox Grid.Column="0" Grid.Row="0"  Text="Logs" FontWeight="Bold"
+                         HorizontalAlignment="Left"/>
+                <Button Grid.Column="1" Grid.Row="0" Content="Clear All" Click="ClearLogButton_Click" 
+                        IsEnabled="True" HorizontalAlignment="Right"/>
+                <ListView Grid.Row="1" Grid.ColumnSpan="2"  
+                          x:Name="LogListView"
+                          ItemTemplateSelector="{StaticResource LogMessageTemplateSelector}"
+                          ScrollViewer.HorizontalScrollMode="Auto" 
+                          ScrollViewer.IsHorizontalRailEnabled="True"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          />
+            </Grid>
+        </Border>
+    </Grid>
 </Page>

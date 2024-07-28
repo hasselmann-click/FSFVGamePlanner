@@ -36,6 +36,8 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         public const string Teams = "teams";
         public const string Fixtures = "fixtures";
         public const string Gameplan = "matchplan";
+        public const string AppworksMappings = "mappings";
+        public const string PdfGenerationHolidays = "holidays";
 
         public static class DisplayNames
         {
@@ -44,7 +46,8 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             public const string Gameplan = "matchplan*.csv";
             public const string Pitches = "pitches.csv";
             public const string LeagueConfigs = "league_configs.csv";
-
+            public const string AppworksMappings = "mappings*_[League].csv";
+            public const string PdfGenerationHolidays = "holidays.csv";
         }
     }
 
@@ -52,11 +55,14 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     {
         ResetConfigFileRecords();
         ResetTeamFiles();
+        ResetMappingsFiles();
+        ResetPdfGenerationsFiles();
         Dispatcher = dispatcher;
     }
 
     private StorageFile gameplanFile;
     private StorageFolder workDir;
+
     private bool generateFixtursButton_IsEnabled;
     private bool generateFixtursButton_IsGenerating;
     private bool generateFixtursButton_HasGenerated;
@@ -65,6 +71,12 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     private bool generateGameplanButton_HasGenerated;
     private bool generateStatsButton_IsGenerating;
     private bool generateStatsButton_HasGenerated;
+    private bool generateAppworksImportButton_IsGenerating;
+    private bool generateAppworksImportButton_HasGenerated;
+    private bool generateAppworksImportButton_IsEnabled;
+    private bool generatePdfButton_IsEnabled;
+    private bool generatePdfButton_IsGenerating;
+    private bool generatePdfButton_HasGenerated;
 
     public StorageFolder WorkDir
     {
@@ -73,6 +85,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     }
     public string WorkDirPath => WorkDir?.Path;
 
+    #region Gameplan
     public StorageFile GameplanFile
     {
         get => gameplanFile;
@@ -84,17 +97,21 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasGameplanFile)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotHasGameplanFile)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GameplanFileName)));
+
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateStatsButton_IsEnabled)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateAppworksImportButton_IsEnabled)));
         }
     }
     public bool NotHasGameplanFile => !HasGameplanFile;
     public bool HasGameplanFile => GameplanFile != null;
     public string GameplanFileName => GameplanFile?.Name ?? FileNamePrefixes.DisplayNames.Gameplan;
 
-    public ObservableCollection<ConfigFileRecordViewModel> TeamFiles { get; } = new();
-    public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; } = new();
+    public ObservableCollection<ConfigFileRecordViewModel> TeamFiles { get; } = [];
+    public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; } = [];
     public ObservableCollection<StorageFile> FixtureFiles { get; } = new(new List<StorageFile>(4));
+    #endregion
 
+    #region buttons
     public bool GenerateFixtursButton_IsEnabled
     {
         get => generateFixtursButton_IsEnabled;
@@ -110,7 +127,6 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => generateFixtursButton_HasGenerated;
         set => SetProperty(ref generateFixtursButton_HasGenerated, value);
     }
-
     public bool GenerateGameplanButton_IsEnabled
     {
         get => generateGameplanButton_IsEnabled;
@@ -126,6 +142,10 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => generateGameplanButton_HasGenerated;
         set => SetProperty(ref generateGameplanButton_HasGenerated, value);
     }
+
+    #endregion
+
+    #region stats
     public bool GenerateStatsButton_IsEnabled => HasGameplanFile && !GenerateStatsButton_IsGenerating;
     public bool GenerateStatsButton_IsGenerating
     {
@@ -141,7 +161,70 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         get => generateStatsButton_HasGenerated;
         set => SetProperty(ref generateStatsButton_HasGenerated, value);
     }
+    #endregion
 
+    #region Appworks Import
+    public bool GenerateAppworksImportButton_IsEnabled
+    {
+        get => generateAppworksImportButton_IsEnabled;
+        set => SetProperty(ref generateAppworksImportButton_IsEnabled, value);
+    }
+    public bool GenerateAppworksImportButton_IsGenerating
+    {
+        get => generateAppworksImportButton_IsGenerating;
+        set
+        {
+            SetProperty(ref generateAppworksImportButton_IsGenerating, value);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateAppworksImportButton_IsEnabled)));
+        }
+    }
+    public bool GenerateAppworksImportButton_HasGenerated
+    {
+        get => generateAppworksImportButton_HasGenerated;
+        set => SetProperty(ref generateAppworksImportButton_HasGenerated, value);
+    }
+
+    public ObservableCollection<ConfigFileRecordViewModel> AppworksMappingsFiles { get; } = [];
+
+    public void ResetMappingsFiles()
+    {
+        AppworksMappingsFiles.Clear();
+        AppworksMappingsFiles.Add(new ConfigFileRecordViewModel { PreviewDisplayName = FileNamePrefixes.DisplayNames.AppworksMappings, IsFound = false });
+    }
+
+    #endregion
+
+    #region Pdf Generation
+
+    public bool GeneratePdfButton_IsEnabled
+    {
+        get => generatePdfButton_IsEnabled;
+        set => SetProperty(ref generatePdfButton_IsEnabled, value);
+    }
+    public bool GeneratePdfButton_IsGenerating
+    {
+        get => generatePdfButton_IsGenerating;
+        set
+        {
+            SetProperty(ref generatePdfButton_IsGenerating, value);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GeneratePdfButton_IsEnabled)));
+        }
+    }
+    public bool GeneratePdfButton_HasGenerated
+    {
+        get => generatePdfButton_HasGenerated;
+        set => SetProperty(ref generatePdfButton_HasGenerated, value);
+    }
+    public ObservableCollection<ConfigFileRecordViewModel> PdfGenerationFiles { get; } = [];
+    public void ResetPdfGenerationsFiles()
+    {
+        PdfGenerationFiles.Clear();
+        PdfGenerationFiles.Add(new ConfigFileRecordViewModel { PreviewDisplayName = FileNamePrefixes.DisplayNames.PdfGenerationHolidays, IsFound = false });
+    }
+
+    #endregion
+
+    #region configs 
     public void ResetConfigFileRecords()
     {
         ConfigFileRecords.Clear();
@@ -167,4 +250,8 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     public DispatcherQueue Dispatcher { get; }
     public bool IsPreventRescanForGameplanFile { get; internal set; }
     public bool IsPreventRescanForTeamFiles { get; internal set; }
+    public bool IsPreventRescanForAppworksMappings { get; internal set; }
+    public bool IsPreventRescanForPdfGenerationFiles { get; internal set; }
+
+    #endregion
 }

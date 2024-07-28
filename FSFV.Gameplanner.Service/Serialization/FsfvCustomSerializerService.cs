@@ -1,8 +1,8 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
-using FSFV.Gameplanner.Fixtures;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,22 +10,15 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.Service.Serialization;
 
-public class FsfvCustomSerializerService
+public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> logger)
 {
-
+    public const string DateFormat = "dd.MM.yy";
+    private const char TimeSeparator = '-';
     private static readonly Encoding DefaultEncoding = Encoding.UTF8;
-
-    private readonly ILogger<FsfvCustomSerializerService> logger;
-
-    public FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> logger)
-    {
-        this.logger = logger;
-    }
 
     public async Task<Dictionary<string, GroupTypeDto>> ParseGroupTypesAsync(Func<Task<Stream>> fileStreamProvider)
     {
@@ -141,7 +134,7 @@ public class FsfvCustomSerializerService
             for (int j = 1; j < fields.Length; ++j)
             {
                 var pitch = new Pitch { Name = pitchNames[j - 1], GameDay = i };
-                var times = fields[j].Split('-');
+                var times = fields[j].Split(TimeSeparator);
                 if (times.Length != 2)
                 {
                     if (string.IsNullOrEmpty(times[0]))
@@ -167,20 +160,37 @@ public class FsfvCustomSerializerService
         return pitches;
     }
 
+    public async Task<Dictionary<DateOnly, string>> ParseHolidaysAsync(Func<Task<Stream>> streamProvider, char separator = ',')
+    {
+        await using var stream = await streamProvider();
+        using var reader = new StreamReader(stream, DefaultEncoding);
+        var holidays = new Dictionary<DateOnly, string>(3); // educated guess
+        string line;
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            var ar = line.Split(separator);
+            holidays.Add(DateOnly.Parse(ar[0]), ar[1]);
+        }
+        return holidays;
+    }
+
     public async Task<List<GameplanGameDto>> ParseGameplanAsync(Func<Task<Stream>> streamProvider)
     {
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            MissingFieldFound = null
+            MissingFieldFound = null,
         };
 
         await using var stream = await streamProvider();
         using var reader = new StreamReader(stream, DefaultEncoding);
         using var csv = new CsvReader(reader, config);
 
+        var options = new TypeConverterOptions { Formats = [DateFormat] };
+        csv.Context.TypeConverterOptionsCache.AddOptions<DateOnly>(options);
+
         // hypothetically it's possible that the stream is inifinitely large. We could use
         // a timeout or a maximum limit of records to read. But for now, this will suffice.
-        var records = csv.GetRecordsAsync<GameplanGameDto>(); ;
+        var records = csv.GetRecordsAsync<GameplanGameDto>();
         var dtos = new List<GameplanGameDto>(100);
         await foreach (var record in records)
         {
@@ -189,13 +199,13 @@ public class FsfvCustomSerializerService
         return dtos;
     }
 
-    public async Task WriteCsvGameplanAsync(Func<Task<Stream>> writeStreamProvider, List<GameDay> gameDays, string dateFormat = "dd.MM.yy")
+    public async Task WriteCsvGameplanAsync(Func<Task<Stream>> writeStreamProvider, List<GameDay> gameDays, string dateFormat = DateFormat)
     {
         // write csv
         await using var csvStream = await writeStreamProvider();
         using var csvWriter = new StreamWriter(csvStream, DefaultEncoding);
-        await csvWriter.WriteLineAsync(string.Join(",", new string[]
-        {
+        await csvWriter.WriteLineAsync(string.Join(",",
+        [
                     "GameDay",
                     "Pitch",
                     "StartTime",
@@ -206,7 +216,7 @@ public class FsfvCustomSerializerService
                     "Group",
                     "League",
                     "Date"
-        }));
+        ]));
         foreach (var gameDay in gameDays)
         {
             var slots = gameDay.Pitches
@@ -281,6 +291,7 @@ public class FsfvCustomSerializerService
         public string Referee { get; set; }
         public string Group { get; set; }
         public string League { get; set; }
+        public DateOnly Date { get; set; }
     }
 
     public class TeamStatsDto

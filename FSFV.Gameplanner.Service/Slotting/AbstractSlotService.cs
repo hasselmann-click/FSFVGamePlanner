@@ -10,7 +10,7 @@ namespace FSFV.Gameplanner.Service.Slotting
     {
 
         protected static readonly Game PLACEHOLDER = new() { Group = new() { Type = new() { MinDurationMinutes = 0 } } };
-        // TODO: make configurable
+        // TODO: make configurable. Implement IConfigurationProvider?
         protected static readonly TimeSpan MaxSlotTime = TimeSpan.FromMinutes(120);
 
         private readonly ILogger logger;
@@ -48,7 +48,7 @@ namespace FSFV.Gameplanner.Service.Slotting
                     additionalBreak = TimeSpan.FromMinutes(
                         Math.Floor(additionalBreak.TotalMinutes / 5.0) * 5);
 
-                pitch.Games = pitch.Games.OrderByDescending(g => g.Group.Type.Priority).ToList();
+                pitch.Games = [.. pitch.Games.OrderByDescending(g => g.Group.Type.Priority)];
 
                 int parallel = 1;
                 int i = 0;
@@ -94,6 +94,7 @@ namespace FSFV.Gameplanner.Service.Slotting
 
         protected void AddRefereesToTimeslots(List<Pitch> pitches)
         {
+            // TODO make configurable by league
             // For every pitch group games by league (GroupType)
             foreach (var pitch in pitches)
             {

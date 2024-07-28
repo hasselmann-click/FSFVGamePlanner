@@ -5,7 +5,7 @@ dotnet_diagnostic.CS8618.severity = silent
 csharp_using_directive_placement = outside_namespace:silent
 csharp_prefer_simple_using_statement = true:suggestion
 csharp_prefer_braces = true:silent
-csharp_style_namespace_declarations = block_scoped:silent
+csharp_style_namespace_declarations = file_scoped:silent
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_prefer_top_level_statements = true:silent
 csharp_style_expression_bodied_methods = false:silent
@@ -33,6 +33,7 @@ csharp_prefer_static_local_function = true:suggestion
 csharp_indent_labels = one_less_than_current
 csharp_space_around_binary_operators = before_and_after
 csharp_style_prefer_readonly_struct = true:suggestion
+csharp_style_prefer_primary_constructors = true:suggestion
 
 [*.{cs,vb}]
 #### Naming styles ####

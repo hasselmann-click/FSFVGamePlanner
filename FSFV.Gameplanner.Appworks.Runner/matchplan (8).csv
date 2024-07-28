@@ -1,0 +1,73 @@
+﻿GameDay,Pitch,StartTime,EndTime,Home,Away,Referee,Group,League,Date
+1,R2,10:00,12:00,FC Eglisau,Real Cabron,Deportivo,A,M,20.08.23
+1,R6,10:00,12:00,AS Lettenwiese,Tabula Entspannt,Tabula Brisant,E,H,20.08.23
+1,R7,10:00,12:00,Saints,ZüriUtd,Inter Mezzo,E,H,20.08.23
+1,R11,10:00,12:00,Dynamo Röntgen,Aurora,Olympique Lettenwiese,A,M,20.08.23
+1,R2,12:00,14:00,Deportivo,Tabula Rasant,Real Azül,A,M,20.08.23
+1,R6,12:00,14:00,Tabula Brisant,Zenit Emilie,AS Lettenwiese,H,H,20.08.23
+1,R7,12:00,14:00,Inter Mezzo,Tram 5,Saints,H,H,20.08.23
+1,R11,12:00,14:00,Olympique Lettenwiese,Bund Schöne Rosen,Sputnik,A,M,20.08.23
+1,R2,14:00,16:00,Real Azül,Gremio Porto Riesbach,Atletico Bernina,A,M,20.08.23
+1,R6,14:00,16:00,Zwietracht Turicum,Furttals Finest,Schachtjor,B,M,20.08.23
+1,R7,14:00,16:00,Widerstand Wipkingen,Tormotor,Rotor,A,M,20.08.23
+1,R11,14:00,16:00,Sputnik,C.D. El Clandestino,Sporting Morgenstern,B,M,20.08.23
+1,R2,16:00,17:35,Atletico Bernina,Ex Hürlimann,Gremio Porto Riesbach,B,M,20.08.23
+1,R6,16:00,17:35,Schachtjor,Traktor Emilie,Zwietracht Turicum,B,M,20.08.23
+1,R7,16:00,17:35,Rotor,Zürich Freestylers,Widerstand Wipkingen,B,M,20.08.23
+1,R11,16:00,17:35,Sporting Morgenstern,Wacker Selnau,C.D. El Clandestino,B,M,20.08.23
+2,R2,10:00,12:00,Olympique Lettenwiese,Tabula Rasant,Zürich Freestylers,A,M,27.08.23
+2,R6,10:00,11:35,Tabula Brisant,Tram 5,ZüriUtd,H,H,27.08.23
+2,R7,10:00,12:00,Inter Mezzo,Zenit Emilie,Tabula Entspannt,H,H,27.08.23
+2,R11,10:00,11:35,Real Azül,Bund Schöne Rosen,Ex Hürlimann,A,M,27.08.23
+2,R6,11:35,13:10,AS Lettenwiese,ZüriUtd,Tram 5,E,H,27.08.23
+2,R11,11:35,13:10,Ex Hürlimann,Wacker Selnau,Bund Schöne Rosen,B,M,27.08.23
+2,R2,12:00,13:35,Schachtjor,Zürich Freestylers,Tabula Rasant,B,M,27.08.23
+2,R7,12:00,14:00,Saints,Tabula Entspannt,Zenit Emilie,E,H,27.08.23
+2,R6,13:10,14:45,Sporting Morgenstern,C.D. El Clandestino,Widerstand Wipkingen,B,M,27.08.23
+2,R11,13:10,14:45,Rotor,Zwietracht Turicum,Real Cabron,B,M,27.08.23
+2,R7,14:00,16:00,Atletico Bernina,Traktor Emilie,FC Eglisau,B,M,27.08.23
+2,R6,14:45,16:20,Widerstand Wipkingen,Gremio Porto Riesbach,Furttals Finest,A,M,27.08.23
+2,R11,14:45,16:20,Deportivo,Real Cabron,Dynamo Röntgen,A,M,27.08.23
+2,R7,16:00,17:35,FC Eglisau,Aurora,Traktor Emilie,A,M,27.08.23
+2,R6,16:20,17:55,Sputnik,Furttals Finest,Gremio Porto Riesbach,B,M,27.08.23
+2,R11,16:20,17:55,Dynamo Röntgen,Tormotor,Deportivo,A,M,27.08.23
+3,R2,10:00,12:00,Deportivo,Aurora,Rotor,A,M,03.09.23
+3,R6,10:00,12:00,Saints,AS Lettenwiese,Zenit Emilie,E,H,03.09.23
+3,R7,10:00,12:00,Tormotor,Gremio Porto Riesbach,Dynamo Röntgen,A,M,03.09.23
+3,R11,10:00,12:00,Tabula Entspannt,ZüriUtd,Inter Mezzo,E,H,03.09.23
+3,R2,12:00,14:00,Rotor,Furttals Finest,Aurora,B,M,03.09.23
+3,R6,12:00,14:00,Zenit Emilie,Tram 5,Saints,H,H,03.09.23
+3,R7,12:00,14:00,Dynamo Röntgen,FC Eglisau,Tormotor,A,M,03.09.23
+3,R11,12:00,14:00,Inter Mezzo,Tabula Brisant,Tabula Entspannt,H,H,03.09.23
+3,R2,14:00,16:00,Atletico Bernina,Sputnik,Schachtjor,B,M,03.09.23
+3,R6,14:00,16:00,Traktor Emilie,Wacker Selnau,Olympique Lettenwiese,B,M,03.09.23
+3,R7,14:00,16:00,Ex Hürlimann,Zürich Freestylers,Bund Schöne Rosen,B,M,03.09.23
+3,R11,14:00,16:00,Sporting Morgenstern,Zwietracht Turicum,Real Azül,B,M,03.09.23
+3,R2,16:00,17:35,Schachtjor,C.D. El Clandestino,Atletico Bernina,B,M,03.09.23
+3,R6,16:00,17:35,Olympique Lettenwiese,Real Cabron,Wacker Selnau,A,M,03.09.23
+3,R7,16:00,17:35,Widerstand Wipkingen,Bund Schöne Rosen,Ex Hürlimann,A,M,03.09.23
+3,R11,16:00,17:35,Real Azül,Tabula Rasant,Sporting Morgenstern,A,M,03.09.23
+4,R2,10:00,12:00,Traktor Emilie,Zürich Freestylers,Wacker Selnau,B,M,24.09.23
+4,R6,10:00,12:00,Ex Hürlimann,C.D. El Clandestino,Real Cabron,B,M,24.09.23
+4,R7,10:00,12:00,Sporting Morgenstern,Furttals Finest,Tabula Rasant,B,M,24.09.23
+4,R11,10:00,12:00,Schachtjor,Zwietracht Turicum,Tormotor,B,M,24.09.23
+4,R2,12:00,13:35,Atletico Bernina,Wacker Selnau,Traktor Emilie,B,M,24.09.23
+4,R6,12:00,14:00,Real Azül,Real Cabron,C.D. El Clandestino,A,M,24.09.23
+4,R7,12:00,14:00,Widerstand Wipkingen,Tabula Rasant,Sputnik,A,M,24.09.23
+4,R11,12:00,14:00,Tormotor,Bund Schöne Rosen,FC Eglisau,A,M,24.09.23
+4,R6,14:00,15:35,Dynamo Röntgen,Gremio Porto Riesbach,Real Azül,A,M,24.09.23
+4,R7,14:00,15:35,Sputnik,Rotor,Widerstand Wipkingen,B,M,24.09.23
+4,R11,14:00,16:00,FC Eglisau,Deportivo,Aurora,A,M,24.09.23
+4,R11,16:00,17:35,Olympique Lettenwiese,Aurora,Deportivo,A,M,24.09.23
+5,R2,10:00,12:00,Sputnik,Sporting Morgenstern,Traktor Emilie,B,M,01.10.23
+5,R6,10:00,12:00,Wacker Selnau,Zürich Freestylers,FC Eglisau,B,M,01.10.23
+5,R7,10:00,12:00,Atletico Bernina,Rotor,Tormotor,B,M,01.10.23
+5,R11,10:00,12:00,Widerstand Wipkingen,Real Cabron,Aurora,A,M,01.10.23
+5,R2,12:00,13:35,Traktor Emilie,C.D. El Clandestino,Sputnik,B,M,01.10.23
+5,R6,12:00,14:00,FC Eglisau,Olympique Lettenwiese,Zürich Freestylers,A,M,01.10.23
+5,R7,12:00,14:00,Tormotor,Tabula Rasant,Zwietracht Turicum,A,M,01.10.23
+5,R11,12:00,14:00,Real Azül,Aurora,Gremio Porto Riesbach,A,M,01.10.23
+5,R6,14:00,15:35,Dynamo Röntgen,Deportivo,Olympique Lettenwiese,A,M,01.10.23
+5,R7,14:00,15:35,Ex Hürlimann,Zwietracht Turicum,Tabula Rasant,B,M,01.10.23
+5,R11,14:00,16:00,Gremio Porto Riesbach,Bund Schöne Rosen,Furttals Finest,A,M,01.10.23
+5,R11,16:00,17:35,Schachtjor,Furttals Finest,Bund Schöne Rosen,B,M,01.10.23

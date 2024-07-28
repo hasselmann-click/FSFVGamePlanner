@@ -31,13 +31,11 @@ public class GeneratorService
         List<string> teamsList;
         if ((teams.Length & 1) == 1) // uneven number of teams
         {
-            teamsList = new List<string>(teams.Length + 1);
-            teamsList.AddRange(teams);
-            teamsList.Add(placeHolder);
+            teamsList = [.. teams, placeHolder];
         }
         else
         {
-            teamsList = teams.ToList();
+            teamsList = [.. teams];
         }
 
         var table = GameCreatorUtil.GenerateGameTable(teamsList.Count);
@@ -46,7 +44,7 @@ public class GeneratorService
 #pragma warning restore CA2254 // Template should be a static expression
         var games = GameCreatorUtil.CreateGameList(teamsList, table);
 
-        return games.OrderBy(g => g.GameDay).ThenBy(g => g.GameDayOrder).ToList();
+        return [.. games.OrderBy(g => g.GameDay).ThenBy(g => g.GameDayOrder)];
     }
 
 }

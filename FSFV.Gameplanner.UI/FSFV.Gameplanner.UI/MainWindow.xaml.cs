@@ -3,6 +3,8 @@
 
 using FSFV.Gameplanner.UI.Pages;
 using Microsoft.UI.Xaml;
+using System;
+using Windows.Graphics;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -19,5 +21,6 @@ namespace FSFV.Gameplanner.UI
             this.InitializeComponent();
             MainFrame.Navigate(typeof(MainPage));
         }
+
     }
 }

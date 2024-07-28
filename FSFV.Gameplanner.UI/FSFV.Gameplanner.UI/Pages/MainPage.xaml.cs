@@ -1,10 +1,14 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
+using FSFV.Gameplanner.Appworks;
+using FSFV.Gameplanner.Appworks.Serialization;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Fixtures;
+using FSFV.Gameplanner.Pdf;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting;
+using FSFV.Gameplanner.UI.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,8 +21,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.Storage;
-using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Search;
@@ -33,10 +37,10 @@ namespace FSFV.Gameplanner.UI.Pages;
 /// </summary>
 public sealed partial class MainPage : Page
 {
-    private const string FolderAccessToken = "PickedFolderToken";
-
     private const string GamesPlaceholder = "SPIELFREI";
     private const string StatsFileSuffix = "_stats.csv";
+    private const string AppworksImportFileSuffix = "_appworks.csv";
+
     private const int FolderContentsChangedEventThrottleDuration = 10_000;
 
     private delegate void FilesChangedHandler(IReadOnlyList<StorageFile> files);
@@ -52,6 +56,20 @@ public sealed partial class MainPage : Page
         OnFolderPicked += LookingForTeamFiles;
         OnFolderPicked += LookingForConfigFiles;
         OnFolderPicked += LookingForGameplanFiles;
+        OnFolderPicked += LookingForAppworksMappingsFiles;
+        OnFolderPicked += LookingForPdfGenerationFiles;
+
+        UILogger.OnMessageLogged += UpdateLog;
+    }
+
+    private void UpdateLog(UILogMessage message)
+    {
+        LogListView.Items.Add(message);
+    }
+
+    private void ClearLogButton_Click(object sender, RoutedEventArgs e)
+    {
+        LogListView.Items.Clear();
     }
 
     #region Folder Picker
@@ -75,7 +93,6 @@ public sealed partial class MainPage : Page
         {
             return;
         }
-        StorageApplicationPermissions.FutureAccessList.AddOrReplace(FolderAccessToken, folder);
         await ChangeWorkFolder(folder);
     }
 
@@ -137,14 +154,35 @@ public sealed partial class MainPage : Page
             && fixtureFiles.Any();
     }
 
+    #endregion
+
+    #region Gameplan
+
     private async void GeneratePlanButton_Click(object sender, RoutedEventArgs e)
     {
-        // TODO ERROR HANDLING > Show error message on exception?
+        try
+        {
+            ViewModel.GenerateGameplanButton_HasGenerated = false;
+            ViewModel.GenerateGameplanButton_IsGenerating = true;
+            ViewModel.GenerateGameplanButton_IsEnabled = false;
 
-        ViewModel.GenerateGameplanButton_HasGenerated = false;
-        ViewModel.GenerateGameplanButton_IsGenerating = true;
-        ViewModel.GenerateGameplanButton_IsEnabled = false;
+            await GenerateGamePlanAsync();
 
+            ViewModel.GenerateGameplanButton_IsGenerating = false;
+            ViewModel.GenerateGameplanButton_HasGenerated = true;
+            ViewModel.GenerateGameplanButton_IsEnabled = true;
+        }
+        catch
+        {
+            ViewModel.GenerateGameplanButton_IsGenerating = false;
+            ViewModel.GenerateGameplanButton_HasGenerated = false;
+            ViewModel.GenerateGameplanButton_IsEnabled = true;
+            throw;
+        }
+    }
+
+    private async Task GenerateGamePlanAsync()
+    {
         var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
         // parse league configs to group type dto
         var leagueConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.LeagueConfigs).File;
@@ -176,7 +214,7 @@ public sealed partial class MainPage : Page
         foreach (var gameDayPitches in pitchesOrdered)
         {
             var slottedPitches = slotService.SlotGameDay(
-                gameDayPitches.ToList(),
+                [.. gameDayPitches],
                 games.Where(g => g.GameDay == gameDayPitches.Key).ToList()
             );
             gameDays.Add(new GameDay
@@ -211,18 +249,16 @@ public sealed partial class MainPage : Page
         // write to file
         ViewModel.GameplanFile = await ViewModel.WorkDir.CreateFileAsync(MainPageViewModel.FileNamePrefixes.Gameplan + ".csv", CreationCollisionOption.GenerateUniqueName);
         await serializer.WriteCsvGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForWriteAsync(), gameDays);
-        await GenerateStatsAsync(serializer, gameplanDtos);
 
-        ViewModel.GenerateGameplanButton_IsGenerating = false;
-        ViewModel.GenerateGameplanButton_HasGenerated = true;
-        ViewModel.GenerateGameplanButton_IsEnabled = true;
+        // todo bhas test this
+        await GenerateStatsAsync();
     }
     #endregion
 
     #region Team Files
     private void LookingForTeamFiles(IReadOnlyList<StorageFile> storageFiles)
     {
-        if(ViewModel.IsPreventRescanForTeamFiles)
+        if (ViewModel.IsPreventRescanForTeamFiles)
         {
             ViewModel.IsPreventRescanForTeamFiles = false;
             return;
@@ -258,7 +294,7 @@ public sealed partial class MainPage : Page
         foreach (var file in ViewModel.TeamFiles.Select(tf => tf.File))
         {
             var teams = await FileIO.ReadLinesAsync(file);
-            var fixtures = fixtureGenerator.Fix(teams.ToArray(), GamesPlaceholder);
+            var fixtures = fixtureGenerator.Fix([.. teams], GamesPlaceholder);
             var csv = fixtures.Select(g => g.GameDay + "," + g.Home + "," + g.Away);
 
             var fixtureFile = await ViewModel.WorkDir.CreateFileAsync(
@@ -274,6 +310,234 @@ public sealed partial class MainPage : Page
     #endregion
 
     #region Stats
+
+    private async void GenerateStatsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ViewModel.GenerateStatsButton_HasGenerated = false;
+            ViewModel.GenerateStatsButton_IsGenerating = true;
+
+            await GenerateStatsAsync();
+
+            ViewModel.GenerateStatsButton_HasGenerated = true;
+            ViewModel.GenerateStatsButton_IsGenerating = false;
+        }
+        catch
+        {
+            ViewModel.GenerateStatsButton_HasGenerated = false;
+            ViewModel.GenerateStatsButton_IsGenerating = false;
+            throw;
+        }
+    }
+
+    private async Task GenerateStatsAsync()
+    {
+
+        var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
+        var gameDtos = await serializer.ParseGameplanAsync(ViewModel.GameplanFile.OpenStreamForReadAsync);
+
+        var configuration = App.Current.Services.GetRequiredService<IConfiguration>();
+        var morningUntil = configuration.GetValue<TimeSpan>("Schedule:MorningUntil");
+        var eveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
+
+        var teams = gameDtos
+            .SelectMany(g => new[] { new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Home },
+                new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Away } })
+            .DistinctBy(x => x.Name)
+            .ToDictionary(x => x.Name, x => x);
+
+        foreach (var game in gameDtos)
+        {
+            if (game.Referee != null && teams.TryGetValue(game.Referee, out var refTeam))
+            {
+                // refs are sometimes optional or have a placeholder name
+                refTeam.Referee++;
+            }
+
+            if (game.StartTime.TimeOfDay < morningUntil)
+            {
+                teams[game.Home].MorningGames++;
+                teams[game.Away].MorningGames++;
+            }
+            else if (game.StartTime.TimeOfDay > eveningSince)
+            {
+                teams[game.Home].EveningGames++;
+                teams[game.Away].EveningGames++;
+            }
+        }
+
+        var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + StatsFileSuffix;
+        var statsFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
+        await serializer.WriteCsvStatsAsync(() => statsFile.OpenStreamForWriteAsync(), teams.Values.OrderBy(v => v.League).ThenBy(v => v.Name));
+
+        ViewModel.IsPreventRescanForGameplanFile = true;
+    }
+    #endregion
+
+    #region Appworks
+
+    private void LookingForAppworksMappingsFiles(IReadOnlyList<StorageFile> files)
+    {
+        if (ViewModel.IsPreventRescanForAppworksMappings)
+        {
+            ViewModel.IsPreventRescanForAppworksMappings = false;
+            return;
+        }
+
+        ViewModel.GenerateAppworksImportButton_HasGenerated = false;
+        ViewModel.AppworksMappingsFiles.Clear();
+
+        var teamFiles = files.Where(s => s.FileType == ".csv" && s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.AppworksMappings, StringComparison.InvariantCultureIgnoreCase));
+        foreach (var file in teamFiles)
+        {
+            ViewModel.AppworksMappingsFiles.Add(new ConfigFileRecordViewModel
+            {
+                IsFound = true,
+                File = file,
+            });
+        }
+
+        var hasMappingsFiles = ViewModel.AppworksMappingsFiles.Any();
+        ViewModel.GenerateAppworksImportButton_IsEnabled = hasMappingsFiles;
+        if (!hasMappingsFiles)
+        {
+            ViewModel.ResetMappingsFiles();
+        }
+    }
+
+    private void AppworksOpenGameplanButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenGameplanButton_Click(sender, e);
+    }
+
+    private async void GenerateAppworksImportButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ViewModel.GenerateAppworksImportButton_HasGenerated = false;
+            ViewModel.GenerateAppworksImportButton_IsGenerating = true;
+
+            await GenerateAppworksImportFile();
+
+            ViewModel.GenerateAppworksImportButton_HasGenerated = true;
+            ViewModel.GenerateAppworksImportButton_IsGenerating = false;
+        }
+        catch
+        {
+            ViewModel.GenerateAppworksImportButton_IsGenerating = false;
+            throw;
+        }
+    }
+
+
+    /// <summary>
+    /// Generates the Appworks import file. 
+    /// This method reads the gameplan file and the appworks mappings files, and generates an import 
+    /// file per mappings file (a.k.a. "tournament").
+    /// </summary>
+    private async Task GenerateAppworksImportFile()
+    {
+        var services = App.Current.Services;
+
+        var gamePlanParser = services.GetRequiredService<FsfvCustomSerializerService>();
+        var gamePlan = await gamePlanParser.ParseGameplanAsync(ViewModel.GameplanFile.OpenStreamForReadAsync);
+
+        var logger = services.GetRequiredService<ILogger<MainPage>>();
+        foreach (var mappings in ViewModel.AppworksMappingsFiles)
+        {
+            var mappingsFilePath = mappings.File.Path;
+            var fileName = Path.GetFileNameWithoutExtension(mappingsFilePath);
+            var fileNameAr = fileName.Split('_');
+            if (fileNameAr.Length < 2)
+            {
+                logger.LogError("Invalid mappings file name: {FileName}", fileName);
+                continue;
+            }
+            var tournament = fileNameAr[1];
+
+            logger.LogInformation("Generating Appworks import file for tournament {Tournament}", tournament);
+            var transformer = services.GetRequiredService<AppworksTransformerFactory>().CreateTransformer(mappingsFilePath);
+            var transformedRecordsByTournament = await transformer.Transform(gamePlan, tournament);
+
+            var name = String.Join('_', Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name), tournament, AppworksImportFileSuffix);
+            var importFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
+
+            var serializer = services.GetRequiredService<IAppworksSerializer>();
+            await serializer.WriteCsvImportFile(importFile.OpenStreamForWriteAsync, transformedRecordsByTournament[tournament]);
+        }
+    }
+
+    #endregion
+
+    #region Pdf Generation
+
+    private void LookingForPdfGenerationFiles(IReadOnlyList<StorageFile> files)
+    {
+        if (ViewModel.IsPreventRescanForPdfGenerationFiles)
+        {
+            ViewModel.IsPreventRescanForPdfGenerationFiles = false;
+            return;
+        }
+
+        ViewModel.GeneratePdfButton_HasGenerated = false;
+        ViewModel.PdfGenerationFiles.Clear();
+
+        var generatePdfFiles = files.Where(s => s.FileType == ".csv" && s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.PdfGenerationHolidays, StringComparison.InvariantCultureIgnoreCase));
+        foreach (var file in generatePdfFiles)
+        {
+            ViewModel.PdfGenerationFiles.Add(new ConfigFileRecordViewModel
+            {
+                IsFound = true,
+                File = file,
+            });
+        }
+
+        var hasMappingsFiles = ViewModel.PdfGenerationFiles.Any();
+        ViewModel.GeneratePdfButton_IsEnabled = hasMappingsFiles;
+        if (!hasMappingsFiles)
+        {
+            ViewModel.ResetPdfGenerationsFiles();
+        }
+    }
+
+    private async void GeneratePdfButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ViewModel.GeneratePdfButton_HasGenerated = false;
+            ViewModel.GeneratePdfButton_IsGenerating = true;
+
+            await GeneratePdfAsync();
+
+            ViewModel.GeneratePdfButton_IsGenerating = false;
+            ViewModel.GeneratePdfButton_HasGenerated = true;
+        }
+        catch
+        {
+            ViewModel.GeneratePdfButton_IsGenerating = false;
+            throw;
+        }
+    }
+
+    private async Task GeneratePdfAsync()
+    {
+        var gamePlanStream = () => ViewModel.GameplanFile.OpenStreamForReadAsync();
+        var holidaysStream = () => ViewModel.PdfGenerationFiles.FirstOrDefault(f => f.IsFound)?.File.OpenStreamForReadAsync();
+
+        var outputFile = await ViewModel.WorkDir.CreateFileAsync("Spielplan.pdf", CreationCollisionOption.ReplaceExisting);
+        var outputStream = () => outputFile.OpenStreamForWriteAsync();
+
+        var pdfGenerator = App.Current.Services.GetRequiredService<PdfGenerator>();
+        await pdfGenerator.GenerateAsync(outputStream, gamePlanStream, holidaysStream);
+    }
+
+    private void PdfOpenGameplanButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenGameplanButton_Click(sender, e);
+    }
+
+    #endregion
 
     private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)
     {
@@ -310,70 +574,10 @@ public sealed partial class MainPage : Page
         ViewModel.GameplanFile = gameplanFile;
     }
 
-    private async void GenerateStatsButton_Click(object sender, RoutedEventArgs e)
-    {
-        ViewModel.GenerateStatsButton_HasGenerated = false;
-        ViewModel.GenerateStatsButton_IsGenerating = true;
-
-        var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
-        var gameDtos = await serializer.ParseGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForReadAsync());
-        await GenerateStatsAsync(serializer, gameDtos);
-
-        ViewModel.GenerateStatsButton_HasGenerated = true;
-        ViewModel.GenerateStatsButton_IsGenerating = false;
-
-    }
-
-    private async Task GenerateStatsAsync(FsfvCustomSerializerService serializer, IEnumerable<FsfvCustomSerializerService.GameplanGameDto> gameDtos)
-    {
-        var configuration = App.Current.Services.GetRequiredService<IConfiguration>();
-        var morningUntil = configuration.GetValue<TimeSpan>("Schedule:MorningUntil");
-        var eveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
-
-        var teams = gameDtos
-            .SelectMany(g => new[] { new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Home }, new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Away } })
-            .DistinctBy(x => x.Name)
-            .ToDictionary(x => x.Name, x => x);
-
-        foreach (var game in gameDtos)
-        {
-            if (game.Referee != null && teams.TryGetValue(game.Referee, out var refTeam))
-            {
-                // refs are sometimes optional or have a placeholder name
-                refTeam.Referee++;
-            }
-
-            if (game.StartTime.TimeOfDay < morningUntil)
-            {
-                teams[game.Home].MorningGames++;
-                teams[game.Away].MorningGames++;
-            }
-            else if (game.EndTime.TimeOfDay < eveningSince)
-            {
-                teams[game.Home].EveningGames++;
-                teams[game.Away].EveningGames++;
-            }
-        }
-
-        var name = Path.GetFileNameWithoutExtension(ViewModel.GameplanFile.Name) + StatsFileSuffix;
-        var statsFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
-        await serializer.WriteCsvStatsAsync(() => statsFile.OpenStreamForWriteAsync(), teams.Values.OrderBy(v => v.League).ThenBy(v => v.Name));
-
-        ViewModel.IsPreventRescanForGameplanFile = true;
-    }
-
     private async void OpenGameplanButton_Click(object sender, RoutedEventArgs e)
     {
-        FileOpenPicker openPicker = new();
-        var hWnd = WindowHelper.GetWindowHandle(this);
-        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
-
-        // Set options for your folder picker
-        openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
-        openPicker.FileTypeFilter.Add(".csv");
-
-        // Open the picker for the user to pick a folder
-        StorageFile file = await openPicker.PickSingleFileAsync();
+        StorageFile file = await OpenFilePicker();
+        // TODO validate picked file?
         if (file == null)
         {
             return;
@@ -386,18 +590,33 @@ public sealed partial class MainPage : Page
         ViewModel.IsPreventRescanForGameplanFile = true;
         ViewModel.GenerateStatsButton_HasGenerated = false;
     }
-    #endregion
+
+    private IAsyncOperation<StorageFile> OpenFilePicker(string fileTypeFilter = ".csv")
+    {
+        FileOpenPicker openPicker = new();
+        var hWnd = WindowHelper.GetWindowHandle(this);
+        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+        // Set options for your folder picker
+        openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+        openPicker.FileTypeFilter.Add(fileTypeFilter);
+
+        // Open the picker for the user to pick a folder
+        return openPicker.PickSingleFileAsync();
+    }
 
     private async Task ChangeWorkFolder(StorageFolder newFolder)
     {
         query = newFolder.CreateFileQuery();
         query.ContentsChanged += OnFolderContentChanged;
         // trigger initial contents change event listening
-        await query.GetFilesAsync(); 
+        await query.GetFilesAsync();
         // ..and explicitly call the event, since choosing a folder without "files" won't trigger initially.
         // Double invocations are handled by throttling.
-        OnFolderContentChanged(query, null); 
+        OnFolderContentChanged(query, null);
         ViewModel.WorkDir = newFolder;
     }
+
+
 
 }
