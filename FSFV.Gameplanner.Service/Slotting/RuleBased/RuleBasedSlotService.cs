@@ -83,6 +83,9 @@ public class RuleBasedSlotService : AbstractSlotService
                     rule.Update(nextPitch, scheduledGame);
                 }
 
+                logger.LogDebug("Game order: {games}", string.Join(", ", games.Select(g => g.Group + ";" + g.Home?.Name ?? "kein")));
+                logger.LogDebug("Slotted game: {g}", scheduledGame.Home);
+
                 games.Remove(scheduledGame);
                 nextPitch.Games.Add(scheduledGame);
                 if (!games.Any())

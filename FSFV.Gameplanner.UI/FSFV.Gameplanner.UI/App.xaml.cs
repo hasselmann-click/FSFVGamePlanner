@@ -77,6 +77,9 @@ namespace FSFV.Gameplanner.UI
             // TODO make this configurable in app. Especially for the ZK teams rule!
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+#if !DEBUG
+                .AddJsonFile("appsettings.prod.json", optional: false, reloadOnChange: false)
+#endif
                 .Build();
 
             var pdfConfig = configuration.GetSection("PdfConfig").Get<PdfConfig>();
