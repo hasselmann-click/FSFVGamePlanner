@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using FSFV.Gameplanner.Appworks;
+using FSFV.Gameplanner.Common.Rng;
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Pdf;
 using FSFV.Gameplanner.Service.Serialization;
@@ -36,8 +37,6 @@ namespace FSFV.Gameplanner.UI
 
         public ServiceProvider Services { get; }
 
-        private static readonly Random RNG = new(23432546);
-
         private Window m_window;
 
         /// <summary>
@@ -71,7 +70,6 @@ namespace FSFV.Gameplanner.UI
             m_window.Activate();
         }
 
-
         private static ServiceProvider ConfigureServices()
         {
             // TODO make this configurable in app. Especially for the ZK teams rule!
@@ -89,7 +87,7 @@ namespace FSFV.Gameplanner.UI
             pdfConfig.LeagueColors = pdfConigLeagueColors.ToDictionary(x => x.Key, x => Color.FromHex(x.Value));
 
             return new ServiceCollection()
-                .AddSingleton(RNG)
+                .AddSingleton<IRngProvider, RngProvider>()
                 .AddSingleton<IConfiguration>(configuration)
                 .AddLogging(config =>
                 {

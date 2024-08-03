@@ -1,5 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
-using FSFV.Gameplanner.Service.Slotting;
+using FSFV.Gameplanner.Common.Rng;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,16 +10,16 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased;
 public class RuleBasedSlotService : AbstractSlotService
 {
     private static readonly List<Game> EmptyList = [];
-    private static readonly TimeSpan SlotBuffer = TimeSpan.FromMinutes(30);
 
-    private readonly IEnumerable<ISlotRule> rules;
     private readonly ILogger<RuleBasedSlotService> logger;
+    private readonly List<ISlotRule> rules;
+    private readonly IRngProvider rng;
 
-    public RuleBasedSlotService(ILogger<RuleBasedSlotService> logger, Random rng,
-        IEnumerable<ISlotRule> rules) : base(logger, rng)
+    public RuleBasedSlotService(ILogger<RuleBasedSlotService> logger, IRngProvider rng, IEnumerable<ISlotRule> rules) : base(logger)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this.rules = rules.OrderByDescending(r => r.GetPriority());
+        this.rng = rng;
+        this.rules = [.. rules.OrderByDescending(r => r.GetPriority())];
 
         if (!rules.Any())
         {
@@ -29,7 +29,7 @@ public class RuleBasedSlotService : AbstractSlotService
 
     public override List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games)
     {
-        rules.ToList().ForEach(r => r.ProcessBeforeGameday(pitches, games));
+        rules.ForEach(r => r.ProcessBeforeGameday(pitches, games));
         var gameDate = pitches.Select(p => new { p.GameDay, Date = p.StartTime.ToShortDateString() }).First();
         // vars for endless loop prevention
         var hasSlottedGames = true;
@@ -38,24 +38,18 @@ public class RuleBasedSlotService : AbstractSlotService
         // to have some scheduled later on. Thus ignoring these pitches.
         var pitchesToIgnore = new HashSet<string>(pitches.Count);
 
-        while (games.Any())
+        while (games.Count != 0)
         {
             // order pitches by their next available starting time 
             var orderedPitches = pitches
                 .Where(p => !pitchesToIgnore.Contains(p.Name))
-                .OrderBy(p => Rng.NextInt64()) 
-                .OrderBy(op => op.NextStartTime);
+                .OrderBy(p => rng.NextInt64())
+                .ThenBy(op => op.NextStartTime);
             var currentStartTime = orderedPitches.Select(p => p.NextStartTime).First();
-            logger.LogDebug("Pitch Order: {pitches}", string.Join(", ", orderedPitches.Select(op => "[" + op.Name + ": " + op.NextStartTime + "]")));
+            
+            logger.LogTrace("Pitch Order: {pitches}", string.Join(", ", orderedPitches.Select(op => "[" + op.Name + ": " + op.NextStartTime + "]")));
             foreach (var nextPitch in orderedPitches)
             {
-                // slot games only for pitches which are in 30 minutes of each other.
-                // i have no idea what this was for...
-                //if (nextPitch.NextStartTime.Subtract(currentStartTime) > SlotBuffer)
-                //{
-                //    logger.LogDebug("Stopping placing at pitch {pitch}", nextPitch.Name);
-                //    break;
-                //}
 
                 IEnumerable<Game> slotCandidates = games;
                 foreach (var rule in rules) // rules are ordered by their priority
@@ -88,7 +82,8 @@ public class RuleBasedSlotService : AbstractSlotService
 
                 games.Remove(scheduledGame);
                 nextPitch.Games.Add(scheduledGame);
-                if (!games.Any())
+
+                if (games.Count == 0)
                     break;
             }
 
@@ -116,7 +111,7 @@ public class RuleBasedSlotService : AbstractSlotService
         }
 
         BuildTimeSlots(pitches);
-        rules.ToList().ForEach(r => r.ProcessAfterGameday(pitches));
+        rules.ForEach(r => r.ProcessAfterGameday(pitches));
 
         AddRefereesToTimeslots(pitches);
         return pitches;

@@ -1,4 +1,5 @@
-﻿using FSFV.Gameplanner.Service.Slotting;
+﻿using FSFV.Gameplanner.Common.Rng;
+using FSFV.Gameplanner.Service.Slotting;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ZkStartAndEnd;
 using Microsoft.Extensions.Configuration;
@@ -22,7 +23,7 @@ public static class ServiceCollectionExtension
             .AddSingleton<ISlotRule>(sp => new ZkStartAndEndFilter(100,
                 sp.GetRequiredService<IConfiguration>(),
                 sp.GetRequiredService<ILogger<ZkStartAndEndFilter>>(),
-                sp.GetRequiredService<Random>()))
+                sp.GetRequiredService<IRngProvider>()))
 
             // Attention: Multiple sorts are kind of useless, because the last one will always win
             .AddSingleton<ISlotRule>(sp => new MorningAndEveningGamesSort(50, sp.GetRequiredService<IConfiguration>()))

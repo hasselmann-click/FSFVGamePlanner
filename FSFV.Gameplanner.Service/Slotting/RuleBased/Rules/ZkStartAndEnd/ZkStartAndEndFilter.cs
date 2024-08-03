@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
+using FSFV.Gameplanner.Common.Rng;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -15,10 +16,10 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
     private const string ConfigKeyZkTeams = "ZkTeams";
 
     private readonly ILogger<ZkStartAndEndFilter> logger;
-    private readonly Random rng;
+    private readonly IRngProvider rng;
     private readonly HashSet<string> zkTeams;
 
-    public ZkStartAndEndFilter(int priority, IConfiguration configuration, ILogger<ZkStartAndEndFilter> logger, Random rng) : base(priority)
+    public ZkStartAndEndFilter(int priority, IConfiguration configuration, ILogger<ZkStartAndEndFilter> logger, IRngProvider rng) : base(priority)
     {
         this.logger = logger;
         this.rng = rng;
@@ -47,10 +48,10 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
             {
                 // search for a ZK in game in the same grouptype, then exchange 
                 var hasSwitched = false;
-                foreach (var p in earlyPitches.OrderBy(p => rng.Next()))
+                foreach (var p in earlyPitches.OrderBy(p => rng.NextInt64()))
                 {
                     var first = p.Games.First();
-                    foreach (var p2 in pitches.OrderBy(p => rng.Next()))
+                    foreach (var p2 in pitches.OrderBy(p => rng.NextInt64()))
                     {
                         for (int i = 0; i < p2.Games.Count; ++i)
                         {
@@ -90,10 +91,10 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
             if (!isZkEnding)
             {
                 var hasSwitched = false;
-                foreach (var p in latestPitches.OrderBy(p => rng.Next()))
+                foreach (var p in latestPitches.OrderBy(p => rng.NextInt64()))
                 {
                     var last = p.Games.Last();
-                    foreach (var p2 in pitches.OrderBy(p => rng.Next()))
+                    foreach (var p2 in pitches.OrderBy(p => rng.NextInt64()))
                     {
                         for (int i = p2.Games.Count - 1; i >= 0; --i)
                         {
