@@ -82,9 +82,14 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     public StorageFolder WorkDir
     {
         get => workDir;
-        set => SetProperty(ref workDir, value, nameof(WorkDirPath));
+        set
+        {
+            SetProperty(ref workDir, value, nameof(WorkDirPath));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FolderReload_IsEnabled)));
+        }
     }
     public string WorkDirPath => WorkDir?.Path;
+    public bool FolderReload_IsEnabled => WorkDir != null;
 
     #region Gameplan
     public StorageFile GameplanFile

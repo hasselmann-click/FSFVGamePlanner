@@ -100,6 +100,14 @@ public sealed partial class MainPage : Page
         await ChangeWorkFolder(folder);
     }
 
+    private async void FolderReload_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.WorkDir == null) return;
+
+        var files = await ViewModel.WorkDir.GetFilesAsync();
+        OnFolderPicked?.Invoke(files);
+    }
+
     private void OnFolderContentChanged(IStorageQueryResultBase sender, object args)
     {
         if (folderContentsChangedThrottleTimer != null)
@@ -115,6 +123,7 @@ public sealed partial class MainPage : Page
 
         folderContentsChangedThrottleTimer = new Timer(async (state) =>
         {
+            if (folderContentsChangedThrottleTimer == null) return;
             await folderContentsChangedThrottleTimer.DisposeAsync();
             folderContentsChangedThrottleTimer = null;
         }, null, FolderContentsChangedEventThrottleDuration, Timeout.Infinite);

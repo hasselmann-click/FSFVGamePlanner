@@ -110,7 +110,10 @@
                         <TextBox Text="Work Folder" FontWeight="Bold" />
                         <StackPanel Orientation="Vertical" >
                             <TextBox x:Name="FolderName" PlaceholderText="No folder selected" Text="{x:Bind ViewModel.WorkDirPath, Mode=OneWay}" />
-                            <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
+                                <Button x:Name="FolderReload" Content="Refresh" Click="FolderReload_Click" IsEnabled="{x:Bind ViewModel.FolderReload_IsEnabled, Mode=OneWay}" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>
