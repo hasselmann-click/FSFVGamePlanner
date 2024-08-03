@@ -50,6 +50,10 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
                 for (int i = 0; i < slots.Length; ++i)
                 {
                     var current = slots[i];
+
+                    // skip empty games (placeholders)
+                    if(string.IsNullOrEmpty(current.Game.Home?.Name)) continue;
+
                     var refCandidates = new List<Team>(8); // ed. guess: 2 before, 2 after, some parallels
 
                     // look for a game after the current one
