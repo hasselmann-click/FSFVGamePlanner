@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
+using CommunityToolkit.WinUI.Helpers;
 using FSFV.Gameplanner.Appworks;
 using FSFV.Gameplanner.Appworks.Serialization;
 using FSFV.Gameplanner.Common;
+using FSFV.Gameplanner.Common.Rng;
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Pdf;
 using FSFV.Gameplanner.Service.Serialization;
@@ -19,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -58,6 +61,7 @@ public sealed partial class MainPage : Page
         OnFolderPicked += LookingForGameplanFiles;
         OnFolderPicked += LookingForAppworksMappingsFiles;
         OnFolderPicked += LookingForPdfGenerationFiles;
+        OnFolderPicked += LookingForRngSeedFile;
 
         UILogger.OnMessageLogged += UpdateLog;
     }
@@ -96,6 +100,14 @@ public sealed partial class MainPage : Page
         await ChangeWorkFolder(folder);
     }
 
+    private async void FolderReload_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.WorkDir == null) return;
+
+        var files = await ViewModel.WorkDir.GetFilesAsync();
+        OnFolderPicked?.Invoke(files);
+    }
+
     private void OnFolderContentChanged(IStorageQueryResultBase sender, object args)
     {
         if (folderContentsChangedThrottleTimer != null)
@@ -111,6 +123,7 @@ public sealed partial class MainPage : Page
 
         folderContentsChangedThrottleTimer = new Timer(async (state) =>
         {
+            if (folderContentsChangedThrottleTimer == null) return;
             await folderContentsChangedThrottleTimer.DisposeAsync();
             folderContentsChangedThrottleTimer = null;
         }, null, FolderContentsChangedEventThrottleDuration, Timeout.Infinite);
@@ -183,7 +196,14 @@ public sealed partial class MainPage : Page
 
     private async Task GenerateGamePlanAsync()
     {
-        var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
+        var services = App.Current.Services;
+        var rng = services.GetRequiredService<IRngProvider>();
+        var logger = services.GetRequiredService<ILogger<MainPage>>();
+        var serializer = services.GetRequiredService<FsfvCustomSerializerService>();
+
+        // restart rng sequence
+        rng.Reset(ViewModel.RngSeed);
+
         // parse league configs to group type dto
         var leagueConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.LeagueConfigs).File;
         var groupTypesTask = serializer.ParseGroupTypesAsync(() => leagueConfigs.OpenStreamForReadAsync());
@@ -199,7 +219,6 @@ public sealed partial class MainPage : Page
         var games = await fixtureTask;
 
         // remove games with SPIELFREI
-        var logger = App.Current.Services.GetRequiredService<ILogger<MainPage>>();
         var spielfrei = games.Where(g => g.Home.Name == GamesPlaceholder || g.Away.Name == GamesPlaceholder);
         if (spielfrei.Any())
         {
@@ -207,14 +226,15 @@ public sealed partial class MainPage : Page
             games = games.Except(spielfrei).ToList();
         }
         // slot by gameday
-        var slotService = App.Current.Services.GetRequiredService<ISlotService>();
+        var slotService = services.GetRequiredService<ISlotService>();
         var pitchesOrdered = pitches.GroupBy(p => p.GameDay).OrderBy(g => g.Key);
         var gameplanDtos = new List<FsfvCustomSerializerService.GameplanGameDto>(games.Count);
         List<GameDay> gameDays = new(pitchesOrdered.Count());
         foreach (var gameDayPitches in pitchesOrdered)
         {
+            List<Pitch> pitchesToSlot = [.. gameDayPitches.OrderBy(p => rng.NextInt64())];
             var slottedPitches = slotService.SlotGameDay(
-                [.. gameDayPitches],
+                pitchesToSlot,
                 games.Where(g => g.GameDay == gameDayPitches.Key).ToList()
             );
             gameDays.Add(new GameDay
@@ -250,8 +270,76 @@ public sealed partial class MainPage : Page
         ViewModel.GameplanFile = await ViewModel.WorkDir.CreateFileAsync(MainPageViewModel.FileNamePrefixes.Gameplan + ".csv", CreationCollisionOption.GenerateUniqueName);
         await serializer.WriteCsvGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForWriteAsync(), gameDays);
 
-        // todo bhas test this
+        await StoreRng(rng, logger);
         await GenerateStatsAsync();
+    }
+    #endregion
+
+    #region RNG
+    /// <summary>
+    /// Loading last seed from .rngseed file, if exists. Otherwise setting the default seed.
+    /// </summary>
+    private async void LookingForRngSeedFile(IReadOnlyList<StorageFile> files)
+    {
+
+        var services = App.Current.Services;
+        var rng = services.GetRequiredService<IRngProvider>();
+
+        ViewModel.RngSeedFile = files.FirstOrDefault(f => f.Name == ".rngseed");
+        var seedfile = ViewModel.RngSeedFile;
+        if (seedfile == null)
+        {
+            ViewModel.RngSeed = rng.CurrentSeed;
+            return;
+        }
+
+        var lines = await FileIO.ReadLinesAsync(seedfile);
+        if (int.TryParse(lines.LastOrDefault(), out var lastSeed))
+        {
+            rng.Reset(lastSeed);
+        }
+        else
+        {
+            var logger = services.GetRequiredService<ILogger<MainPage>>();
+            logger.LogError("Found rng seed file, but couldn't read last. Using default.");
+        }
+        ViewModel.RngSeed = rng.CurrentSeed;
+    }
+
+    private void RandomizePlanButton_Click(object sender, RoutedEventArgs e)
+    {
+        var rng = App.Current.Services.GetRequiredService<IRngProvider>();
+        rng.Clear();
+        ViewModel.RngSeed = rng.CurrentSeed;
+    }
+
+    private async Task StoreRng(IRngProvider rng, ILogger logger)
+    {
+        var seed = rng.CurrentSeed;
+        if (ViewModel.RngSeedFile is not StorageFile seedfile)
+        {
+            seedfile = await ViewModel.WorkDir.CreateFileAsync(".rngseed", CreationCollisionOption.OpenIfExists);
+        }
+
+        /* 
+         * Sometimes there is an access exception when writing the file, even though StorageFile.IsAvailable == true.
+         * Usually I don't like using the "while - catch exception" combo, but I don't know of any other way in this case.
+         */
+        const int maxTries = 5;
+        int tries = 0;
+        while (tries++ < maxTries)
+        {
+            try
+            {
+                await FileIO.AppendLinesAsync(seedfile, [seed.ToString()]);
+                return;
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                await Task.Delay(100);
+            }
+        }
+        logger.LogError("Could not access seedfile after {max} tries.", maxTries);
     }
     #endregion
 
@@ -522,11 +610,12 @@ public sealed partial class MainPage : Page
 
     private async Task GeneratePdfAsync()
     {
-        var gamePlanStream = () => ViewModel.GameplanFile.OpenStreamForReadAsync();
-        var holidaysStream = () => ViewModel.PdfGenerationFiles.FirstOrDefault(f => f.IsFound)?.File.OpenStreamForReadAsync();
+        // Local functions faster than lambda: https://stackoverflow.com/questions/40943117/local-function-vs-lambda-c-sharp-7-0
+        Task<Stream> gamePlanStream() => ViewModel.GameplanFile.OpenStreamForReadAsync();
+        Task<Stream> holidaysStream() => ViewModel.PdfGenerationFiles.FirstOrDefault(f => f.IsFound)?.File.OpenStreamForReadAsync();
 
         var outputFile = await ViewModel.WorkDir.CreateFileAsync("Spielplan.pdf", CreationCollisionOption.ReplaceExisting);
-        var outputStream = () => outputFile.OpenStreamForWriteAsync();
+        Task<Stream> outputStream() => outputFile.OpenStreamForWriteAsync();
 
         var pdfGenerator = App.Current.Services.GetRequiredService<PdfGenerator>();
         await pdfGenerator.GenerateAsync(outputStream, gamePlanStream, holidaysStream);
@@ -536,7 +625,6 @@ public sealed partial class MainPage : Page
     {
         OpenGameplanButton_Click(sender, e);
     }
-
     #endregion
 
     private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)

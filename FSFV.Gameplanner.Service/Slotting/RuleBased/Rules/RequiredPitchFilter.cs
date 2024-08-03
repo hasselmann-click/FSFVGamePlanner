@@ -5,14 +5,10 @@ using System.Linq;
 
 namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 
-internal class RequiredPitchFilter : AbstractSlotRule
+internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
 {
     private TimeSpan maxMinDurationAtGameDay;
     private Dictionary<string, string> requiredPitchByLeague;
-
-    public RequiredPitchFilter(int priority) : base(priority)
-    {
-    }
 
     public override void ProcessBeforeGameday(List<Pitch> pitches, List<Game> games)
     {
@@ -34,7 +30,7 @@ internal class RequiredPitchFilter : AbstractSlotRule
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
-        if (!requiredPitchByLeague.Any())
+        if (requiredPitchByLeague.Count == 0)
         {
             return games;
         }

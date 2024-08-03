@@ -1,5 +1,7 @@
-﻿using FSFV.Gameplanner.Service.Slotting;
+﻿using FSFV.Gameplanner.Common.Rng;
+using FSFV.Gameplanner.Service.Slotting;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
+using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.RefereeUpdate;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ZkStartAndEnd;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,14 +21,14 @@ public static class ServiceCollectionExtension
             .AddSingleton<ISlotRule>(new MaxParallelPitchesFilter(10_000))
             .AddSingleton<ISlotRule>(new LeagueTogethernessFilter(5000))
             .AddSingleton<ISlotRule>(new LeaguePriorityFilter(1000))
-            .AddSingleton<ISlotRule>(sp => new ZkStartAndEndFilter(100,
-                sp.GetRequiredService<IConfiguration>(),
-                sp.GetRequiredService<ILogger<ZkStartAndEndFilter>>(),
-                sp.GetRequiredService<Random>()))
+            .AddSingleton<ISlotRule>(sp => ActivatorUtilities.CreateInstance<ZkStartAndEndFilter>(sp, 100))
 
             // Attention: Multiple sorts are kind of useless, because the last one will always win
-            .AddSingleton<ISlotRule>(sp => new MorningAndEveningGamesSort(50, sp.GetRequiredService<IConfiguration>()))
+            .AddSingleton<ISlotRule>(sp => ActivatorUtilities.CreateInstance<MorningAndEveningGamesSort>(sp, 50))
             .AddSingleton<ISlotRule>(sp => new ManualSortRule(10))
-            ;
+
+            // Special update "rule"
+            .AddSingleton<ISlotRule>(sp => ActivatorUtilities.CreateInstance<RefereeUpdateRule>(sp, 1));
+        ;
     }
 }

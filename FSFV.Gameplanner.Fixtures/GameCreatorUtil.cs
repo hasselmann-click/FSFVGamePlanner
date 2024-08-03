@@ -133,7 +133,7 @@ public static class GameCreatorUtil
             else
             {
                 // match taken.
-                if (!crItems.Any())
+                if (crItems.Count == 0)
                 { // if the first cross reference doesn't work, only reduce top and continue
                     --top;
                 }

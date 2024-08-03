@@ -77,13 +77,19 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     private bool generatePdfButton_IsEnabled;
     private bool generatePdfButton_IsGenerating;
     private bool generatePdfButton_HasGenerated;
+    private int rngSeed;
 
     public StorageFolder WorkDir
     {
         get => workDir;
-        set => SetProperty(ref workDir, value, nameof(WorkDirPath));
+        set
+        {
+            SetProperty(ref workDir, value, nameof(WorkDirPath));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FolderReload_IsEnabled)));
+        }
     }
     public string WorkDirPath => WorkDir?.Path;
+    public bool FolderReload_IsEnabled => WorkDir != null;
 
     #region Gameplan
     public StorageFile GameplanFile
@@ -109,6 +115,11 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     public ObservableCollection<ConfigFileRecordViewModel> TeamFiles { get; } = [];
     public ObservableCollection<ConfigFileRecordViewModel> ConfigFileRecords { get; } = [];
     public ObservableCollection<StorageFile> FixtureFiles { get; } = new(new List<StorageFile>(4));
+    #endregion
+
+    #region RNG
+    public int RngSeed { get => rngSeed; set => SetProperty(ref rngSeed, value); }
+    public StorageFile RngSeedFile { get; internal set; }
     #endregion
 
     #region buttons

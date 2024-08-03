@@ -49,6 +49,14 @@
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
+        <!-- NumberBox Styles -->
+        <Style TargetType="NumberBox">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Margin" Value="0,10,0,10" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
         <!-- implicit base style with only target type inheriting from explicit default style-->
         <Style TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}" />
         <Style x:Key="LogMessageTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
@@ -102,7 +110,10 @@
                         <TextBox Text="Work Folder" FontWeight="Bold" />
                         <StackPanel Orientation="Vertical" >
                             <TextBox x:Name="FolderName" PlaceholderText="No folder selected" Text="{x:Bind ViewModel.WorkDirPath, Mode=OneWay}" />
-                            <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="FolderPicker" Content="Open" Click="FolderPicker_Click" IsEnabled="True" />
+                                <Button x:Name="FolderReload" Content="Refresh" Click="FolderReload_Click" IsEnabled="{x:Bind ViewModel.FolderReload_IsEnabled, Mode=OneWay}" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -178,6 +189,13 @@
                                 <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateGameplanButton_HasGenerated, Mode=OneWay}" />
                                 <ProgressRing IsActive="{x:Bind ViewModel.GenerateGameplanButton_IsGenerating, Mode=OneWay}" />
                             </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <TextBox Text="Seed:"/>
+                                <NumberBox x:Name="RngSeedText" Text="{x:Bind ViewModel.RngSeed, Mode=TwoWay}" />
+                                <Button x:Name="RandomizePlanBlutton" Content="Randomize" Click="RandomizePlanButton_Click" IsEnabled="True" />
+                            </StackPanel>
+
                         </StackPanel>
                     </StackPanel>
                 </Border>

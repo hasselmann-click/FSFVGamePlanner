@@ -11,12 +11,8 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 /// This is a custom sort rule, which should only be used in special circumstances.
 /// E.g. in 2023 Furttals have a wedding coming up, but want still be able to play.
 /// </summary>
-internal class ManualSortRule : AbstractSlotRule
+internal class ManualSortRule(int priority) : AbstractSlotRule(priority)
 {
-    public ManualSortRule(int priority) : base(priority)
-    {
-    }
-
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
 
