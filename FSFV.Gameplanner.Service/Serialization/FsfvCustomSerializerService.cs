@@ -244,7 +244,7 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
                     slot.EndTime.ToShortTimeString(),
                     slot.Home.Name,
                     slot.Away.Name,
-                    slot.Referee?.Name ?? "<kein>",
+                    slot.Referee?.Name,
                     slot.Group,
                     slot.League,
                     slot.StartTime.ToString(dateFormat)

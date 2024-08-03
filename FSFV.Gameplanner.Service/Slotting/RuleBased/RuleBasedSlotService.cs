@@ -30,6 +30,7 @@ public class RuleBasedSlotService : AbstractSlotService
     public override List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games)
     {
         rules.ForEach(r => r.ProcessBeforeGameday(pitches, games));
+
         var gameDate = pitches.Select(p => new { p.GameDay, Date = p.StartTime.ToShortDateString() }).First();
         // vars for endless loop prevention
         var hasSlottedGames = true;
@@ -72,10 +73,7 @@ public class RuleBasedSlotService : AbstractSlotService
                 }
 
                 // update rules
-                foreach (var rule in rules)
-                {
-                    rule.Update(nextPitch, scheduledGame);
-                }
+                rules.ForEach(r => r.Update(nextPitch, scheduledGame));
 
                 logger.LogDebug("Game order: {games}", string.Join(", ", games.Select(g => g.Group + ";" + g.Home?.Name ?? "kein")));
                 logger.LogDebug("Slotted game: {g}", scheduledGame.Home);
@@ -112,8 +110,7 @@ public class RuleBasedSlotService : AbstractSlotService
 
         BuildTimeSlots(pitches);
         rules.ForEach(r => r.ProcessAfterGameday(pitches));
-
-        AddRefereesToTimeslots(pitches);
+        
         return pitches;
     }
 

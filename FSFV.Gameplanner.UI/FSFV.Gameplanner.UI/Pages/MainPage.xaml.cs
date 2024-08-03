@@ -321,18 +321,25 @@ public sealed partial class MainPage : Page
             seedfile = await ViewModel.WorkDir.CreateFileAsync(".rngseed", CreationCollisionOption.OpenIfExists);
         }
 
+        /* 
+         * Sometimes there is an access exception when writing the file, even though StorageFile.IsAvailable == true.
+         * Usually I don't like using the "while - catch exception" combo, but I don't know of any other way in this case.
+         */
         const int maxTries = 5;
         int tries = 0;
-        while (!seedfile.IsAvailable)
+        while (tries++ < maxTries)
         {
-            if (tries >= maxTries)
+            try
             {
-                logger.LogError("Could not access seedfile after {max} tries.", maxTries);
+                await FileIO.AppendLinesAsync(seedfile, [seed.ToString()]);
                 return;
             }
-            await Task.Delay(100);
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                await Task.Delay(100);
+            }
         }
-        await FileIO.AppendLinesAsync(seedfile, [seed.ToString()]);
+        logger.LogError("Could not access seedfile after {max} tries.", maxTries);
     }
     #endregion
 
