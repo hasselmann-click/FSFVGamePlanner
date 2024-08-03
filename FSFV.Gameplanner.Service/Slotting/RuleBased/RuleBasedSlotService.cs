@@ -75,8 +75,8 @@ public class RuleBasedSlotService : AbstractSlotService
                 // update rules
                 rules.ForEach(r => r.Update(nextPitch, scheduledGame));
 
-                logger.LogDebug("Game order: {games}", string.Join(", ", games.Select(g => g.Group + ";" + g.Home?.Name ?? "kein")));
-                logger.LogDebug("Slotted game: {g}", scheduledGame.Home);
+                logger.LogTrace("Game order: {games}", string.Join(", ", games.Select(g => g.Group + ";" + g.Home?.Name ?? "kein")));
+                logger.LogTrace("Slotted game Home: {g}", scheduledGame.Home.Name);
 
                 games.Remove(scheduledGame);
                 nextPitch.Games.Add(scheduledGame);

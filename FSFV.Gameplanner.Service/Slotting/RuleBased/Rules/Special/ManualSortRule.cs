@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
+namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.Special;
 
 /// <summary>
 /// This is a custom sort rule, which should only be used in special circumstances.

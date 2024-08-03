@@ -8,6 +8,7 @@ public class LogMessageTemplateSelector : DataTemplateSelector
     public DataTemplate ErrorTemplate { get; set; }
     public DataTemplate WarningTemplate { get; set; }
     public DataTemplate InformationTemplate { get; set; }
+    public DataTemplate DebugTemplate { get; set; }
 
     protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
     {
@@ -20,6 +21,7 @@ public class LogMessageTemplateSelector : DataTemplateSelector
         {
             LogLevel.Error => ErrorTemplate,
             LogLevel.Warning => WarningTemplate,
+            LogLevel.Debug => DebugTemplate,
             _ => InformationTemplate,
         };
     }

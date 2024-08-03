@@ -1,6 +1,7 @@
 ﻿using FSFV.Gameplanner.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,6 +10,8 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.RefereeUpdate;
 internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger, IConfiguration configuration) : AbstractSlotRule(priority)
 {
     private const string ConfigKey = "RefereeUpdate";
+    // TOOD read from config
+    private static readonly TimeSpan MaxBreak = TimeSpan.FromMinutes(30);
 
     private readonly Dictionary<string, RefereeUpdateGroupConfig> configs = configuration.GetSection(ConfigKey).Get<Dictionary<string, RefereeUpdateGroupConfig>>();
 
@@ -52,7 +55,7 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
                     var current = slots[i];
 
                     // skip empty games (placeholders)
-                    if(string.IsNullOrEmpty(current.Game.Home?.Name)) continue;
+                    if (string.IsNullOrEmpty(current.Game.Home?.Name)) continue;
 
                     var refCandidates = new List<Team>(8); // ed. guess: 2 before, 2 after, some parallels
 
@@ -63,7 +66,9 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
                     {
                         after = slots[afterId++];
                     }
-                    if (after.StartTime != current.StartTime)
+                    if (after.StartTime != current.StartTime
+                         // check for grouped games, which are too far apart
+                         && !(after.StartTime.Subtract(current.EndTime) > MaxBreak))
                     {
                         // also look for parallel "after" games
                         TimeSlot afterParallel = after;
@@ -83,8 +88,11 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
                     {
                         before = slots[beforeId--];
                     }
-                    if (before.StartTime != current.StartTime)
+                    if (before.StartTime != current.StartTime
+                         // check for grouped games, which are too far apart
+                         && !(current.StartTime.Subtract(before.EndTime) > MaxBreak))
                     {
+
                         // also look for parallel "before" games
                         TimeSlot beforeParallel = before;
                         beforeId += 1; // id hack, otherwise the first option would be skipped
