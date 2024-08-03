@@ -610,11 +610,12 @@ public sealed partial class MainPage : Page
 
     private async Task GeneratePdfAsync()
     {
-        var gamePlanStream = () => ViewModel.GameplanFile.OpenStreamForReadAsync();
-        var holidaysStream = () => ViewModel.PdfGenerationFiles.FirstOrDefault(f => f.IsFound)?.File.OpenStreamForReadAsync();
+        // Local functions faster than lambda: https://stackoverflow.com/questions/40943117/local-function-vs-lambda-c-sharp-7-0
+        Task<Stream> gamePlanStream() => ViewModel.GameplanFile.OpenStreamForReadAsync();
+        Task<Stream> holidaysStream() => ViewModel.PdfGenerationFiles.FirstOrDefault(f => f.IsFound)?.File.OpenStreamForReadAsync();
 
         var outputFile = await ViewModel.WorkDir.CreateFileAsync("Spielplan.pdf", CreationCollisionOption.ReplaceExisting);
-        var outputStream = () => outputFile.OpenStreamForWriteAsync();
+        Task<Stream> outputStream() => outputFile.OpenStreamForWriteAsync();
 
         var pdfGenerator = App.Current.Services.GetRequiredService<PdfGenerator>();
         await pdfGenerator.GenerateAsync(outputStream, gamePlanStream, holidaysStream);
@@ -624,7 +625,6 @@ public sealed partial class MainPage : Page
     {
         OpenGameplanButton_Click(sender, e);
     }
-
     #endregion
 
     private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)

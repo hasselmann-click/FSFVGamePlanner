@@ -6,17 +6,11 @@ using System.Linq;
 
 namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 
-internal class MorningAndEveningGamesSort : AbstractSlotRule
+internal class MorningAndEveningGamesSort(int priority, IConfiguration configuration) : AbstractSlotRule(priority)
 {
 
-    private readonly TimeSpan EveningSince;
-    private readonly TimeSpan MorningUntil;
-
-    public MorningAndEveningGamesSort(int priority, IConfiguration configuration) : base(priority)
-    {
-        MorningUntil = configuration.GetValue<TimeSpan>("Schedule:MorningUntil");
-        EveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
-    }
+    private readonly TimeSpan EveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
+    private readonly TimeSpan MorningUntil = configuration.GetValue<TimeSpan>("Schedule:MorningUntil");
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {

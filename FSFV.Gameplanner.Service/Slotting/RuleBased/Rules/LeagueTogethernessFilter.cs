@@ -7,15 +7,11 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 /// <summary>
 /// Filters by the last slotted league. If no games are left from this league, nothing is filtered.
 /// </summary>
-internal class LeagueTogethernessFilter : AbstractSlotRule
+internal class LeagueTogethernessFilter(int priority) : AbstractSlotRule(priority)
 {
-    public LeagueTogethernessFilter(int priority) : base(priority)
-    {
-    }
-
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
-        if (!pitch.Games.Any())
+        if (pitch.Games.Count == 0)
             return games;
 
         var lastSlottedLeague = pitch.Games.Last().Group.Type.Name;

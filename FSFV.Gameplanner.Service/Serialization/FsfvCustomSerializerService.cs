@@ -36,6 +36,8 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
         {
             groupTypes.Add(record.Name, record);
         }
+
+        logger.LogDebug("Found Group Types: {types}", string.Join(", ", groupTypes.Keys));
         return groupTypes;
     }
 
@@ -46,19 +48,19 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
         List<Game> games = new(count * 6 * 5);
         // ed. guess: 10 teams per group
         Dictionary<string, Team> teams = new(count * 10);
-        foreach (var file in files)
+        foreach (var (FileName, StreamProvider) in files)
         {
             // requirement: file has to be called "*_[GroupType]_[Group].*"
-            var name = Path.GetFileNameWithoutExtension(file.FileName).Split('_');
+            var name = Path.GetFileNameWithoutExtension(FileName).Split('_');
             if (name.Length < 2 || !groupTypes.TryGetValue(name[^2], out var type))
-                throw new ArgumentException($"Could not get group type from file {file.FileName}");
+                throw new ArgumentException($"Could not get group type from file {FileName}");
 
             var group = new Group { Name = name[^1], Type = type };
             var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = false
             };
-            await using var fileStream = await file.StreamProvider();
+            await using var fileStream = await StreamProvider();
             using var reader = new StreamReader(fileStream);
             using var csv = new CsvReader(reader, csvConfig);
             var fixtures = csv.GetRecordsAsync<FixtureDto>();
@@ -171,6 +173,8 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
             var ar = line.Split(separator);
             holidays.Add(DateOnly.Parse(ar[0]), ar[1]);
         }
+
+        logger.LogDebug("Found holidays: {days}", string.Join(", ", holidays.Values));
         return holidays;
     }
 
@@ -196,6 +200,8 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
         {
             dtos.Add(record);
         }
+
+        logger.LogDebug("Found number of games: {cnt}", dtos.Count);
         return dtos;
     }
 
@@ -236,8 +242,8 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
                 .OrderBy(a => a.StartTime);
             foreach (var slot in slots)
             {
-                await csvWriter.WriteLineAsync(string.Join(",", new string[]
-                {
+                await csvWriter.WriteLineAsync(string.Join(",",
+                [
                     slot.GameDay.ToString(),
                     slot.Pitch,
                     slot.StartTime.ToShortTimeString(),
@@ -248,36 +254,38 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
                     slot.Group,
                     slot.League,
                     slot.StartTime.ToString(dateFormat)
-                }));
+                ]));
             }
         }
         csvWriter.Close();
+        logger.LogTrace("Finished writing gameplan as csv");
     }
 
     public async Task WriteCsvStatsAsync(Func<Task<Stream>> writeStreamProvider, IEnumerable<TeamStatsDto> teamStatsDto)
     {
         await using var csvStream = await writeStreamProvider();
         using var csvWriter = new StreamWriter(csvStream, DefaultEncoding);
-        await csvWriter.WriteLineAsync(string.Join(",", new string[]
-        {
+        await csvWriter.WriteLineAsync(string.Join(",",
+        [
                     "League",
                     "Name",
                     "Referee",
                     "MorningGames",
                     "EveningGames"
-        }));
+        ]));
         foreach (var teamStat in teamStatsDto)
         {
-            await csvWriter.WriteLineAsync(string.Join(",", new string[]
-            {
+            await csvWriter.WriteLineAsync(string.Join(",",
+            [
                     teamStat.League,
                     teamStat.Name,
                     teamStat.Referee.ToString(),
                     teamStat.MorningGames.ToString(),
                     teamStat.EveningGames.ToString()
-            }));
+            ]));
         }
         csvWriter.Close();
+        logger.LogTrace("Finished writing stats as csv");
     }
 
     public class GameplanGameDto

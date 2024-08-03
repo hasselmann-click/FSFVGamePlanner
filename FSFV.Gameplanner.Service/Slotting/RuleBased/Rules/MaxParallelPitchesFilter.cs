@@ -4,15 +4,11 @@ using System.Linq;
 
 namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 
-internal class MaxParallelPitchesFilter : AbstractSlotRule
+internal class MaxParallelPitchesFilter(int priority) : AbstractSlotRule(priority)
 {
     private Dictionary<string, int> maxParallelPitchesByLeague;
     private Dictionary<string, HashSet<string>> currentParallelPitchesByLeague;
     private HashSet<string> isMaxedOut;
-
-    public MaxParallelPitchesFilter(int priority) : base(priority)
-    {
-    }
 
     public override void ProcessBeforeGameday(List<Pitch> pitches, List<Game> games)
     {

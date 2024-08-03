@@ -2,15 +2,8 @@
 
 namespace FSFV.Gameplanner.Fixtures;
 
-public class GeneratorService
+public class GeneratorService(ILogger<GeneratorService> logger)
 {
-
-    private readonly ILogger<GeneratorService> logger;
-
-    public GeneratorService(ILogger<GeneratorService> logger)
-    {
-        this.logger = logger;
-    }
 
     /// <summary>
     /// Create all possible, single leg (!) fixtures for the given teams.
@@ -22,11 +15,7 @@ public class GeneratorService
     /// <exception cref="ArgumentNullException"></exception>
     public List<Fixture> Fix(string[] teams, string placeHolder = "SPIELFREI")
     {
-
-        if (teams is null)
-        {
-            throw new ArgumentNullException(nameof(teams));
-        }
+        ArgumentNullException.ThrowIfNull(teams);
 
         List<string> teamsList;
         if ((teams.Length & 1) == 1) // uneven number of teams

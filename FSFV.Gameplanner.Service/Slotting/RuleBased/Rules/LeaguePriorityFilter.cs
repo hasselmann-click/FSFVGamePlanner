@@ -4,12 +4,8 @@ using System.Linq;
 
 namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 
-internal class LeaguePriorityFilter : AbstractSlotRule
+internal class LeaguePriorityFilter(int priority) : AbstractSlotRule(priority)
 {
-    public LeaguePriorityFilter(int priority) : base(priority)
-    {
-    }
-
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
         var g = games.GroupBy(g => g.Group.Type.Priority);

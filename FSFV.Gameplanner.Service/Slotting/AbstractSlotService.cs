@@ -46,8 +46,7 @@ public abstract class AbstractSlotService(ILogger logger) : ISlotService
             var slottime = firstGame.MinDuration.Add(additionalBreak);
             pitch.Slots = new List<TimeSlot>(pitch.Games.Count)
             {
-                new TimeSlot
-                {
+                new() {
                     StartTime = pitch.StartTime,
                     EndTime = pitch.StartTime.Add(slottime > MaxSlotTime ? MaxSlotTime : slottime),
                     Game = firstGame

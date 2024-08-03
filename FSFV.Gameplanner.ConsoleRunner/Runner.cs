@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.ConsoleRunner;
 
-public class Runner
+public class Runner(IConfiguration configuration, ILogger<Runner> logger, ISlotService slotService)
 {
 
     private const string MatchPlanCsv = "MatchPlan.csv";
@@ -27,16 +27,9 @@ public class Runner
     private const string DateFormat = "dd.MM.yy";
     private const string SPIELFREI = "SPIELFREI";
 
-    private readonly IConfiguration configuration;
-    private readonly ILogger<Runner> logger;
-    private readonly ISlotService slotService;
-
-    public Runner(IConfiguration configuration, ILogger<Runner> logger, ISlotService slotService)
-    {
-        this.configuration = configuration;
-        this.logger = logger;
-        this.slotService = slotService;
-    }
+    private readonly IConfiguration configuration = configuration;
+    private readonly ILogger<Runner> logger = logger;
+    private readonly ISlotService slotService = slotService;
 
     // TODO config: Referee yes or no
     // TODO config: Mark teams as ZK (A list of teams as input?), then activate ZK rule

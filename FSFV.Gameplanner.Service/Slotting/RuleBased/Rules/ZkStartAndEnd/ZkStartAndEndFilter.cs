@@ -42,7 +42,7 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
         void l_HandleZkStart(List<Pitch> pitches)
         {
             var earliestStartTime = pitches.Select(x => x.StartTime).Min();
-            var earlyPitches = pitches.Where(p => p.StartTime == earliestStartTime && p.Games.Any());
+            var earlyPitches = pitches.Where(p => p.StartTime == earliestStartTime && p.Games.Count != 0);
             var isZkStarting = earlyPitches.Select(p => p.Games.First()).Any(g => g.HasZk(zkTeams));
             if (!isZkStarting)
             {
@@ -85,7 +85,7 @@ internal class ZkStartAndEndFilter : AbstractSlotRule
             // TODO: dont switch with first games for gamedays where there is only one ZK team present
 
             var latestEndTime = pitches.Select(p => p.EndTime).Max();
-            var latestPitches = pitches.Where(p => p.EndTime == latestEndTime && p.Games.Any());
+            var latestPitches = pitches.Where(p => p.EndTime == latestEndTime && p.Games.Count != 0);
             var isZkEnding = latestPitches.Select(p => p.Games.Last()).Any(g => g.HasZk(zkTeams));
 
             if (!isZkEnding)
