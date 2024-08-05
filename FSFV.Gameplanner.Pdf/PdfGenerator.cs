@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Service.Serialization;
+using FSFV.Gameplanner.Service.Serialization.Dto;
 using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -6,7 +7,7 @@ using QuestPDF.Previewer;
 
 namespace FSFV.Gameplanner.Pdf;
 
-public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCustomSerializerService serializer)
+public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSerializerService serializer)
 {
 
     static PdfGenerator()
@@ -78,7 +79,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
         document.GeneratePdf(writeStream);
     }
 
-    private Action<PageDescriptor> ComposePageGameDay(IGrouping<DateOnly, FsfvCustomSerializerService.GameplanGameDto> gameDay)
+    private Action<PageDescriptor> ComposePageGameDay(IGrouping<DateOnly, GameplanGameDto> gameDay)
     {
         return page =>
         {

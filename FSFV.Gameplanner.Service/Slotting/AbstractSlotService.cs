@@ -23,8 +23,7 @@ public abstract class AbstractSlotService(ILogger logger) : ISlotService
         {
             if (pitch.Games.Count < 1)
             {
-                Logger.LogWarning("No games for pitch {pitch} on {date}", pitch.Name,
-                    pitch.StartTime.ToShortDateString());
+                Logger.LogWarning("No games for pitch {pitch} on {date}", pitch.Name, pitch.StartTime.ToShortTimeString());
                 continue;
             }
 
@@ -57,7 +56,7 @@ public abstract class AbstractSlotService(ILogger logger) : ISlotService
             {
                 var prev = pitch.Slots[i - 1];
                 var game = pitch.Games[i];
-                DateTime start;
+                TimeOnly start;
                 if (prev.Game.Group.Type == game.Group.Type
                     && game.Group.Type.ParallelGamesPerPitch >= ++parallel)
                 {

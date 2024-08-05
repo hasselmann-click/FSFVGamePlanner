@@ -1,12 +1,13 @@
 ﻿using FSFV.Gameplanner.Appworks.Mappings;
 using FSFV.Gameplanner.Service.Serialization;
+using FSFV.Gameplanner.Service.Serialization.Dto;
 using Microsoft.Extensions.Logging;
 
 namespace FSFV.Gameplanner.Appworks;
 public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksMappingImporter importer)
 {
 
-    public async Task<Dictionary<string, List<AppworksImportRecord>>> Transform(List<FsfvCustomSerializerService.GameplanGameDto> gamePlan, string? tournament = null)
+    public async Task<Dictionary<string, List<AppworksImportRecord>>> Transform(List<GameplanGameDto> gamePlan, string? tournament = null)
     {
         var tournaments = string.IsNullOrEmpty(tournament) ? gamePlan.Select(x => x.League).Distinct().ToList() : [tournament];
         logger.LogDebug("Found {TournamentCount} tournaments", tournaments.Count);
@@ -41,7 +42,7 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
                     var divisionId = mappings.Divisions[game.Group];
                     var matchdayId = mappings.Matchdays[game.Date.ToString(IAppworksMappingImporter.MatchdayDateFormat)];
                     var locationId = mappings.Locations[game.Pitch];
-                    var startTime = game.Date.ToDateTime(TimeOnly.FromDateTime(game.StartTime));
+                    var startTime = game.Date.ToDateTime(game.StartTime);
                     var record = new AppworksImportRecord(matchdayId, divisionId, locationId, homeId, awayId, startTime, refereeId);
                     records.Add(record);
                 }
@@ -70,7 +71,7 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
     /// <param name="origMappings"></param>
     /// <param name="gamePlan"></param>
     /// <param name="tournament"></param>
-    private void UpdateTeamMappings(AppworksIdMappings origMappings, List<FsfvCustomSerializerService.GameplanGameDto> gamePlan, string tournament)
+    private void UpdateTeamMappings(AppworksIdMappings origMappings, List<GameplanGameDto> gamePlan, string tournament)
     {
         var teams = gamePlan.Where(g => g.League == tournament).SelectMany(x => new[] { x.Home, x.Away, x.Referee }).Distinct().Where(team => !string.IsNullOrEmpty(team)).ToList();
         foreach (var team in teams)

@@ -39,7 +39,7 @@ internal class LCupRule(int priority) : AbstractSlotRule(priority)
         for (; idx < slots.Count; ++idx)
         {
             var slot = slots[idx];
-            slot.StartTime = new DateTime(slot.StartTime.Year, slot.StartTime.Month, slot.StartTime.Day, ++hour, 0, 0);
+            slot.StartTime = new TimeOnly(++hour, 0);
         }
 
         base.ProcessAfterGameday(pitches);

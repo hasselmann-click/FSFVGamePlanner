@@ -68,7 +68,7 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
                     }
                     if (after.StartTime != current.StartTime
                          // check for grouped games, which are too far apart
-                         && !(after.StartTime.Subtract(current.EndTime) > MaxBreak))
+                         && !(after.StartTime - current.EndTime > MaxBreak))
                     {
                         // also look for parallel "after" games
                         TimeSlot afterParallel = after;
@@ -90,7 +90,7 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
                     }
                     if (before.StartTime != current.StartTime
                          // check for grouped games, which are too far apart
-                         && !(current.StartTime.Subtract(before.EndTime) > MaxBreak))
+                         && !(current.StartTime - before.EndTime > MaxBreak))
                     {
 
                         // also look for parallel "before" games

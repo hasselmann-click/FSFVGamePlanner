@@ -16,11 +16,11 @@ internal class ManualSortRule(int priority) : AbstractSlotRule(priority)
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
 
-        var currentDay = pitch.NextStartTime.Date;
-        var furttalLast1 = DateTime.Parse("27.08.2023");
-        var auroraFirst = DateTime.Parse("03.09.2023");
-        var auroraLast = DateTime.Parse("24.09.2023");
-        var furtalLast2 = DateTime.Parse("01.10.2023");
+        var currentDay = pitch.Date;
+        var furttalLast1 = DateOnly.Parse("27.08.2023");
+        var auroraFirst = DateOnly.Parse("03.09.2023");
+        var auroraLast = DateOnly.Parse("24.09.2023");
+        var furtalLast2 = DateOnly.Parse("01.10.2023");
 
 
         const string Furttal = "Furttals Finest";
