@@ -3,6 +3,8 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
+using FSFV.Gameplanner.Service.Migration;
+using FSFV.Gameplanner.Service.Serialization.Dto;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace FSFV.Gameplanner.Service.Serialization;
 
-public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> logger)
+public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
 {
     public const string DateFormat = "dd.MM.yy";
     private const char TimeSeparator = '-';
@@ -153,8 +155,9 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
                     throw new ArgumentException($"Could not parse times for pitch {pitch.Name}" +
                         $" at {gameDay.ToShortDateString()}");
 
-                pitch.StartTime = gameDay.Add(start);
-                pitch.EndTime = gameDay.Add(end);
+                pitch.Date = DateOnly.FromDateTime(gameDay);
+                pitch.StartTime = TimeOnly.FromDateTime(gameDay.Add(start));
+                pitch.EndTime = TimeOnly.FromDateTime(gameDay.Add(end));
                 pitches.Add(pitch);
             }
         }
@@ -203,6 +206,16 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
 
         logger.LogDebug("Found number of games: {cnt}", dtos.Count);
         return dtos;
+    }
+
+    public async Task WriteCsvGameplanAsync(Stream writeStream, IEnumerable<GameplanGameDto> dtos)
+    {
+        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+        };
+        await using var csvWriter = new CsvWriter(new StreamWriter(writeStream, DefaultEncoding), config);
+        csvWriter.WriteHeader<GameplanGameDto>();
+        await csvWriter.WriteRecordsAsync(dtos);
     }
 
     public async Task WriteCsvGameplanAsync(Func<Task<Stream>> writeStreamProvider, List<GameDay> gameDays, string dateFormat = DateFormat)
@@ -288,27 +301,8 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
         logger.LogTrace("Finished writing stats as csv");
     }
 
-    public class GameplanGameDto
+    public async Task<List<MigrationDto>> ParseMigrationsAsync(Func<Task<Stream>> value)
     {
-        public int GameDay { get; set; }
-        public string Pitch { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public string Home { get; set; }
-        public string Away { get; set; }
-        public string Referee { get; set; }
-        public string Group { get; set; }
-        public string League { get; set; }
-        public DateOnly Date { get; set; }
+        return await Task.FromResult<List<MigrationDto>>([]);
     }
-
-    public class TeamStatsDto
-    {
-        public string League { get; set; }
-        public string Name { get; set; }
-        public int Referee { get; set; }
-        public int MorningGames { get; set; }
-        public int EveningGames { get; set; }
-    }
-
 }

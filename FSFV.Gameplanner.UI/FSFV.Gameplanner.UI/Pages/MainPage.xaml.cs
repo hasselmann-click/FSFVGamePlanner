@@ -8,7 +8,9 @@ using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Rng;
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Pdf;
+using FSFV.Gameplanner.Service.Migration;
 using FSFV.Gameplanner.Service.Serialization;
+using FSFV.Gameplanner.Service.Serialization.Dto;
 using FSFV.Gameplanner.Service.Slotting;
 using FSFV.Gameplanner.UI.Logging;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -62,6 +63,7 @@ public sealed partial class MainPage : Page
         OnFolderPicked += LookingForAppworksMappingsFiles;
         OnFolderPicked += LookingForPdfGenerationFiles;
         OnFolderPicked += LookingForRngSeedFile;
+        OnFolderPicked += LookingForMigrationFile;
 
         UILogger.OnMessageLogged += UpdateLog;
     }
@@ -98,6 +100,18 @@ public sealed partial class MainPage : Page
             return;
         }
         await ChangeWorkFolder(folder);
+    }
+
+    private async Task ChangeWorkFolder(StorageFolder newFolder)
+    {
+        query = newFolder.CreateFileQuery();
+        query.ContentsChanged += OnFolderContentChanged;
+        // trigger initial contents change event listening
+        await query.GetFilesAsync();
+        // ..and explicitly call the event, since choosing a folder without "files" won't trigger initially.
+        // Double invocations are handled by throttling.
+        OnFolderContentChanged(query, null);
+        ViewModel.WorkDir = newFolder;
     }
 
     private async void FolderReload_Click(object sender, RoutedEventArgs e)
@@ -171,6 +185,72 @@ public sealed partial class MainPage : Page
 
     #region Gameplan
 
+    private async void OpenGameplanButton_Click(object sender, RoutedEventArgs e)
+    {
+        StorageFile file = await OpenFilePicker();
+        // TODO validate picked file?
+        if (file == null)
+        {
+            return;
+        }
+
+        var newWorkDir = await file.GetParentAsync();
+        await ChangeWorkFolder(newWorkDir);
+
+        ViewModel.GameplanFile = file;
+        ViewModel.IsPreventRescanForGameplanFile = true;
+        ViewModel.GenerateStatsButton_HasGenerated = false;
+    }
+
+    private IAsyncOperation<StorageFile> OpenFilePicker(string fileTypeFilter = ".csv")
+    {
+        FileOpenPicker openPicker = new();
+        var hWnd = WindowHelper.GetWindowHandle(this);
+        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+        // Set options for your folder picker
+        openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+        openPicker.FileTypeFilter.Add(fileTypeFilter);
+
+        // Open the picker for the user to pick a folder
+        return openPicker.PickSingleFileAsync();
+    }
+
+    private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)
+    {
+        if (ViewModel.IsPreventRescanForGameplanFile)
+        {
+            ViewModel.IsPreventRescanForGameplanFile = false;
+            return;
+        }
+
+        ViewModel.GenerateGameplanButton_HasGenerated = false;
+        ViewModel.GenerateStatsButton_HasGenerated = false;
+
+        var gameplanCandidates = files
+            .Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Gameplan, StringComparison.InvariantCultureIgnoreCase))
+            .Where(s => !s.Name.EndsWith(StatsFileSuffix))
+            .ToList();
+
+        // TODO use common file query options
+        // this sorting is horrible but there is no other way to get the latest file
+        // since getting the properties is an async operation
+        var propTasks = new List<(StorageFile File, Task<BasicProperties> PropTask)>(files.Count);
+        foreach (var file in gameplanCandidates)
+        {
+            propTasks.Add((file, file.GetBasicPropertiesAsync().AsTask()));
+        }
+        await Task.WhenAll(propTasks.Select(p => p.PropTask));
+
+        var gameplanFile = propTasks
+            .Where(p => p.PropTask.Result.Size > 0)
+            .OrderByDescending(p => p.PropTask.Result.DateModified)
+            .Select(p => p.File)
+            .FirstOrDefault();
+
+        ViewModel.GameplanFile = gameplanFile;
+    }
+
     private async void GeneratePlanButton_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -199,7 +279,7 @@ public sealed partial class MainPage : Page
         var services = App.Current.Services;
         var rng = services.GetRequiredService<IRngProvider>();
         var logger = services.GetRequiredService<ILogger<MainPage>>();
-        var serializer = services.GetRequiredService<FsfvCustomSerializerService>();
+        var serializer = services.GetRequiredService<CsvSerializerService>();
 
         // restart rng sequence
         rng.Reset(ViewModel.RngSeed);
@@ -228,7 +308,7 @@ public sealed partial class MainPage : Page
         // slot by gameday
         var slotService = services.GetRequiredService<ISlotService>();
         var pitchesOrdered = pitches.GroupBy(p => p.GameDay).OrderBy(g => g.Key);
-        var gameplanDtos = new List<FsfvCustomSerializerService.GameplanGameDto>(games.Count);
+        var gameplanDtos = new List<GameplanGameDto>(games.Count);
         List<GameDay> gameDays = new(pitchesOrdered.Count());
         foreach (var gameDayPitches in pitchesOrdered)
         {
@@ -250,7 +330,7 @@ public sealed partial class MainPage : Page
                 foreach (var slot in pitch.Slots)
                 {
                     var game = slot.Game;
-                    gameplanDtos.Add(new FsfvCustomSerializerService.GameplanGameDto
+                    gameplanDtos.Add(new GameplanGameDto
                     {
                         GameDay = gameDayPitches.Key,
                         Pitch = name,
@@ -273,6 +353,30 @@ public sealed partial class MainPage : Page
         await StoreRng(rng, logger);
         await GenerateStatsAsync();
     }
+
+
+    #endregion
+
+    #region Migrations
+    private void LookingForMigrationFile(IReadOnlyList<StorageFile> files)
+    {
+        ViewModel.MigrationFile = files.FirstOrDefault(f => f.Name.StartsWith("migration", StringComparison.InvariantCultureIgnoreCase) && f.FileType == ".csv");
+    }
+
+    private async void RunMigrationsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var migrationService = App.Current.Services.GetRequiredService<IMigrationService>();
+        var serializerService = App.Current.Services.GetRequiredService<CsvSerializerService>();
+
+        var gamePlanTask = serializerService.ParseGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForReadAsync());
+        var migrationsTask = serializerService.ParseMigrationsAsync(() => ViewModel.MigrationFile.OpenStreamForReadAsync());
+        await Task.WhenAll(migrationsTask, gamePlanTask);
+
+        var updatedGamePlan = await migrationService.RunMigrations(migrationsTask.Result, gamePlanTask.Result);
+        using var writeStream = await ViewModel.GameplanFile.OpenStreamForWriteAsync();
+        await serializerService.WriteCsvGameplanAsync(writeStream, updatedGamePlan);
+    }
+
     #endregion
 
     #region RNG
@@ -422,16 +526,16 @@ public sealed partial class MainPage : Page
     private async Task GenerateStatsAsync()
     {
 
-        var serializer = App.Current.Services.GetRequiredService<FsfvCustomSerializerService>();
+        var serializer = App.Current.Services.GetRequiredService<CsvSerializerService>();
         var gameDtos = await serializer.ParseGameplanAsync(ViewModel.GameplanFile.OpenStreamForReadAsync);
 
         var configuration = App.Current.Services.GetRequiredService<IConfiguration>();
-        var morningUntil = configuration.GetValue<TimeSpan>("Schedule:MorningUntil");
-        var eveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
+        var morningUntil = configuration.GetValue<TimeOnly>("Schedule:MorningUntil");
+        var eveningSince = configuration.GetValue<TimeOnly>("Schedule:EveningSince");
 
         var teams = gameDtos
-            .SelectMany(g => new[] { new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Home },
-                new FsfvCustomSerializerService.TeamStatsDto { League = g.League, Name = g.Away } })
+            .SelectMany(g => new[] { new TeamStatsDto { League = g.League, Name = g.Home },
+                new TeamStatsDto { League = g.League, Name = g.Away } })
             .DistinctBy(x => x.Name)
             .ToDictionary(x => x.Name, x => x);
 
@@ -443,12 +547,12 @@ public sealed partial class MainPage : Page
                 refTeam.Referee++;
             }
 
-            if (game.StartTime.TimeOfDay < morningUntil)
+            if (game.StartTime < morningUntil)
             {
                 teams[game.Home].MorningGames++;
                 teams[game.Away].MorningGames++;
             }
-            else if (game.StartTime.TimeOfDay > eveningSince)
+            else if (game.StartTime > eveningSince)
             {
                 teams[game.Home].EveningGames++;
                 teams[game.Away].EveningGames++;
@@ -528,7 +632,7 @@ public sealed partial class MainPage : Page
     {
         var services = App.Current.Services;
 
-        var gamePlanParser = services.GetRequiredService<FsfvCustomSerializerService>();
+        var gamePlanParser = services.GetRequiredService<CsvSerializerService>();
         var gamePlan = await gamePlanParser.ParseGameplanAsync(ViewModel.GameplanFile.OpenStreamForReadAsync);
 
         var logger = services.GetRequiredService<ILogger<MainPage>>();
@@ -626,85 +730,4 @@ public sealed partial class MainPage : Page
         OpenGameplanButton_Click(sender, e);
     }
     #endregion
-
-    private async void LookingForGameplanFiles(IReadOnlyList<StorageFile> files)
-    {
-        if (ViewModel.IsPreventRescanForGameplanFile)
-        {
-            ViewModel.IsPreventRescanForGameplanFile = false;
-            return;
-        }
-
-        ViewModel.GenerateGameplanButton_HasGenerated = false;
-        ViewModel.GenerateStatsButton_HasGenerated = false;
-
-        var gameplanCandidates = files
-            .Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Gameplan, StringComparison.InvariantCultureIgnoreCase))
-            .Where(s => !s.Name.EndsWith(StatsFileSuffix))
-            .ToList();
-
-        // TODO use common file query options
-        // this sorting is horrible but there is no other way to get the latest file
-        // since getting the properties is an async operation
-        var propTasks = new List<(StorageFile File, Task<BasicProperties> PropTask)>(files.Count);
-        foreach (var file in gameplanCandidates)
-        {
-            propTasks.Add((file, file.GetBasicPropertiesAsync().AsTask()));
-        }
-        await Task.WhenAll(propTasks.Select(p => p.PropTask));
-
-        var gameplanFile = propTasks
-            .Where(p => p.PropTask.Result.Size > 0)
-            .OrderByDescending(p => p.PropTask.Result.DateModified)
-            .Select(p => p.File)
-            .FirstOrDefault();
-
-        ViewModel.GameplanFile = gameplanFile;
-    }
-
-    private async void OpenGameplanButton_Click(object sender, RoutedEventArgs e)
-    {
-        StorageFile file = await OpenFilePicker();
-        // TODO validate picked file?
-        if (file == null)
-        {
-            return;
-        }
-
-        var newWorkDir = await file.GetParentAsync();
-        await ChangeWorkFolder(newWorkDir);
-
-        ViewModel.GameplanFile = file;
-        ViewModel.IsPreventRescanForGameplanFile = true;
-        ViewModel.GenerateStatsButton_HasGenerated = false;
-    }
-
-    private IAsyncOperation<StorageFile> OpenFilePicker(string fileTypeFilter = ".csv")
-    {
-        FileOpenPicker openPicker = new();
-        var hWnd = WindowHelper.GetWindowHandle(this);
-        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
-
-        // Set options for your folder picker
-        openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
-        openPicker.FileTypeFilter.Add(fileTypeFilter);
-
-        // Open the picker for the user to pick a folder
-        return openPicker.PickSingleFileAsync();
-    }
-
-    private async Task ChangeWorkFolder(StorageFolder newFolder)
-    {
-        query = newFolder.CreateFileQuery();
-        query.ContentsChanged += OnFolderContentChanged;
-        // trigger initial contents change event listening
-        await query.GetFilesAsync();
-        // ..and explicitly call the event, since choosing a folder without "files" won't trigger initially.
-        // Double invocations are handled by throttling.
-        OnFolderContentChanged(query, null);
-        ViewModel.WorkDir = newFolder;
-    }
-
-
-
 }

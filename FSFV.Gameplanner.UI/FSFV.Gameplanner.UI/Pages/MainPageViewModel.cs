@@ -156,6 +156,44 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
     #endregion
 
+    #region Migrations
+
+    private StorageFile migrationFile;
+    private bool runMigrationsButton_IsRunning;
+    private bool runMigrationsButton_HasRun;
+
+    public bool HasMigrationFile => migrationFile != null;
+    public bool NotHasMigrationFile => !HasMigrationFile;
+    public string MigrationFileName => migrationFile?.Name;
+    public bool RunMigrationsButton_IsEnabled => HasMigrationFile;
+
+    public bool RunMigrationsButton_IsRunning
+    {
+        get => generateFixtursButton_IsEnabled;
+        set => SetProperty(ref runMigrationsButton_IsRunning, value);
+    }
+
+    public bool RunMigrationsButton_HasRun
+    {
+        get => generateFixtursButton_IsEnabled;
+        set => SetProperty(ref runMigrationsButton_HasRun, value);
+    }
+
+    public StorageFile MigrationFile
+    {
+        get => migrationFile;
+        set
+        {
+            SetProperty(ref migrationFile, value, nameof(MigrationFile));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasMigrationFile)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotHasMigrationFile)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MigrationFileName)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RunMigrationsButton_IsEnabled)));
+        }
+    }
+
+    #endregion
+
     #region stats
     public bool GenerateStatsButton_IsEnabled => HasGameplanFile && !GenerateStatsButton_IsGenerating;
     public bool GenerateStatsButton_IsGenerating

@@ -5,6 +5,7 @@ using FSFV.Gameplanner.Appworks;
 using FSFV.Gameplanner.Common.Rng;
 using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Pdf;
+using FSFV.Gameplanner.Service.Migration;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Extensions;
 using FSFV.Gameplanner.UI.Logging;
@@ -98,7 +99,8 @@ namespace FSFV.Gameplanner.UI
                     config.AddProvider(new UILoggerProvider());
                 })
                 .AddTransient<GeneratorService>()
-                .AddTransient<FsfvCustomSerializerService>()
+                .AddScoped<CsvSerializerService>()
+                .AddScoped<IMigrationService, MigrationService>()
 
                 .AddSingleton(pdfConfig)
                 .AddTransient<PdfGenerator>()
