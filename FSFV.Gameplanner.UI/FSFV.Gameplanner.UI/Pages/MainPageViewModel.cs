@@ -48,6 +48,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             public const string LeagueConfigs = "league_configs.csv";
             public const string AppworksMappings = "mappings*_[League].csv";
             public const string PdfGenerationHolidays = "holidays.csv";
+            public const string TargetRuleConfigs = "target*.csv";
         }
     }
 

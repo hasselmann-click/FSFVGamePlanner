@@ -3,6 +3,7 @@ using FSFV.Gameplanner.Service.Slotting;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.RefereeUpdate;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.Special;
+using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.TargetState;
 using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ZkStartAndEnd;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,8 @@ public static class ServiceCollectionExtension
         return services
             .AddScoped<ISlotService, RuleBasedSlotService>()
 
+            .AddSingleton<TargetStateRuleConfigurationProvider>()
+            .AddSingleton<ISlotRule>(sp => ActivatorUtilities.CreateInstance<TargetStateRule>(sp, 200_000)) 
             .AddSingleton<ISlotRule>(new LCupRule(100_001))
 
             .AddSingleton<ISlotRule>(new RequiredPitchFilter(100_000))

@@ -10,6 +10,7 @@ using FSFV.Gameplanner.Fixtures;
 using FSFV.Gameplanner.Pdf;
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Slotting;
+using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.TargetState;
 using FSFV.Gameplanner.UI.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -207,6 +208,9 @@ public sealed partial class MainPage : Page
         // parse league configs to group type dto
         var leagueConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.LeagueConfigs).File;
         var groupTypesTask = serializer.ParseGroupTypesAsync(() => leagueConfigs.OpenStreamForReadAsync());
+        // parse target rules
+        var targetRuleConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.TargetRuleConfigs).File;
+        var targetRuleTask = serializer.ParseTargetRuleConfigs(() => targetRuleConfigs.OpenStreamForReadAsync());
         // parse pitches to pitches
         var pitchesFile = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.Pitches).File;
         var pitchesTask = serializer.ParsePitchesAsync(() => pitchesFile.OpenStreamForReadAsync());
@@ -219,14 +223,22 @@ public sealed partial class MainPage : Page
         var games = await fixtureTask;
 
         // remove games with SPIELFREI
+        // TODO make "SPIELFREI" rule?
         var spielfrei = games.Where(g => g.Home.Name == GamesPlaceholder || g.Away.Name == GamesPlaceholder);
         if (spielfrei.Any())
         {
             logger.LogInformation("Removing {count} with 'SPIELFREI'", spielfrei.Count());
             games = games.Except(spielfrei).ToList();
         }
+
         // slot by gameday
         var slotService = services.GetRequiredService<ISlotService>();
+        var targetStateRuleConfigProvider = services.GetRequiredService<TargetStateRuleConfigurationProvider>();
+
+        var targetRules = await targetRuleTask;
+        targetStateRuleConfigProvider.GroupTypeConfigs = groupTypes;
+        targetStateRuleConfigProvider.RuleConfigs = targetRules;
+
         var pitchesOrdered = pitches.GroupBy(p => p.GameDay).OrderBy(g => g.Key);
         var gameplanDtos = new List<FsfvCustomSerializerService.GameplanGameDto>(games.Count);
         List<GameDay> gameDays = new(pitchesOrdered.Count());

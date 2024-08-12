@@ -3,6 +3,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
+using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.TargetState;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -286,6 +287,12 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
         }
         csvWriter.Close();
         logger.LogTrace("Finished writing stats as csv");
+    }
+
+    public async Task<List<TargetStateRuleConfiguration>> ParseTargetRuleConfigs(Func<Task<Stream>> value)
+    {
+        // TODO implement
+        throw new NotImplementedException();
     }
 
     public class GameplanGameDto
