@@ -641,6 +641,7 @@ public sealed partial class MainPage : Page
         var gameplanCandidates = files
             .Where(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.Gameplan, StringComparison.InvariantCultureIgnoreCase))
             .Where(s => !s.Name.EndsWith(StatsFileSuffix))
+            .Where(s => !s.Name.EndsWith(AppworksImportFileSuffix))
             .ToList();
 
         // TODO use common file query options
