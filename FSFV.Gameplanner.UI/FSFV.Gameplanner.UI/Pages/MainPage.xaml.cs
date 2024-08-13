@@ -163,7 +163,16 @@ public sealed partial class MainPage : Page
             }
         }
 
-        // TODO refactor to property dependency in view model
+        var targetStateRuleConfigs = storageFiles.FirstOrDefault(s => s.Name.StartsWith(MainPageViewModel.FileNamePrefixes.TargetRuleConfigs, StringComparison.InvariantCultureIgnoreCase));
+        if (targetStateRuleConfigs != null)
+        {
+            ViewModel.ConfigFileRecords.Add(new ConfigFileRecordViewModel
+            {
+                File = targetStateRuleConfigs,
+                IsFound = true
+            });
+        }
+
         ViewModel.GenerateGameplanButton_IsEnabled = ViewModel.ConfigFileRecords.All(r => r.IsFound)
             && fixtureFiles.Any();
     }
@@ -209,8 +218,12 @@ public sealed partial class MainPage : Page
         var leagueConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.LeagueConfigs).File;
         var groupTypesTask = serializer.ParseGroupTypesAsync(() => leagueConfigs.OpenStreamForReadAsync());
         // parse target rules
-        var targetRuleConfigs = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.TargetRuleConfigs).File;
-        var targetRuleTask = serializer.ParseTargetRuleConfigs(() => targetRuleConfigs.OpenStreamForReadAsync());
+        var targetRuleConfigs = ViewModel.ConfigFileRecords.FirstOrDefault(r => r.File?.Name.StartsWith(MainPageViewModel.FileNamePrefixes.TargetRuleConfigs) ?? false)?.File;
+        Task<List<TargetStateRuleConfiguration>> targetRuleTask = null;
+        if (targetRuleConfigs != null)
+        {
+            targetRuleTask = serializer.ParseTargetRuleConfigs(() => targetRuleConfigs.OpenStreamForReadAsync());
+        }
         // parse pitches to pitches
         var pitchesFile = ViewModel.ConfigFileRecords.First(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.Pitches).File;
         var pitchesTask = serializer.ParsePitchesAsync(() => pitchesFile.OpenStreamForReadAsync());
@@ -231,14 +244,17 @@ public sealed partial class MainPage : Page
             games = games.Except(spielfrei).ToList();
         }
 
+        // prepare target state rules
+        if (targetRuleConfigs != null)
+        {
+            var targetStateRuleConfigProvider = services.GetRequiredService<TargetStateRuleConfigurationProvider>();
+            var targetRules = await targetRuleTask;
+            targetStateRuleConfigProvider.GroupTypeConfigs = groupTypes;
+            targetStateRuleConfigProvider.RuleConfigs = targetRules;
+        }
+
         // slot by gameday
         var slotService = services.GetRequiredService<ISlotService>();
-        var targetStateRuleConfigProvider = services.GetRequiredService<TargetStateRuleConfigurationProvider>();
-
-        var targetRules = await targetRuleTask;
-        targetStateRuleConfigProvider.GroupTypeConfigs = groupTypes;
-        targetStateRuleConfigProvider.RuleConfigs = targetRules;
-
         var pitchesOrdered = pitches.GroupBy(p => p.GameDay).OrderBy(g => g.Key);
         var gameplanDtos = new List<FsfvCustomSerializerService.GameplanGameDto>(games.Count);
         List<GameDay> gameDays = new(pitchesOrdered.Count());

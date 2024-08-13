@@ -55,6 +55,7 @@ public class RuleBasedSlotService : AbstractSlotService
                 IEnumerable<Game> slotCandidates = games;
                 foreach (var rule in rules) // rules are ordered by their priority
                 {
+                    logger.LogDebug("Applying rule {rule}", rule.GetType().Name);
                     slotCandidates = rule.Apply(nextPitch, slotCandidates, pitches) ?? EmptyList;
                 }
                 if (!slotCandidates.Any())
@@ -114,8 +115,7 @@ public class RuleBasedSlotService : AbstractSlotService
         return pitches;
     }
 
-    // TODO: missing commentary why this is overriden from abstract class
-    protected override void BuildTimeSlots(List<Pitch> pitches)
+    private void BuildTimeSlots(List<Pitch> pitches)
     {
         foreach (var pitch in pitches)
         {
