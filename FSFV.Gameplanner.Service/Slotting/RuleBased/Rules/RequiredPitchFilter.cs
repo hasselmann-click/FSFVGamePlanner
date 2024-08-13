@@ -18,14 +18,6 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
             .DistinctBy(t => t.Name)
             .Where(t => !string.IsNullOrEmpty(t.RequiredPitchName))
             .ToDictionary(t => t.Name, t => t.RequiredPitchName);
-
-        foreach (var lp in requiredPitchByLeague)
-        {
-            var leagueGames = games.Where(g => g.Group.Type.Name == lp.Key);
-            var (minDuration, parallelFactor) = leagueGames
-                .Select(g => (g.Group.Type.MinDurationMinutes, g.Group.Type.ParallelGamesPerPitch))
-                .First();
-        }
     }
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)

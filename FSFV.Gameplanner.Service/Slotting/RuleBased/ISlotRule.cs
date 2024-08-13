@@ -1,6 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FSFV.Gameplanner.Service.Slotting.RuleBased;
 

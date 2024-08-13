@@ -12,7 +12,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 {
 
     /// <summary>
-    /// Stolen from <see cref="MvvmHelpers.ObservableObject.SetProperty{T}(ref T, T, string)"/>.<br/>
+    /// Copied from <see cref="MvvmHelpers.ObservableObject.SetProperty{T}(ref T, T, string)"/>.<br/>
     /// <seealso cref="https://github.com/CommunityToolkit/dotnet/blob/main/src/CommunityToolkit.Mvvm/ComponentModel/ObservableObject.cs"/>
     /// </summary>
     protected bool SetProperty<T>([NotNullIfNotNull(nameof(newValue))] ref T field, T newValue, [CallerMemberName] string? propertyName = null)
@@ -38,6 +38,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         public const string Gameplan = "matchplan";
         public const string AppworksMappings = "mappings";
         public const string PdfGenerationHolidays = "holidays";
+        public const string TargetRuleConfigs = "target";
 
         public static class DisplayNames
         {
@@ -48,6 +49,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             public const string LeagueConfigs = "league_configs.csv";
             public const string AppworksMappings = "mappings*_[League].csv";
             public const string PdfGenerationHolidays = "holidays.csv";
+            public const string TargetRuleConfigs = "target*.csv";
         }
     }
 

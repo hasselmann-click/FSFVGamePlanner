@@ -3,6 +3,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
+using FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.TargetState;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -286,6 +287,44 @@ public class FsfvCustomSerializerService(ILogger<FsfvCustomSerializerService> lo
         }
         csvWriter.Close();
         logger.LogTrace("Finished writing stats as csv");
+    }
+
+    public async Task<List<TargetStateRuleConfiguration>> ParseTargetRuleConfigs(Func<Task<Stream>> streamProvider)
+    {
+        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            HasHeaderRecord = false,
+            Delimiter = ",",
+            IgnoreBlankLines = true,
+            MissingFieldFound = null,
+        };
+
+        await using var stream = await streamProvider();
+        using var reader = new StreamReader(stream, DefaultEncoding);
+        using var csv = new CsvReader(reader, config);
+
+        var stateRules = new List<TargetStateRuleConfiguration>(10);
+        int rowNr = 0;
+        while (await csv.ReadAsync())
+        {
+            if ((++rowNr & 1) == 0)
+            {
+                // even, i.e. applicator
+                var applicator = csv.GetRecord<TargetStateRuleConfiguration.Target>();
+                logger.LogTrace("RowNr|Length: {rnr}|{length}", rowNr, stateRules.Count);
+                stateRules[rowNr / 2 - 1].Applicator = applicator;
+                continue;
+            }
+
+            // odd, i.e. filter
+            var filter = csv.GetRecord<TargetStateRuleConfiguration.Current>();
+            stateRules.Add(new TargetStateRuleConfiguration
+            {
+                Filter = filter
+            });
+        }
+
+        return stateRules;
     }
 
     public class GameplanGameDto

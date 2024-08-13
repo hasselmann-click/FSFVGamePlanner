@@ -80,6 +80,11 @@
                     <TextBox Text="{Binding Message}" Background="Transparent" Style="{StaticResource LogMessageTextBoxStyle}" />
                 </DataTemplate>
             </logging:LogMessageTemplateSelector.InformationTemplate>
+            <logging:LogMessageTemplateSelector.DebugTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding Message}" Background="Gray" Style="{StaticResource LogMessageTextBoxStyle}" />
+                </DataTemplate>
+            </logging:LogMessageTemplateSelector.DebugTemplate>
         </logging:LogMessageTemplateSelector>
     </Page.Resources>
 
