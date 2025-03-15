@@ -2,7 +2,7 @@
 
 namespace FSFV.Gameplanner.Fixtures;
 
-public class GeneratorService(ILogger<GeneratorService> logger)
+public class GeneratorService(ILogger<GeneratorService> logger) : IGeneratorService
 {
 
     /// <summary>
@@ -35,5 +35,4 @@ public class GeneratorService(ILogger<GeneratorService> logger)
 
         return [.. games.OrderBy(g => g.GameDay).ThenBy(g => g.GameDayOrder)];
     }
-
 }
