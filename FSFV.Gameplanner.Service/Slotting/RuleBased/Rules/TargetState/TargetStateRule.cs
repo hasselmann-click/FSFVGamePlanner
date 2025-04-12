@@ -9,8 +9,26 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.TargetState;
 internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvider targetStates, ILogger<TargetStateRule> logger) : AbstractSlotRule(priority)
 {
 
+    // TODO extract to interface
+    private bool Validate()
+    {
+        if(targetStates.RuleConfigs is null)
+        {
+            logger.LogDebug("No target state rules given. Add some via a target.*.csv file");
+            return false;
+        }
+
+        if(targetStates.GroupTypeConfigs is null)
+        {
+            throw new InvalidOperationException("Can not use target state rules without group type configs");
+        }
+
+        return true;
+    }
+
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
+        if (!Validate()) return games;
 
         IEnumerable<Game> nextGames = games.ToList();
         foreach (var state in targetStates.RuleConfigs)
@@ -115,6 +133,8 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
 
     public override void ProcessAfterGameday(List<Pitch> pitches)
     {
+        if (!Validate()) return;
+
         // update the timeslot start time 
         foreach (var state in targetStates.RuleConfigs.Where(ts => ts.Applicator.Time.HasValue))
         {
