@@ -12,13 +12,13 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
     // TODO extract to interface
     private bool Validate()
     {
-        if(targetStates.RuleConfigs is null)
+        if (targetStates.RuleConfigs is null)
         {
             logger.LogDebug("No target state rules given. Add some via a target.*.csv file");
             return false;
         }
 
-        if(targetStates.GroupTypeConfigs is null)
+        if (targetStates.GroupTypeConfigs is null)
         {
             throw new InvalidOperationException("Can not use target state rules without group type configs");
         }
@@ -109,7 +109,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
     {
         (var round, var _, var date, var _) = state.Filter;
         var shouldApply = (round == null || pitch.GameDay == round)
-            && (date == null || DateOnly.FromDateTime(pitch.StartTime) == date);
+            && (date == null || pitch.Date == date);
         return shouldApply;
     }
 
@@ -122,7 +122,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
             (string.IsNullOrEmpty(pitchFilter) || pitch.Name == pitchFilter)
             && (time == null ||
                 // next start time (+ buffer) is after the time filter
-                pitch.NextStartTime.AddMinutes(bufferMinutes).TimeOfDay.CompareTo(time?.ToTimeSpan()) >= 0);
+                pitch.NextStartTime.AddMinutes(bufferMinutes).CompareTo(time) >= 0);
         return shouldApply;
     }
 
@@ -151,9 +151,9 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
             var slots = pitches
                 .Where(p => fPitch == null || fPitch == p.Name)
                 .Where(p => round == null || round == p.GameDay)
-                .Where(p => date == null || date == DateOnly.FromDateTime(p.StartTime))
+                .Where(p => date == null || date == p.Date)
                 .SelectMany(p => p.Slots)
-                .Where(s => s.StartTime.AddMinutes(bufferMinutes).TimeOfDay.CompareTo(time?.ToTimeSpan()) >= 0)
+                .Where(s => s.StartTime.AddMinutes(bufferMinutes).CompareTo(time?.ToTimeSpan()) >= 0)
                 .ToList()
                 ;
             if (slots.Count == 0)
@@ -165,7 +165,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
             // update start time with the given rule time and update the subsequent slots
             var endTime = slots.Last().EndTime;
             var first = slots.First();
-            first.StartTime = first.StartTime.Date.Add(aTime.Value.ToTimeSpan());
+            first.StartTime = first.StartTime.Add(aTime!.Value.ToTimeSpan());
             first.EndTime = first.StartTime.AddMinutes(first.Game.Group.Type.MinDurationMinutes);
 
             int parallelGames = 1;
@@ -195,14 +195,14 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
             if (j == 0 || j == (slots.Count - 1)) continue;
 
             // TODO refactor: This taken from the initial "BuildSlotTimes" and the Pitch.TimeLeft dto
-            // add break between placeholder league and follow up slots
+            // Add break between placeholder league and follow up slots
             var numberOfBreaks = slots.Count - j; // + 1 (index) - 1 (no break after last slot)
             var timeLeft = endTime
-                .Subtract(slots[j].StartTime)
-                .Subtract(slots[j..]
+                - slots[j].StartTime
+                - slots[j..]
                     .Select(s => s.Game)
                     .Select(g => g.MinDuration.Divide(g.Group.Type.ParallelGamesPerPitch))
-                    .Aggregate(TimeSpan.Zero, (d1, d2) => d1.Add(d2)));
+                    .Aggregate(TimeSpan.Zero, (d1, d2) => d1.Add(d2));
             var additionalBreak = numberOfBreaks > 0 ? timeLeft.Divide(numberOfBreaks) : TimeSpan.Zero;
             if (additionalBreak < TimeSpan.Zero)
                 additionalBreak = TimeSpan.Zero;

@@ -9,12 +9,12 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 internal class MorningAndEveningGamesSort(int priority, IConfiguration configuration) : AbstractSlotRule(priority)
 {
 
-    private readonly TimeSpan EveningSince = configuration.GetValue<TimeSpan>("Schedule:EveningSince");
-    private readonly TimeSpan MorningUntil = configuration.GetValue<TimeSpan>("Schedule:MorningUntil");
+    private readonly TimeOnly EveningSince = configuration.GetValue<TimeOnly>("Schedule:EveningSince");
+    private readonly TimeOnly MorningUntil = configuration.GetValue<TimeOnly>("Schedule:MorningUntil");
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
-        var currentSlot = pitch.NextStartTime.TimeOfDay;
+        var currentSlot = pitch.NextStartTime;
 
         // is morning?
         if (currentSlot <= MorningUntil)
@@ -36,7 +36,7 @@ internal class MorningAndEveningGamesSort(int priority, IConfiguration configura
     {
         // update morning games
         pitches.SelectMany(p => p.Slots)
-            .Where(s => s.StartTime.TimeOfDay <= MorningUntil)
+            .Where(s => s.StartTime <= MorningUntil)
             .SelectMany(s => new[] { s.Game.Home, s.Game.Away })
             .ToList()
             .ForEach(t =>
@@ -46,7 +46,7 @@ internal class MorningAndEveningGamesSort(int priority, IConfiguration configura
 
         // update evening games
         pitches.SelectMany(p => p.Slots)
-            .Where(s => s.StartTime.TimeOfDay >= EveningSince)
+            .Where(s => s.StartTime >= EveningSince)
             .SelectMany(s => new[] { s.Game.Home, s.Game.Away })
             .ToList()
             .ForEach(t =>

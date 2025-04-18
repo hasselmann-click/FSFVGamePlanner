@@ -11,22 +11,12 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ZkStartAndEnd;
 /// <summary>
 /// Checks after a game day, if it starts 
 /// </summary>
-internal class ZkStartAndEndFilter : AbstractSlotRule
+internal class ZkStartAndEndFilter(int priority, IConfiguration configuration, ILogger<ZkStartAndEndFilter> logger, IRngProvider rng)
+    : AbstractSlotRule(priority)
 {
     private const string ConfigKeyZkTeams = "ZkTeams";
 
-    private readonly ILogger<ZkStartAndEndFilter> logger;
-    private readonly IRngProvider rng;
-    private readonly HashSet<string> zkTeams;
-
-    public ZkStartAndEndFilter(int priority, IConfiguration configuration, ILogger<ZkStartAndEndFilter> logger, IRngProvider rng) : base(priority)
-    {
-        this.logger = logger;
-        this.rng = rng;
-
-        var teams = configuration.GetSection(ConfigKeyZkTeams).Get<string[]>();
-        zkTeams = new HashSet<string>(teams);
-    }
+    private readonly HashSet<string> zkTeams = configuration.GetSection(ConfigKeyZkTeams).Get<string[]>()?.ToHashSet() ?? [];
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {

@@ -27,7 +27,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         return true;
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public static class FileNamePrefixes
     {
@@ -62,8 +62,8 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         Dispatcher = dispatcher;
     }
 
-    private StorageFile gameplanFile;
-    private StorageFolder workDir;
+    private StorageFile? gameplanFile;
+    private StorageFolder? workDir;
 
     private bool generateFixtursButton_IsEnabled;
     private bool generateFixtursButton_IsGenerating;
@@ -81,7 +81,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     private bool generatePdfButton_HasGenerated;
     private int rngSeed;
 
-    public StorageFolder WorkDir
+    public StorageFolder? WorkDir
     {
         get => workDir;
         set
@@ -90,11 +90,11 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FolderReload_IsEnabled)));
         }
     }
-    public string WorkDirPath => WorkDir?.Path;
+    public string? WorkDirPath => WorkDir?.Path;
     public bool FolderReload_IsEnabled => WorkDir != null;
 
     #region Gameplan
-    public StorageFile GameplanFile
+    public StorageFile? GameplanFile
     {
         get => gameplanFile;
         set
@@ -121,7 +121,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
     #region RNG
     public int RngSeed { get => rngSeed; set => SetProperty(ref rngSeed, value); }
-    public StorageFile RngSeedFile { get; internal set; }
+    public StorageFile? RngSeedFile { get; internal set; }
     #endregion
 
     #region buttons
@@ -154,6 +154,44 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     {
         get => generateGameplanButton_HasGenerated;
         set => SetProperty(ref generateGameplanButton_HasGenerated, value);
+    }
+
+    #endregion
+
+    #region Migrations
+
+    private StorageFile? migrationFile;
+    private bool runMigrationsButton_IsRunning;
+    private bool runMigrationsButton_HasRun;
+
+    public bool HasMigrationFile => migrationFile != null;
+    public bool NotHasMigrationFile => !HasMigrationFile;
+    public string? MigrationFileName => migrationFile?.Name;
+    public bool RunMigrationsButton_IsEnabled => HasMigrationFile;
+
+    public bool RunMigrationsButton_IsRunning
+    {
+        get => generateFixtursButton_IsEnabled;
+        set => SetProperty(ref runMigrationsButton_IsRunning, value);
+    }
+
+    public bool RunMigrationsButton_HasRun
+    {
+        get => generateFixtursButton_IsEnabled;
+        set => SetProperty(ref runMigrationsButton_HasRun, value);
+    }
+
+    public StorageFile? MigrationFile
+    {
+        get => migrationFile;
+        set
+        {
+            SetProperty(ref migrationFile, value, nameof(MigrationFile));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasMigrationFile)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NotHasMigrationFile)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MigrationFileName)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RunMigrationsButton_IsEnabled)));
+        }
     }
 
     #endregion
