@@ -13,7 +13,8 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
     // TOOD read from config
     private static readonly TimeSpan MaxBreak = TimeSpan.FromMinutes(30);
 
-    private readonly Dictionary<string, RefereeUpdateGroupConfig> configs = configuration.GetSection(ConfigKey).Get<Dictionary<string, RefereeUpdateGroupConfig>>();
+    private readonly Dictionary<string, RefereeUpdateGroupConfig> configs 
+        = configuration.GetSection(ConfigKey).Get<Dictionary<string, RefereeUpdateGroupConfig>>() ?? [];
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
@@ -68,7 +69,7 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
                     }
                     if (after.StartTime != current.StartTime
                          // check for grouped games, which are too far apart
-                         && !(after.StartTime.Subtract(current.EndTime) > MaxBreak))
+                         && !(after.StartTime - current.EndTime > MaxBreak))
                     {
                         // also look for parallel "after" games
                         TimeSlot afterParallel = after;
@@ -90,7 +91,7 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
                     }
                     if (before.StartTime != current.StartTime
                          // check for grouped games, which are too far apart
-                         && !(current.StartTime.Subtract(before.EndTime) > MaxBreak))
+                         && !(current.StartTime - before.EndTime > MaxBreak))
                     {
 
                         // also look for parallel "before" games

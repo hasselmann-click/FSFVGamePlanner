@@ -18,12 +18,12 @@ var serviceProvider = new ServiceCollection()
     .AddLogging(builder => builder.AddConsole())
     .AddTransient<IAppworksMappingImporter>(sp => new AppworksMappingFileImporter(sp.GetRequiredService<ILogger<AppworksMappingFileImporter>>(), inputMappingsFilePath))
     .AddTransient<AppworksTransformer>()
-    .AddTransient<FsfvCustomSerializerService>()
+    .AddTransient<CsvSerializerService>()
     .AddTransient<AppworksSerializer>()
     .BuildServiceProvider();
 
 // Import the game plan
-var gamePlanParser = serviceProvider.GetRequiredService<FsfvCustomSerializerService>();
+var gamePlanParser = serviceProvider.GetRequiredService<CsvSerializerService>();
 var gamePlan = await gamePlanParser.ParseGameplanAsync(() => Task.FromResult((Stream)new FileStream(inputGameplanFilePath, FileMode.Open)));
 
 // Import the mappings and transform the imports

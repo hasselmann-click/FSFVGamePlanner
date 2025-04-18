@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Service.Serialization;
+using FSFV.Gameplanner.Service.Serialization.Dto;
 using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -6,7 +7,7 @@ using QuestPDF.Previewer;
 
 namespace FSFV.Gameplanner.Pdf;
 
-public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCustomSerializerService serializer)
+public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSerializerService serializer)
 {
 
     static PdfGenerator()
@@ -14,11 +15,11 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    private Action<IContainer> ComposeHeader(string title)
+    private static Action<IContainer> ComposeHeader(string title)
     {
         return c => c
-            .PaddingVertical(10)
-            .PaddingTop(20)
+            .PaddingVertical(5)
+            .PaddingTop(10)
             .AlignCenter()
             .Text(t =>
             {
@@ -27,11 +28,11 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
             });
     }
 
-    private Action<IContainer> ComposeFooter(string title)
+    private static Action<IContainer> ComposeFooter(string title)
     {
         return c => c
             .PaddingVertical(10)
-            .PaddingBottom(20)
+            .PaddingBottom(10)
             .AlignCenter()
             .Text(t =>
             {
@@ -41,7 +42,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
     }
 
     public async Task GenerateAsync(Func<Task<Stream>> writeStreamProvider,
-        Func<Task<Stream>> gameplanCsvStream, Func<Task<Stream>>? holidaysStream = null, bool showDocument = false)
+        Func<Task<Stream>> gameplanCsvStream, Func<Task<Stream?>?>? holidaysStream = null, bool showDocument = false)
     {
         var games = await serializer.ParseGameplanAsync(gameplanCsvStream);
         var gamesPerDay = games.GroupBy(x => x.Date).OrderBy(x => x.Key).ToList();
@@ -63,7 +64,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
                 {
                     var (key, value) = nextHoliday.Value;
                     // special day page, e.g. Pentecost Monday
-                    container.Page(ComposePageSpecialDays(value));
+                    container.Page(ComposePageSpecialDays(key, value));
                     nextHoliday = holidays!.OrderBy(x => x.Key).FirstOrDefault(x => x.Key.CompareTo(key) > 0);
                 }
 
@@ -78,7 +79,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
         document.GeneratePdf(writeStream);
     }
 
-    private Action<PageDescriptor> ComposePageGameDay(IGrouping<DateOnly, FsfvCustomSerializerService.GameplanGameDto> gameDay)
+    private Action<PageDescriptor> ComposePageGameDay(IGrouping<DateOnly, GameplanGameDto> gameDay)
     {
         return page =>
         {
@@ -131,7 +132,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
         };
     }
 
-    private Action<PageDescriptor> ComposePageSpecialDays(string title)
+    private Action<PageDescriptor> ComposePageSpecialDays(DateOnly date, string title)
     {
         return page =>
         {
@@ -139,7 +140,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
             page.PlanPageStyle();
             // Set page header and footer
             page.Header().Element(ComposeHeader(config.HeaderTitle));
-            page.Footer().Element(ComposeFooter(title));
+            page.Footer().Element(ComposeFooter(date.ToString(config.FooterDateFormat)));
 
             // set page content
             page.Content()

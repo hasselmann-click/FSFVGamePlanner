@@ -19,7 +19,7 @@ if (pdfConfig is null)
 var services = new ServiceCollection()
     .AddLogging(builder => builder.AddConsole())
     .AddTransient<PdfGenerator>()
-    .AddTransient<FsfvCustomSerializerService>()
+    .AddTransient<CsvSerializerService>()
     .AddSingleton(pdfConfig)
     .BuildServiceProvider();
 

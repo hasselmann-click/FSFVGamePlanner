@@ -109,6 +109,7 @@
             VerticalScrollMode="Enabled" 
             VerticalScrollBarVisibility="Auto">
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
+
                 <!-- work folder picker -->
                 <Border>
                     <StackPanel Orientation="Vertical">
@@ -205,6 +206,63 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Pdf Generation -->
+                <Border>
+                    <StackPanel Orientation="Vertical">
+                        <TextBox Text="Generate PDF" FontWeight="Bold" />
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Visibility="Visible">
+                                <!-- TODO dont apply these styles locally -->
+                                <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasGameplanFile, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
+                                <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+                            </StackPanel>
+
+                            <!-- mappings files -->
+                            <ListView ItemsSource="{x:Bind ViewModel.PdfGenerationFiles}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- TODO dont apply these styles locally -->
+                                            <SymbolIcon Symbol="Clear" Foreground="Blue" Visibility="{Binding NotIsFound}" />
+                                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
+                                            <TextBox Text="{x:Bind DisplayName}" Margin="10" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <Button x:Name="PdfGenerationOpenGameplanButton" Content="Select Gameplan" Click="PdfOpenGameplanButton_Click" IsEnabled="True" />
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="GeneratePdfButton" Content="Generate PDF" Click="GeneratePdfButton_Click" IsEnabled="{x:Bind ViewModel.GeneratePdfButton_IsEnabled, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GeneratePdfButton_HasGenerated, Mode=OneWay}" />
+                                <ProgressRing IsActive="{x:Bind ViewModel.GeneratePdfButton_IsGenerating, Mode=OneWay}" />
+                                <!-- TODO add hyperlink to generated document -->
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Running migrations -->
+                <!-- <Border>
+                    <StackPanel Orientation="Vertical">
+                        <TextBox Text="Migrations" FontWeight="Bold" />
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Visibility="Visible">
+                                <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasMigrationFile, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasMigrationFile, Mode=OneWay}" />
+                                <TextBox Text="{x:Bind ViewModel.MigrationFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Padding="0">
+                                <Button x:Name="RunMigrationsButton" Content="Run Migrations" Click="RunMigrationsButton_Click" IsEnabled="{x:Bind ViewModel.RunMigrationsButton_IsEnabled, Mode=OneWay}" />
+                                <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.RunMigrationsButton_HasRun, Mode=OneWay}" />
+                                <ProgressRing IsActive="{x:Bind ViewModel.RunMigrationsButton_IsRunning, Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                -->
+
                 <!-- stats generation -->
                 <Border>
                     <StackPanel Orientation="Vertical">
@@ -256,47 +314,9 @@
                             <Button x:Name="AppworksOpenGameplanButton" Content="Select Gameplan" Click="AppworksOpenGameplanButton_Click" IsEnabled="True" />
                             <StackPanel Orientation="Horizontal" Padding="0">
                                 <Button x:Name="GenerateAppworksImportButton" Content="Generate Appworks" Click="GenerateAppworksImportButton_Click" 
-                                    IsEnabled="{x:Bind ViewModel.GenerateAppworksImportButton_IsEnabled, Mode=OneWay}" />
+                    IsEnabled="{x:Bind ViewModel.GenerateAppworksImportButton_IsEnabled, Mode=OneWay}" />
                                 <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GenerateAppworksImportButton_HasGenerated, Mode=OneWay}" />
                                 <ProgressRing IsActive="{x:Bind ViewModel.GenerateAppworksImportButton_IsGenerating, Mode=OneWay}" />
-                                <!-- TODO add hyperlink to generated document -->
-                            </StackPanel>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- Pdf Generation -->
-                <Border>
-                    <StackPanel Orientation="Vertical">
-                        <TextBox Text="Generate PDF" FontWeight="Bold" />
-                        <StackPanel Orientation="Vertical">
-                            <StackPanel Orientation="Horizontal" Visibility="Visible">
-                                <!-- TODO dont apply these styles locally -->
-                                <SymbolIcon Symbol="Clear" Foreground="Red" Visibility="{x:Bind ViewModel.NotHasGameplanFile, Mode=OneWay}" />
-                                <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind ViewModel.HasGameplanFile, Mode=OneWay}" />
-                                <TextBox Text="{x:Bind ViewModel.GameplanFileName, Mode=OneWay}" Margin="10" IsReadOnly="True" />
-                            </StackPanel>
-
-                            <!-- mappings files -->
-                            <ListView ItemsSource="{x:Bind ViewModel.PdfGenerationFiles}">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="local:ConfigFileRecordViewModel">
-                                        <StackPanel Orientation="Horizontal">
-                                            <!-- TODO dont apply these styles locally -->
-                                            <SymbolIcon Symbol="Clear" Foreground="Blue" Visibility="{Binding NotIsFound}" />
-                                            <SymbolIcon Symbol="Accept" Foreground="Green" Visibility="{x:Bind IsFound}" />
-                                            <TextBox Text="{x:Bind DisplayName}" Margin="10" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-
-                            <Button x:Name="PdfGenerationOpenGameplanButton" Content="Select Gameplan" Click="PdfOpenGameplanButton_Click" IsEnabled="True" />
-                            <StackPanel Orientation="Horizontal" Padding="0">
-                                <Button x:Name="GeneratePdfButton" Content="Generate PDF" Click="GeneratePdfButton_Click" 
-IsEnabled="{x:Bind ViewModel.GeneratePdfButton_IsEnabled, Mode=OneWay}" />
-                                <SymbolIcon Symbol="Accept" Visibility="{x:Bind ViewModel.GeneratePdfButton_HasGenerated, Mode=OneWay}" />
-                                <ProgressRing IsActive="{x:Bind ViewModel.GeneratePdfButton_IsGenerating, Mode=OneWay}" />
                                 <!-- TODO add hyperlink to generated document -->
                             </StackPanel>
                         </StackPanel>

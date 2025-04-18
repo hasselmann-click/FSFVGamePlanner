@@ -31,7 +31,7 @@ public class RuleBasedSlotService : AbstractSlotService
     {
         rules.ForEach(r => r.ProcessBeforeGameday(pitches, games));
 
-        var gameDate = pitches.Select(p => new { p.GameDay, Date = p.StartTime.ToShortDateString() }).First();
+        var gameDate = pitches.Select(p => new { p.GameDay, p.Date }).First();
         // vars for endless loop prevention
         var hasSlottedGames = true;
         var previousGamesCount = games.Count;
@@ -47,7 +47,7 @@ public class RuleBasedSlotService : AbstractSlotService
                 .OrderBy(p => rng.NextInt64())
                 .ThenBy(op => op.NextStartTime);
             var currentStartTime = orderedPitches.Select(p => p.NextStartTime).First();
-            
+
             logger.LogTrace("Pitch Order: {pitches}", string.Join(", ", orderedPitches.Select(op => "[" + op.Name + ": " + op.NextStartTime + "]")));
             foreach (var nextPitch in orderedPitches)
             {
@@ -111,7 +111,7 @@ public class RuleBasedSlotService : AbstractSlotService
 
         BuildTimeSlots(pitches);
         rules.ForEach(r => r.ProcessAfterGameday(pitches));
-        
+
         return pitches;
     }
 
@@ -121,8 +121,7 @@ public class RuleBasedSlotService : AbstractSlotService
         {
             if (pitch.Games.Count < 1)
             {
-                Logger.LogWarning("No games for pitch {pitch} on {date}", pitch.Name,
-                    pitch.StartTime.ToShortDateString());
+                Logger.LogWarning("No games for pitch {pitch} on {date}", pitch.Name, pitch.StartTime.ToShortTimeString());
                 continue;
             }
 
@@ -157,7 +156,7 @@ public class RuleBasedSlotService : AbstractSlotService
             {
                 var prev = pitch.Slots[i - 1];
                 var game = pitch.Games[i];
-                DateTime start;
+                TimeOnly start;
                 if (prev.Game.Group.Type == game.Group.Type
                     && game.Group.Type.ParallelGamesPerPitch >= ++parallel)
                 {

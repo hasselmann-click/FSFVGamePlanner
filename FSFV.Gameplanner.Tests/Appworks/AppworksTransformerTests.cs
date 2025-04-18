@@ -1,6 +1,7 @@
 ﻿using FSFV.Gameplanner.Appworks;
 using FSFV.Gameplanner.Appworks.Mappings;
 using FSFV.Gameplanner.Service.Serialization;
+using FSFV.Gameplanner.Service.Serialization.Dto;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Globalization;
@@ -28,7 +29,7 @@ public class AppworksTransformerTests
         var mappings = new AppworksIdMappings(locations, teams, divisions, matchdays, tournament);
 
         // matchplan.csv, parsed by "FsfvCustomSerializerService.ParseGameplanAsync"
-        var gamePlan = new List<FsfvCustomSerializerService.GameplanGameDto>()
+        var gamePlan = new List<GameplanGameDto>()
         {
             new()
             {
@@ -36,12 +37,12 @@ public class AppworksTransformerTests
                 Away = "team1",
                 Referee = "team3",
                 GameDay = 1,
-                StartTime = DateTime.Parse("01.01.22 10:00"),
-                EndTime = DateTime.Parse("01.01.22 12:00"),
+                StartTime = TimeOnly.Parse("01.01.22 10:00"),
+                EndTime = TimeOnly.Parse("01.01.22 12:00"),
                 Group = "A",
                 League = "M",
                 Pitch = "R2",
-                Date = DateOnly.ParseExact("01.01.22", FsfvCustomSerializerService.DateFormat, CultureInfo.InvariantCulture),
+                Date = DateOnly.ParseExact("01.01.22", CsvSerializerService.DateFormat, CultureInfo.InvariantCulture),
             },
             new()
             {
@@ -49,12 +50,12 @@ public class AppworksTransformerTests
                 Away = "teamThatNeedsToBeMapped",
                 Referee = "team2",
                 GameDay = 1,
-                StartTime = DateTime.Parse("01.01.22 14:00"),
-                EndTime = DateTime.Parse("01.01.22 16:00"),
+                StartTime = TimeOnly.Parse("01.01.22 14:00"),
+                EndTime = TimeOnly.Parse("01.01.22 16:00"),
                 Group = "B",
                 League = "M",
                 Pitch = "R7",
-                Date = DateOnly.ParseExact("01.01.22", FsfvCustomSerializerService.DateFormat, CultureInfo.InvariantCulture),
+                Date = DateOnly.ParseExact("01.01.22", CsvSerializerService.DateFormat, CultureInfo.InvariantCulture),
             }
         };
 
