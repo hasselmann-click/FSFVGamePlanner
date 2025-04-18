@@ -9,10 +9,10 @@ public class GameplanGameDto
     public int GameDay { get; set; }
     public string Pitch { get; set; }
 
-    [Format("hh:mm")]
+    [Format("HH:mm")]
     public TimeOnly StartTime { get; set; }
-    
-    [Format("hh:mm")]
+
+    [Format("HH:mm")]
     public TimeOnly EndTime { get; set; }
     public string Home { get; set; }
     public string Away { get; set; }
@@ -20,7 +20,7 @@ public class GameplanGameDto
     public string Group { get; set; }
     public string League { get; set; }
 
-    [Format("dd.MM.yyyy")]
+    [Format("dd.MM.yy", "dd.MM.yyyy")]
     public DateOnly Date { get; set; }
 }
 

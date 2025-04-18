@@ -122,7 +122,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
             (string.IsNullOrEmpty(pitchFilter) || pitch.Name == pitchFilter)
             && (time == null ||
                 // next start time (+ buffer) is after the time filter
-                pitch.NextStartTime.AddMinutes(bufferMinutes).CompareTo(time?.ToTimeSpan()) >= 0);
+                pitch.NextStartTime.AddMinutes(bufferMinutes).CompareTo(time) >= 0);
         return shouldApply;
     }
 

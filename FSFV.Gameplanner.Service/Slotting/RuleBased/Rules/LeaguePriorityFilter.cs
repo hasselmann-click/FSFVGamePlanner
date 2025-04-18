@@ -11,7 +11,7 @@ internal class LeaguePriorityFilter(int priority) : AbstractSlotRule(priority)
         var g = games.GroupBy(g => g.Group.Type.Priority);
         var go = g.OrderByDescending(gr => gr.Key);
         // only return games with the highest priority
-        return go.First();
+        return go.FirstOrDefault() ?? games;
     }
 
 }

@@ -86,15 +86,15 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
                     away = new Team { Name = fixture.Away };
                     teams.Add(fixture.Away, away);
                 }
-
-                games.Add(new Game
+                var game = new Game
                 {
                     GameDay = l_NormalizedGameDay(group, fixture),
                     Home = home,
                     Away = away,
                     Group = group,
                     Referee = null
-                });
+                };
+                games.Add(game);
             }
         }
 
@@ -201,9 +201,6 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
         using var reader = new StreamReader(stream, DefaultEncoding);
         using var csv = new CsvReader(reader, config);
 
-        var options = new TypeConverterOptions { Formats = [DateFormat] };
-        csv.Context.TypeConverterOptionsCache.AddOptions<DateOnly>(options);
-
         // hypothetically it's possible that the stream is inifinitely large. We could use
         // a timeout or a maximum limit of records to read. But for now, this will suffice.
         var records = csv.GetRecordsAsync<GameplanGameDto>();
@@ -253,6 +250,7 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
                     {
                         s.Game.GameDay,
                         Pitch = p.Name,
+                        p.Date,
                         s.StartTime,
                         s.EndTime,
                         s.Game.Home,
@@ -275,7 +273,7 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
                     slot.Referee?.Name,
                     slot.Group,
                     slot.League,
-                    slot.StartTime.ToString(dateFormat)
+                    slot.Date.ToString(dateFormat)
                 ]));
             }
         }

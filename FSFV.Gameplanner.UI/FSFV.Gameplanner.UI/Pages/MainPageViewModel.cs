@@ -63,7 +63,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     }
 
     private StorageFile? gameplanFile;
-    private StorageFolder workDir;
+    private StorageFolder? workDir;
 
     private bool generateFixtursButton_IsEnabled;
     private bool generateFixtursButton_IsGenerating;
@@ -81,7 +81,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
     private bool generatePdfButton_HasGenerated;
     private int rngSeed;
 
-    public StorageFolder WorkDir
+    public StorageFolder? WorkDir
     {
         get => workDir;
         set
@@ -90,7 +90,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FolderReload_IsEnabled)));
         }
     }
-    public string WorkDirPath => WorkDir.Path;
+    public string? WorkDirPath => WorkDir?.Path;
     public bool FolderReload_IsEnabled => WorkDir != null;
 
     #region Gameplan

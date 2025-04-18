@@ -31,7 +31,7 @@ public class RuleBasedSlotService : AbstractSlotService
     {
         rules.ForEach(r => r.ProcessBeforeGameday(pitches, games));
 
-        var gameDate = pitches.Select(p => new { p.GameDay, Date = p.StartTime.ToShortTimeString() }).First();
+        var gameDate = pitches.Select(p => new { p.GameDay, p.Date }).First();
         // vars for endless loop prevention
         var hasSlottedGames = true;
         var previousGamesCount = games.Count;
