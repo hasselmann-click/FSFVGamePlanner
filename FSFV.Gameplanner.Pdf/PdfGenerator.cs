@@ -17,8 +17,8 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
     private Action<IContainer> ComposeHeader(string title)
     {
         return c => c
-            .PaddingVertical(10)
-            .PaddingTop(20)
+            .PaddingVertical(5)
+            .PaddingTop(10)
             .AlignCenter()
             .Text(t =>
             {
@@ -31,7 +31,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
     {
         return c => c
             .PaddingVertical(10)
-            .PaddingBottom(20)
+            .PaddingBottom(10)
             .AlignCenter()
             .Text(t =>
             {
@@ -63,7 +63,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
                 {
                     var (key, value) = nextHoliday.Value;
                     // special day page, e.g. Pentecost Monday
-                    container.Page(ComposePageSpecialDays(value));
+                    container.Page(ComposePageSpecialDays(key, value));
                     nextHoliday = holidays!.OrderBy(x => x.Key).FirstOrDefault(x => x.Key.CompareTo(key) > 0);
                 }
 
@@ -131,7 +131,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
         };
     }
 
-    private Action<PageDescriptor> ComposePageSpecialDays(string title)
+    private Action<PageDescriptor> ComposePageSpecialDays(DateOnly date, string title)
     {
         return page =>
         {
@@ -139,7 +139,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
             page.PlanPageStyle();
             // Set page header and footer
             page.Header().Element(ComposeHeader(config.HeaderTitle));
-            page.Footer().Element(ComposeFooter(title));
+            page.Footer().Element(ComposeFooter(date.ToString(config.FooterDateFormat)));
 
             // set page content
             page.Content()
