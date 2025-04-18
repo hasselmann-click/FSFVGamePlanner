@@ -17,8 +17,8 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
     private Action<IContainer> ComposeHeader(string title)
     {
         return c => c
-            .PaddingVertical(10)
-            .PaddingTop(20)
+            .PaddingVertical(5)
+            .PaddingTop(10)
             .AlignCenter()
             .Text(t =>
             {
@@ -31,7 +31,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, FsfvCu
     {
         return c => c
             .PaddingVertical(10)
-            .PaddingBottom(20)
+            .PaddingBottom(10)
             .AlignCenter()
             .Text(t =>
             {
