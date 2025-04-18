@@ -76,12 +76,12 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
                 if (fixture.GameDay < group.Type.FixtureStart)
                     continue;
 
-                if (!teams.TryGetValue(fixture.Home, out Team home))
+                if (!teams.TryGetValue(fixture.Home, out var home))
                 {
                     home = new Team { Name = fixture.Home };
                     teams.Add(fixture.Home, home);
                 }
-                if (!teams.TryGetValue(fixture.Away, out Team away))
+                if (!teams.TryGetValue(fixture.Away, out var away))
                 {
                     away = new Team { Name = fixture.Away };
                     teams.Add(fixture.Away, away);
@@ -111,8 +111,7 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
         await using var stream = await pitchesStreamProvider();
         using var reader = new StreamReader(stream, DefaultEncoding);
         var lines = new List<string>(4 + 1); // 4 pitches + header
-        string line;
-        while ((line = await reader.ReadLineAsync()) != null)
+        while (await reader.ReadLineAsync() is string line)
         {
             lines.Add(line);
         }
@@ -166,13 +165,22 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
         return pitches;
     }
 
-    public async Task<Dictionary<DateOnly, string>> ParseHolidaysAsync(Func<Task<Stream>> streamProvider, char separator = ',')
+    public async Task<Dictionary<DateOnly, string>> ParseHolidaysAsync(Func<Task<Stream?>?> streamProvider, char separator = ',')
     {
-        await using var stream = await streamProvider();
+        if (streamProvider() is not Task<Stream?> task)
+        {
+            return [];
+        }
+
+        await using var stream = await task;
+        if (stream is null)
+        {
+            return [];
+        }
+
         using var reader = new StreamReader(stream, DefaultEncoding);
         var holidays = new Dictionary<DateOnly, string>(3); // educated guess
-        string line;
-        while ((line = await reader.ReadLineAsync()) != null)
+        while (await reader.ReadLineAsync() is string line)
         {
             var ar = line.Split(separator);
             holidays.Add(DateOnly.Parse(ar[0]), ar[1]);
@@ -209,7 +217,7 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
         return dtos;
     }
 
-    public async Task WriteCsvGameplanAsync(Stream writeStream, IEnumerable<GameplanGameDto> dtos)
+    public static async Task WriteCsvGameplanAsync(Stream writeStream, IEnumerable<GameplanGameDto> dtos)
     {
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
@@ -340,8 +348,9 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
         return stateRules;
     }
 
-    public class GameplanGameDto
+    public static async Task<List<MigrationDto>> ParseMigrationsAsync(Func<Task<Stream>> value)
     {
         return await Task.FromResult<List<MigrationDto>>([]);
     }
+
 }

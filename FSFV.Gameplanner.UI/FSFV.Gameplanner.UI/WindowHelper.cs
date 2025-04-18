@@ -22,6 +22,7 @@ namespace FSFV.Gameplanner.UI
     // of all active Windows.  The app code must call WindowHelper.CreateWindow
     // rather than "new Window" so we can keep track of all the relevant
     // windows.  In the future, we would like to support this in platform APIs.
+#pragma warning disable CS8603 // Possible null reference return.
     public class WindowHelper
     {
 
@@ -65,6 +66,9 @@ namespace FSFV.Gameplanner.UI
 
         static public List<Window> ActiveWindows { get { return _activeWindows; } }
 
-        static private List<Window> _activeWindows = [];
+        private static readonly List<Window> _activeWindows = [];
     }
+
+#pragma warning restore CS8603 // Possible null reference return.
 }
+

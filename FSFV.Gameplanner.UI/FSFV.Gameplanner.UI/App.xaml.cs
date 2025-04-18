@@ -81,13 +81,24 @@ namespace FSFV.Gameplanner.UI
 #endif
                 .Build();
 
-            var pdfConfig = configuration.GetSection("PdfConfig").Get<PdfConfig>();
-            // explicitly convert the dictionary of strings to dictionary of colors
-            // since IConfigurationSections doesn't use custom json converters
-            var pdfConigLeagueColors = configuration.GetSection("PdfConfig:LeagueColors").Get<Dictionary<string, string>>();
-            pdfConfig.LeagueColors = pdfConigLeagueColors.ToDictionary(x => x.Key, x => Color.FromHex(x.Value));
+            var services = new ServiceCollection();
 
-            return new ServiceCollection()
+            if (configuration.GetSection("PdfConfig").Get<PdfConfig>() is PdfConfig pdfConfig)
+            {
+                // explicitly convert the dictionary of strings to dictionary of colors
+                // since IConfigurationSections doesn't use custom json converters
+                var pdfConigLeagueColors = configuration.GetSection("PdfConfig:LeagueColors").Get<Dictionary<string, string>>();
+                pdfConfig.LeagueColors = pdfConigLeagueColors?.ToDictionary(x => x.Key, x => Color.FromHex(x.Value)) ?? [];
+                services
+                    .AddSingleton(pdfConfig)
+                    .AddTransient<PdfGenerator>();
+            }
+            else
+            {
+                throw new ArgumentException("Missing PdfConfig in configuration");
+            }
+
+            return services
                 .AddSingleton<IRngProvider, RngProvider>()
                 .AddSingleton<IConfiguration>(configuration)
                 .AddLogging(config =>
@@ -101,9 +112,6 @@ namespace FSFV.Gameplanner.UI
                 .AddTransient<GeneratorService>()
                 .AddScoped<CsvSerializerService>()
                 .AddScoped<IMigrationService, MigrationService>()
-
-                .AddSingleton(pdfConfig)
-                .AddTransient<PdfGenerator>()
 
                 .AddRuleBasedSlotting()
                 .AddAppworksServices()

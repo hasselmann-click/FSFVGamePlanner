@@ -16,6 +16,7 @@
 		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 
 		<ApplicationIcon>Images/fsfv-logo.ico</ApplicationIcon>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<Target Name="RemoveFoldersWithMuiFiles" AfterTargets="Build">
@@ -64,7 +65,7 @@
 
 	<ItemGroup>
 		<None Update="appsettings.prod.json">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

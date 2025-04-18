@@ -27,7 +27,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         return true;
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public static class FileNamePrefixes
     {
@@ -62,7 +62,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         Dispatcher = dispatcher;
     }
 
-    private StorageFile gameplanFile;
+    private StorageFile? gameplanFile;
     private StorageFolder workDir;
 
     private bool generateFixtursButton_IsEnabled;
@@ -90,11 +90,11 @@ public partial class MainPageViewModel : INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FolderReload_IsEnabled)));
         }
     }
-    public string WorkDirPath => WorkDir?.Path;
+    public string WorkDirPath => WorkDir.Path;
     public bool FolderReload_IsEnabled => WorkDir != null;
 
     #region Gameplan
-    public StorageFile GameplanFile
+    public StorageFile? GameplanFile
     {
         get => gameplanFile;
         set
@@ -121,7 +121,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
     #region RNG
     public int RngSeed { get => rngSeed; set => SetProperty(ref rngSeed, value); }
-    public StorageFile RngSeedFile { get; internal set; }
+    public StorageFile? RngSeedFile { get; internal set; }
     #endregion
 
     #region buttons
@@ -160,13 +160,13 @@ public partial class MainPageViewModel : INotifyPropertyChanged
 
     #region Migrations
 
-    private StorageFile migrationFile;
+    private StorageFile? migrationFile;
     private bool runMigrationsButton_IsRunning;
     private bool runMigrationsButton_HasRun;
 
     public bool HasMigrationFile => migrationFile != null;
     public bool NotHasMigrationFile => !HasMigrationFile;
-    public string MigrationFileName => migrationFile?.Name;
+    public string? MigrationFileName => migrationFile?.Name;
     public bool RunMigrationsButton_IsEnabled => HasMigrationFile;
 
     public bool RunMigrationsButton_IsRunning
@@ -181,7 +181,7 @@ public partial class MainPageViewModel : INotifyPropertyChanged
         set => SetProperty(ref runMigrationsButton_HasRun, value);
     }
 
-    public StorageFile MigrationFile
+    public StorageFile? MigrationFile
     {
         get => migrationFile;
         set

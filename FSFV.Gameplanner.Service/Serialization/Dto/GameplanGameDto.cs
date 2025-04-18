@@ -16,7 +16,7 @@ public class GameplanGameDto
     public TimeOnly EndTime { get; set; }
     public string Home { get; set; }
     public string Away { get; set; }
-    public string Referee { get; set; }
+    public string? Referee { get; set; }
     public string Group { get; set; }
     public string League { get; set; }
 

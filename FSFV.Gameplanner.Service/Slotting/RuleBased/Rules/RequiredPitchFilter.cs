@@ -54,12 +54,12 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
                 .Select(g => (g.Group.Type.MinDurationMinutes, g.Group.Type.ParallelGamesPerPitch))
                 .First();
             var minRequiredTime = TimeSpan.FromMinutes(Math.Ceiling(leagueGames.Count / (double)parallelFactor) * minDuration);
-            if (pitch.NextStartTime <= (pitch.EndTime - TimeOnly.FromTimeSpan(minRequiredTime.Add(maxMinDurationAtGameDay))))
+            if (pitch.NextStartTime <= (pitch.EndTime.Add(minRequiredTime.Add(maxMinDurationAtGameDay).Negate())))
             {
                 continue;
             }
 
-            return league.ToList();
+            return [.. league];
         }
 
         // return games from leagues that don't have a required pitch or if this pitch is the required pitch 

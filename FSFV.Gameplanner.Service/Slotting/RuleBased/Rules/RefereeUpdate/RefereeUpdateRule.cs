@@ -13,7 +13,8 @@ internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger
     // TOOD read from config
     private static readonly TimeSpan MaxBreak = TimeSpan.FromMinutes(30);
 
-    private readonly Dictionary<string, RefereeUpdateGroupConfig> configs = configuration.GetSection(ConfigKey).Get<Dictionary<string, RefereeUpdateGroupConfig>>();
+    private readonly Dictionary<string, RefereeUpdateGroupConfig> configs 
+        = configuration.GetSection(ConfigKey).Get<Dictionary<string, RefereeUpdateGroupConfig>>() ?? [];
 
     public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {

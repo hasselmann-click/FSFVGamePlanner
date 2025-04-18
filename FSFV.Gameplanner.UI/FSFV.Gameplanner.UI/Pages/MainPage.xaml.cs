@@ -31,11 +31,14 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Search;
+using static FSFV.Gameplanner.UI.Pages.MainPageViewModel;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace FSFV.Gameplanner.UI.Pages;
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 /// <summary>
 /// An empty page that can be used on its own or navigated to within a Frame.
@@ -80,8 +83,8 @@ public sealed partial class MainPage : Page
     }
 
     #region Folder Picker
-    private StorageFileQueryResult query = null;
-    private Timer folderContentsChangedThrottleTimer = null;
+    private StorageFileQueryResult? query = null;
+    private Timer? folderContentsChangedThrottleTimer = null;
 
     private async void FolderPicker_Click(object sender, RoutedEventArgs e)
     {
@@ -123,7 +126,7 @@ public sealed partial class MainPage : Page
         OnFolderPicked?.Invoke(files);
     }
 
-    private void OnFolderContentChanged(IStorageQueryResultBase sender, object args)
+    private void OnFolderContentChanged(IStorageQueryResultBase sender, object? args)
     {
         if (folderContentsChangedThrottleTimer != null)
         {
@@ -155,6 +158,7 @@ public sealed partial class MainPage : Page
         if (pitchesFile != null)
         {
             var record = ViewModel.ConfigFileRecords.FirstOrDefault(r => r.PreviewDisplayName == MainPageViewModel.FileNamePrefixes.DisplayNames.Pitches);
+
             record.IsFound = true;
             record.File = pitchesFile;
         }
@@ -299,7 +303,7 @@ public sealed partial class MainPage : Page
         var groupTypesTask = serializer.ParseGroupTypesAsync(() => leagueConfigs.OpenStreamForReadAsync());
         // parse target rules
         var targetRuleConfigs = ViewModel.ConfigFileRecords.FirstOrDefault(r => r.File?.Name.StartsWith(MainPageViewModel.FileNamePrefixes.TargetRuleConfigs) ?? false)?.File;
-        Task<List<TargetStateRuleConfiguration>> targetRuleTask = null;
+        Task<List<TargetStateRuleConfiguration>>? targetRuleTask = null;
         if (targetRuleConfigs != null)
         {
             targetRuleTask = serializer.ParseTargetRuleConfigs(() => targetRuleConfigs.OpenStreamForReadAsync());
@@ -397,12 +401,12 @@ public sealed partial class MainPage : Page
         var serializerService = App.Current.Services.GetRequiredService<CsvSerializerService>();
 
         var gamePlanTask = serializerService.ParseGameplanAsync(() => ViewModel.GameplanFile.OpenStreamForReadAsync());
-        var migrationsTask = serializerService.ParseMigrationsAsync(() => ViewModel.MigrationFile.OpenStreamForReadAsync());
+        var migrationsTask = CsvSerializerService.ParseMigrationsAsync(() => ViewModel.MigrationFile.OpenStreamForReadAsync());
         await Task.WhenAll(migrationsTask, gamePlanTask);
 
         var updatedGamePlan = await migrationService.RunMigrations(migrationsTask.Result, gamePlanTask.Result);
         using var writeStream = await ViewModel.GameplanFile.OpenStreamForWriteAsync();
-        await serializerService.WriteCsvGameplanAsync(writeStream, updatedGamePlan);
+        await CsvSerializerService.WriteCsvGameplanAsync(writeStream, updatedGamePlan);
     }
 
     #endregion
@@ -744,7 +748,9 @@ public sealed partial class MainPage : Page
     {
         // Local functions faster than lambda: https://stackoverflow.com/questions/40943117/local-function-vs-lambda-c-sharp-7-0
         Task<Stream> gamePlanStream() => ViewModel.GameplanFile.OpenStreamForReadAsync();
-        Task<Stream> holidaysStream() => ViewModel.PdfGenerationFiles.FirstOrDefault(f => f.IsFound)?.File.OpenStreamForReadAsync();
+        Task<Stream?>? holidaysStream() => ViewModel.PdfGenerationFiles.FirstOrDefault(f => f.IsFound
+                && f.File.Name.StartsWith(MainPageViewModel.FileNamePrefixes.PdfGenerationHolidays)
+            )?.File.OpenStreamForReadAsync();
 
         var outputFile = await ViewModel.WorkDir.CreateFileAsync("Spielplan.pdf", CreationCollisionOption.ReplaceExisting);
         Task<Stream> outputStream() => outputFile.OpenStreamForWriteAsync();
@@ -758,4 +764,6 @@ public sealed partial class MainPage : Page
         OpenGameplanButton_Click(sender, e);
     }
     #endregion
+
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 }

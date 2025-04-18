@@ -15,7 +15,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    private Action<IContainer> ComposeHeader(string title)
+    private static Action<IContainer> ComposeHeader(string title)
     {
         return c => c
             .PaddingVertical(5)
@@ -28,7 +28,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
             });
     }
 
-    private Action<IContainer> ComposeFooter(string title)
+    private static Action<IContainer> ComposeFooter(string title)
     {
         return c => c
             .PaddingVertical(10)
@@ -42,7 +42,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
     }
 
     public async Task GenerateAsync(Func<Task<Stream>> writeStreamProvider,
-        Func<Task<Stream>> gameplanCsvStream, Func<Task<Stream>>? holidaysStream = null, bool showDocument = false)
+        Func<Task<Stream>> gameplanCsvStream, Func<Task<Stream?>?>? holidaysStream = null, bool showDocument = false)
     {
         var games = await serializer.ParseGameplanAsync(gameplanCsvStream);
         var gamesPerDay = games.GroupBy(x => x.Date).OrderBy(x => x.Key).ToList();

@@ -2,6 +2,7 @@
 using FSFV.Gameplanner.Service.Serialization;
 using FSFV.Gameplanner.Service.Serialization.Dto;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace FSFV.Gameplanner.Appworks;
 public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksMappingImporter importer)
@@ -73,10 +74,14 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
     /// <param name="tournament"></param>
     private void UpdateTeamMappings(AppworksIdMappings origMappings, List<GameplanGameDto> gamePlan, string tournament)
     {
-        var teams = gamePlan.Where(g => g.League == tournament).SelectMany(x => new[] { x.Home, x.Away, x.Referee }).Distinct().Where(team => !string.IsNullOrEmpty(team)).ToList();
+        var teams = gamePlan.Where(g => g.League == tournament)
+                            .SelectMany(x => new[] { x.Home, x.Away, x.Referee })
+                            .Distinct()
+                            .Where(team => !string.IsNullOrEmpty(team))
+                            .ToList();
         foreach (var team in teams)
         {
-            if (origMappings.Teams.ContainsKey(team))
+            if (origMappings.Teams.ContainsKey(team!))
             {
                 continue;
             }
