@@ -54,7 +54,14 @@ namespace FSFV.Gameplanner.UI
             // Handle unhandled exceptions
             Application.Current.UnhandledException += (sender, e) =>
             {
-                logger.LogError(e.Exception, "Unhandled exception occurred");
+                logger.LogError(e.Exception, "Unexpected exception occurred");
+                var inner = e.Exception.InnerException;
+                while (inner != null)
+                {
+                    logger.LogError("{innerMessage}", inner.Message);
+                    inner = inner.InnerException;
+                }
+
                 e.Handled = true; // Set this to true to prevent the exception from crashing the app
             };
 

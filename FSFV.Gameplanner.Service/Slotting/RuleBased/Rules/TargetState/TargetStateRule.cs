@@ -153,7 +153,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
                 .Where(p => round == null || round == p.GameDay)
                 .Where(p => date == null || date == p.Date)
                 .SelectMany(p => p.Slots)
-                .Where(s => s.StartTime.AddMinutes(bufferMinutes).CompareTo(time?.ToTimeSpan()) >= 0)
+                .Where(s => s.StartTime.AddMinutes(bufferMinutes).CompareTo(time) >= 0)
                 .ToList()
                 ;
             if (slots.Count == 0)
@@ -165,7 +165,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
             // update start time with the given rule time and update the subsequent slots
             var endTime = slots.Last().EndTime;
             var first = slots.First();
-            first.StartTime = first.StartTime.Add(aTime!.Value.ToTimeSpan());
+            first.StartTime = aTime!.Value;
             first.EndTime = first.StartTime.AddMinutes(first.Game.Group.Type.MinDurationMinutes);
 
             int parallelGames = 1;
