@@ -49,7 +49,8 @@ public class AppworksMappingFileImporter(ILogger<AppworksMappingFileImporter> lo
                 continue;
             }
 
-            if(!int.TryParse(firstColumn, out int id)) { 
+            if (!int.TryParse(firstColumn, out int id))
+            {
                 logger.LogDebug("Skipping what appears to be a header row: {row}", string.Join(",", csv.Parser.RawRecord));
                 continue;
             }
@@ -60,16 +61,17 @@ public class AppworksMappingFileImporter(ILogger<AppworksMappingFileImporter> lo
             switch (section)
             {
                 case "Divisions":
-                    divisions[name] = id;
+                    divisions.Add(name, id);
                     break;
                 case "Matchdays":
-                    matchdays[DateOnly.Parse(name).ToString(IAppworksMappingImporter.MatchdayDateFormat)] = id;
+                    var nameDate = DateOnly.Parse(name).ToString(IAppworksMappingImporter.MatchdayDateFormat);
+                    matchdays.Add(nameDate, id);
                     break;
                 case "Locations":
-                    locations[name] = id;
+                    locations.Add(name, id);
                     break;
                 case "Teams":
-                    teams[name] = id;
+                    teams.Add(name, id);
                     break;
             }
         }
