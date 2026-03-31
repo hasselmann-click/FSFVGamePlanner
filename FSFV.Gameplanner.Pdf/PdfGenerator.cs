@@ -44,13 +44,54 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
     public async Task GenerateAsync(Func<Task<Stream>> writeStreamProvider,
         Func<Task<Stream>> gameplanCsvStream, Func<Task<Stream?>?>? holidaysStream = null, bool showDocument = false)
     {
-        var games = await serializer.ParseGameplanAsync(gameplanCsvStream);
+        await using var writeStream = await writeStreamProvider();
+        await using var gameplanStream = await gameplanCsvStream();
+
+        Stream? holidays = null;
+        if (holidaysStream is not null)
+        {
+            var holidaysTask = holidaysStream();
+            if (holidaysTask is not null)
+            {
+                holidays = await holidaysTask;
+            }
+        }
+
+        try
+        {
+            await GenerateAsync(writeStream, gameplanStream, holidays, showDocument);
+        }
+        finally
+        {
+            if (holidays is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync();
+            }
+            else
+            {
+                holidays?.Dispose();
+            }
+        }
+    }
+
+    // This overload intentionally does not dispose caller-owned streams.
+    public async Task GenerateAsync(Stream writeStream,
+        Stream gameplanCsvStream, Stream? holidaysStream = null, bool showDocument = false)
+    {
+        var gameplanCsvCopy = new MemoryStream();
+        await gameplanCsvStream.CopyToAsync(gameplanCsvCopy);
+        gameplanCsvCopy.Position = 0;
+
+        var games = await serializer.ParseGameplanAsync(() => Task.FromResult<Stream>(gameplanCsvCopy));
         var gamesPerDay = games.GroupBy(x => x.Date).OrderBy(x => x.Key).ToList();
 
         Dictionary<DateOnly, string>? holidays = null;
         if (holidaysStream is not null)
         {
-            holidays = await serializer.ParseHolidaysAsync(holidaysStream);
+            var holidaysCopy = new MemoryStream();
+            await holidaysStream.CopyToAsync(holidaysCopy);
+            holidaysCopy.Position = 0;
+            holidays = await serializer.ParseHolidaysAsync(() => Task.FromResult<Stream?>(holidaysCopy));
         }
 
         var document = Document.Create(container =>
@@ -74,8 +115,6 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         });
 
         if (showDocument) { document.ShowInPreviewer(); }
-
-        await using var writeStream = await writeStreamProvider();
         document.GeneratePdf(writeStream);
     }
 
