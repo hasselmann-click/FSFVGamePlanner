@@ -219,9 +219,13 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
         };
-        await using var csvWriter = new CsvWriter(new StreamWriter(writeStream, DefaultEncoding), config);
+
+        // Keep caller-owned streams open so this overload can be used with MemoryStream and other in-memory buffers.
+        using var streamWriter = new StreamWriter(writeStream, DefaultEncoding, leaveOpen: true);
+        using var csvWriter = new CsvWriter(streamWriter, config);
         csvWriter.WriteHeader<GameplanGameDto>();
         await csvWriter.WriteRecordsAsync(dtos);
+        await streamWriter.FlushAsync();
     }
 
     public async Task WriteCsvGameplanAsync(Func<Task<Stream>> writeStreamProvider, List<GameDay> gameDays, string dateFormat = DateFormat)
