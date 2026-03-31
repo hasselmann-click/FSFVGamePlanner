@@ -224,6 +224,7 @@ public partial class CsvSerializerService(ILogger<CsvSerializerService> logger)
         using var streamWriter = new StreamWriter(writeStream, DefaultEncoding, leaveOpen: true);
         using var csvWriter = new CsvWriter(streamWriter, config);
         csvWriter.WriteHeader<GameplanGameDto>();
+        await csvWriter.NextRecordAsync();
         await csvWriter.WriteRecordsAsync(dtos);
         await streamWriter.FlushAsync();
     }

@@ -121,14 +121,43 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
 
         try
         {
-            document.GeneratePdf(writeStream);
+            // Use the byte[] overload so QuestPDF manages its own internal stream rather than
+            // wrapping our MemoryStream in a native SkWriteStream. The native stream wrapper in
+            // QuestPDF 2024.3.x can put the PDF document into an invalid state when a managed
+            // MemoryStream is passed directly, causing SkDocument.BeginPage to return null.
+            var pdfBytes = document.GeneratePdf();
+            await writeStream.WriteAsync(pdfBytes);
         }
-        catch (QuestPDF.Drawing.Exceptions.InitializationException ex)
+        catch (QuestPDF.Drawing.Exceptions.DocumentDrawingException ex)
+            when (TryGetInitializationException(ex, out var initializationException))
         {
             var diagnosticMessage = BuildNativeRenderDiagnostics();
-            logger.LogError(ex, "QuestPDF native initialization failed. {Diagnostics}", diagnosticMessage);
-            throw new InvalidOperationException($"PDF rendering failed due to native renderer initialization. {diagnosticMessage}", ex);
+            logger.LogError(initializationException,
+                "QuestPDF native initialization failed. {Diagnostics}",
+                diagnosticMessage);
+
+            throw new InvalidOperationException(
+                $"PDF rendering failed due to native renderer initialization. {diagnosticMessage}",
+                ex);
         }
+    }
+
+    private static bool TryGetInitializationException(Exception ex, out QuestPDF.Drawing.Exceptions.InitializationException? initializationException)
+    {
+        var current = ex;
+        while (current is not null)
+        {
+            if (current is QuestPDF.Drawing.Exceptions.InitializationException initEx)
+            {
+                initializationException = initEx;
+                return true;
+            }
+
+            current = current.InnerException!;
+        }
+
+        initializationException = null;
+        return false;
     }
 
     private static string BuildNativeRenderDiagnostics()
@@ -138,9 +167,41 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         var os = RuntimeInformation.OSDescription;
         var processArch = RuntimeInformation.ProcessArchitecture;
         var osArch = RuntimeInformation.OSArchitecture;
-        var nativePath = Path.Combine(runtimePath, "runtimes", "win-x64", "native", "QuestPdfSkia.dll");
+        var nativeRelativePath = GetNativeSkiaRelativePath();
+        var nativePath = Path.Combine(runtimePath, nativeRelativePath);
 
-        return $"RID={runtimeId}, OS={os}, ProcessArch={processArch}, OSArch={osArch}, BaseDir={runtimePath}, WinNativeExists={File.Exists(nativePath)}";
+        return $"RID={runtimeId}, OS={os}, ProcessArch={processArch}, OSArch={osArch}, BaseDir={runtimePath}, NativeRelativePath={nativeRelativePath}, NativeExists={File.Exists(nativePath)}";
+    }
+
+    private static string GetNativeSkiaRelativePath()
+    {
+        var ridPart = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? $"win-{ToRidArch(RuntimeInformation.ProcessArchitecture)}"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? $"linux-{ToRidArch(RuntimeInformation.ProcessArchitecture)}"
+                : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                    ? $"osx-{ToRidArch(RuntimeInformation.ProcessArchitecture)}"
+                    : "unknown";
+
+        var fileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "QuestPdfSkia.dll"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? "libQuestPdfSkia.so"
+                : "libQuestPdfSkia.dylib";
+
+        return Path.Combine("runtimes", ridPart, "native", fileName);
+    }
+
+    private static string ToRidArch(Architecture architecture)
+    {
+        return architecture switch
+        {
+            Architecture.X64 => "x64",
+            Architecture.Arm64 => "arm64",
+            Architecture.X86 => "x86",
+            Architecture.Arm => "arm",
+            _ => architecture.ToString().ToLowerInvariant()
+        };
     }
 
     private Action<PageDescriptor> ComposePageGameDay(IGrouping<DateOnly, GameplanGameDto> gameDay)
