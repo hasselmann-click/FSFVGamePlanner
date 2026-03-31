@@ -2,13 +2,16 @@
 using FSFV.Gameplanner.Service.Serialization.Dto;
 using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
+using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
+using System.Runtime.InteropServices;
 
 namespace FSFV.Gameplanner.Pdf;
 
 public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSerializerService serializer)
 {
+    private const string DefaultLeagueColorKey = "Default";
 
     static PdfGenerator()
     {
@@ -78,7 +81,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
     public async Task GenerateAsync(Stream writeStream,
         Stream gameplanCsvStream, Stream? holidaysStream = null, bool showDocument = false)
     {
-        var gameplanCsvCopy = new MemoryStream();
+        await using var gameplanCsvCopy = new MemoryStream();
         await gameplanCsvStream.CopyToAsync(gameplanCsvCopy);
         gameplanCsvCopy.Position = 0;
 
@@ -88,7 +91,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         Dictionary<DateOnly, string>? holidays = null;
         if (holidaysStream is not null)
         {
-            var holidaysCopy = new MemoryStream();
+            await using var holidaysCopy = new MemoryStream();
             await holidaysStream.CopyToAsync(holidaysCopy);
             holidaysCopy.Position = 0;
             holidays = await serializer.ParseHolidaysAsync(() => Task.FromResult<Stream?>(holidaysCopy));
@@ -115,7 +118,29 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         });
 
         if (showDocument) { document.ShowInPreviewer(); }
-        document.GeneratePdf(writeStream);
+
+        try
+        {
+            document.GeneratePdf(writeStream);
+        }
+        catch (QuestPDF.Drawing.Exceptions.InitializationException ex)
+        {
+            var diagnosticMessage = BuildNativeRenderDiagnostics();
+            logger.LogError(ex, "QuestPDF native initialization failed. {Diagnostics}", diagnosticMessage);
+            throw new InvalidOperationException($"PDF rendering failed due to native renderer initialization. {diagnosticMessage}", ex);
+        }
+    }
+
+    private static string BuildNativeRenderDiagnostics()
+    {
+        var runtimePath = AppContext.BaseDirectory;
+        var runtimeId = RuntimeInformation.RuntimeIdentifier;
+        var os = RuntimeInformation.OSDescription;
+        var processArch = RuntimeInformation.ProcessArchitecture;
+        var osArch = RuntimeInformation.OSArchitecture;
+        var nativePath = Path.Combine(runtimePath, "runtimes", "win-x64", "native", "QuestPdfSkia.dll");
+
+        return $"RID={runtimeId}, OS={os}, ProcessArch={processArch}, OSArch={osArch}, BaseDir={runtimePath}, WinNativeExists={File.Exists(nativePath)}";
     }
 
     private Action<PageDescriptor> ComposePageGameDay(IGrouping<DateOnly, GameplanGameDto> gameDay)
@@ -151,10 +176,10 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
                     foreach (var game in gameDay.OrderBy(x => x.StartTime))
                     {
 
-                        if (!config.LeagueColors.TryGetValue(game.League, out var color))
+                        if (!TryResolveLeagueColor(game.League, out var color))
                         {
-                            logger.LogWarning("No color defined for league {League}. Using default color.", game.League);
-                            color = config.LeagueColors["Default"];
+                            logger.LogWarning("No usable color defined for league {League}. Falling back to QuestPDF default row color.", game.League);
+                            color = Colors.White;
                         }
                         t.Cell().RowContainer(row, color);
 
@@ -228,5 +253,20 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         t.Cell().Row(row).Column(5).LabelCell("SCHIRI");
         t.Cell().Row(row).Column(6).LabelCell("GRUPPE");
         t.Cell().Row(row).Column(7).LabelCell("LIGA");
+    }
+
+    private bool TryResolveLeagueColor(string league, out Color color)
+    {
+        if (config.LeagueColors.TryGetValue(league, out color))
+        {
+            return true;
+        }
+
+        if (config.LeagueColors.TryGetValue(DefaultLeagueColorKey, out color))
+        {
+            return true;
+        }
+
+        return false;
     }
 }
