@@ -32,4 +32,5 @@ var transformedRecordsByTournament = await transformer.Transform(gamePlan, tourn
 
 // Write the transformed records to the output file
 var serializer = serviceProvider.GetRequiredService<AppworksSerializer>();
-await serializer.WriteCsvImportFile(() => Task.FromResult((Stream)new FileStream(outputFilePath, FileMode.Create)), transformedRecordsByTournament[tournament]);
+await using var outputFileStream = new FileStream(outputFilePath, FileMode.Create);
+await serializer.WriteCsvImportFile(outputFileStream, transformedRecordsByTournament[tournament]);

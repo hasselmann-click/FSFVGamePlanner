@@ -2,5 +2,5 @@
 
 public interface IAppworksSerializer
 {
-    Task WriteCsvImportFile(Func<Task<Stream>> writeStreamProvider, List<AppworksImportRecord> records);
+    Task WriteCsvImportFile(Stream writeStream, List<AppworksImportRecord> records);
 }

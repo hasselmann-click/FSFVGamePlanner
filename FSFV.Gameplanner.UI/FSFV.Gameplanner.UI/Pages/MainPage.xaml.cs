@@ -688,7 +688,8 @@ public sealed partial class MainPage : Page
             var importFile = await ViewModel.WorkDir.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting);
 
             var serializer = services.GetRequiredService<IAppworksSerializer>();
-            await serializer.WriteCsvImportFile(importFile.OpenStreamForWriteAsync, transformedRecordsByTournament[tournament]);
+            await using var importStream = await importFile.OpenStreamForWriteAsync();
+            await serializer.WriteCsvImportFile(importStream, transformedRecordsByTournament[tournament]);
         }
     }
 

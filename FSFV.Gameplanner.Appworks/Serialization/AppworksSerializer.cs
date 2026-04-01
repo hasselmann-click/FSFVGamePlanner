@@ -7,14 +7,12 @@ namespace FSFV.Gameplanner.Appworks.Serialization;
 public class AppworksSerializer(ILogger<AppworksSerializer> logger) : IAppworksSerializer
 {
 
-    public async Task WriteCsvImportFile(Func<Task<Stream>> writeStreamProvider, List<AppworksImportRecord> records)
+    public Task WriteCsvImportFile(Stream writeStream, List<AppworksImportRecord> records)
     {
-        // write records to csv using the stream provider
-        await using var stream = await writeStreamProvider();
-        using var writer = new StreamWriter(stream);
+        using var writer = new StreamWriter(writeStream, leaveOpen: true);
         using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
-        if (stream is FileStream fs)
+        if (writeStream is FileStream fs)
         {
             logger.LogInformation("Writing to file {FileName}", fs.Name);
         }
@@ -23,6 +21,8 @@ public class AppworksSerializer(ILogger<AppworksSerializer> logger) : IAppworksS
         csv.Context.TypeConverterOptionsCache.AddOptions<DateTime>(options);
 
         csv.WriteRecords(records);
+        writer.Flush();
+        return Task.CompletedTask;
     }
 
 }
