@@ -38,7 +38,13 @@ internal class ZkStartAndEndFilter(
         void l_HandleZkStart(List<Pitch> pitches)
         {
             var earliestStartTime = pitches.Select(x => x.StartTime).Min();
-            var earlyPitches = pitches.Where(p => p.StartTime == earliestStartTime && p.Games.Count != 0);
+            var earlyPitches = pitches.Where(p => p.StartTime == earliestStartTime && p.Games.Count != 0).ToList();
+            if (earlyPitches.Count == 0)
+            {
+                logger.LogWarning("ZK Start: No scheduled games found on earliest-start pitches for game day {day}", pitches.First().GameDay);
+                return;
+            }
+
             var zkStartingGame = earlyPitches.Select(p => p.Games.First()).FirstOrDefault(g => g.HasZk(currentZkTeams));
             if (zkStartingGame != null)
             {
@@ -80,7 +86,13 @@ internal class ZkStartAndEndFilter(
             // TODO: dont switch with first games for gamedays where there is only one ZK team present
 
             var latestEndTime = pitches.Select(p => p.EndTime).Max();
-            var latestPitches = pitches.Where(p => p.EndTime == latestEndTime && p.Games.Count != 0);
+            var latestPitches = pitches.Where(p => p.EndTime == latestEndTime && p.Games.Count != 0).ToList();
+            if (latestPitches.Count == 0)
+            {
+                logger.LogWarning("ZK End: No scheduled games found on latest-ending pitches for game day {day}", pitches.First().GameDay);
+                return;
+            }
+
             var zkEndingGame = latestPitches.Select(p => p.Games.Last()).FirstOrDefault(g => g.HasZk(currentZkTeams));
 
             if (zkEndingGame != null)
