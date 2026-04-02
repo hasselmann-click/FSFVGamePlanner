@@ -8,6 +8,10 @@ internal abstract class AbstractSlotRule(int priority) : ISlotRule
 {
     public abstract IEnumerable<Game> Apply(SlottingContext context, Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches);
     public int GetPriority() => priority;
+
+    /// <inheritdoc />
+    public virtual IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
+        => [];
     public virtual void Update(SlottingContext context, Pitch pitch, Game game)
     {
         /* do nothing */

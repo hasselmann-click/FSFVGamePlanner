@@ -24,8 +24,11 @@ public static class ServiceCollectionExtension
             // Attention: Multiple sorts are kind of useless, because the last one will always win
             .AddSingleton<ISlotRule>(sp => ActivatorUtilities.CreateInstance<MorningAndEveningGamesSort>(sp, 50))
 
-            // Special update "rule"
-            .AddSingleton<ISlotRule>(sp => ActivatorUtilities.CreateInstance<RefereeUpdateRule>(sp, 1));
+                // Special update "rule"
+                .AddSingleton<ISlotRule>(sp => ActivatorUtilities.CreateInstance<RefereeUpdateRule>(sp, 1))
+
+                // Validation-only rule: no-op during generation, structural consistency checks during validation
+                .AddSingleton<ISlotRule>(new ConsistencyChecksRule(0));
         ;
     }
 }

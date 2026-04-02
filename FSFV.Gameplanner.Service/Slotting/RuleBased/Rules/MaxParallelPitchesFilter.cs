@@ -53,4 +53,44 @@ internal class MaxParallelPitchesFilter(int priority) : AbstractSlotRule(priorit
             currentParallelPitchesByLeague.Add(league, new HashSet<string>(maxParallelPitches) { pitch.Name });
         }
     }
+
+    public override IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
+        {
+            var byGameDay = pitches.GroupBy(p => p.GameDay);
+            foreach (var dayGroup in byGameDay)
+            {
+                var dayPitches = dayGroup.ToList();
+                var dayPitchCount = dayPitches.Count;
+
+                var restrictedLeagues = dayPitches
+                    .SelectMany(p => p.Slots)
+                    .Select(s => s.Game.Group.Type)
+                    .DistinctBy(t => t.Name)
+                    .Where(t => t.MaxParallelPitches > 0 && t.MaxParallelPitches < dayPitchCount)
+                    .ToDictionary(t => t.Name, t => t.MaxParallelPitches);
+
+                if (restrictedLeagues.Count == 0) continue;
+
+                var allSlots = dayPitches.SelectMany(p => p.Slots.Select(s => new { PitchName = p.Name, Slot = s }));
+                foreach (var timeGroup in allSlots.GroupBy(x => x.Slot.StartTime))
+                {
+                    foreach (var leagueGroup in timeGroup.GroupBy(x => x.Slot.Game.Group.Type.Name))
+                    {
+                        if (!restrictedLeagues.TryGetValue(leagueGroup.Key, out var maxParallel)) continue;
+
+                        var pitchesServingLeague = leagueGroup.Select(x => x.PitchName).Distinct().ToList();
+                        if (pitchesServingLeague.Count > maxParallel)
+                        {
+                            yield return new ValidationMessage(
+                                $"League '{leagueGroup.Key}' uses {pitchesServingLeague.Count} pitches simultaneously"
+                                    + $" at {timeGroup.Key:HH:mm} on game day {dayGroup.Key},"
+                                    + $" but maximum is {maxParallel}.",
+                                ValidationSeverity.Warning,
+                                Code: "MAX_PARALLEL_PITCHES_VIOLATION",
+                                GameDay: dayGroup.Key);
+                        }
+                    }
+                }
+            }
+        }
 }

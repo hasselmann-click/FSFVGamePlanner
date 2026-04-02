@@ -7,6 +7,11 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased;
 public interface ISlotRule
 {
     /// <summary>
+    /// Validates an already-scheduled gameplan against the rule's constraints.
+    /// Called during validation only; not invoked during normal generation.
+    /// </summary>
+    IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches);
+    /// <summary>
     /// Highest goes first.
     /// </summary>
     /// <returns></returns>

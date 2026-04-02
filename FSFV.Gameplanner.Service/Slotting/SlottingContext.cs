@@ -16,4 +16,10 @@ public class SlottingContext
     public TimeOnly? EveningSince { get; init; }
     public IReadOnlySet<string>? ZkTeams { get; init; }
     public IReadOnlyDictionary<string, RefereeUpdateGroupConfig>? RefereeUpdate { get; init; }
+
+    /// <summary>
+    /// Expected (homeId, awayId, groupId, gameDay) tuples. Only populated during validation;
+    /// null during normal generation. Used by <see cref="FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ConsistencyChecksRule"/>.
+    /// </summary>
+    public IReadOnlyList<(string HomeId, string AwayId, string GroupId, int GameDay)>? ExpectedFixtures { get; init; }
 }

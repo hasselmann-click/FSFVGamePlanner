@@ -128,4 +128,53 @@ internal class RefereeUpdateRule(
             }
         }
     }
+
+    public override IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
+        {
+            var configs = context.RefereeUpdate?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+                ?? new Dictionary<string, RefereeUpdateGroupConfig>(defaultConfigs);
+
+            foreach (var pitch in pitches)
+            {
+                foreach (var slotGroup in pitch.Slots.GroupBy(s => s.Game.Group.Type.Name))
+                {
+                    if (!configs.TryGetValue(slotGroup.Key, out var config)) continue;
+                    if (!config.HasReferees) continue;
+                    if (pitch.GameDay == 1 && config.SkipRefereeOnFirstDay) continue;
+
+                    foreach (var slot in slotGroup)
+                    {
+                        if (slot.Game.Referee == null)
+                        {
+                            yield return new ValidationMessage(
+                                $"Game {slot.Game.Home.Name} vs {slot.Game.Away.Name}"
+                                    + $" (league '{slotGroup.Key}') on game day {pitch.GameDay} is missing a referee.",
+                                ValidationSeverity.Warning,
+                                Code: "MISSING_REFEREE",
+                                GameDay: pitch.GameDay,
+                                PitchName: pitch.Name);
+                        }
+                        else
+                        {
+                            var refereeTeam = slot.Game.Referee.Name;
+                            var hasConflict = pitch.Slots
+                                .Where(s => s != slot)
+                                .Where(s => s.StartTime < slot.EndTime && slot.StartTime < s.EndTime)
+                                .Any(s => s.Game.Home.Name == refereeTeam || s.Game.Away.Name == refereeTeam);
+
+                            if (hasConflict)
+                            {
+                                yield return new ValidationMessage(
+                                    $"Referee '{refereeTeam}' is playing and refereeing simultaneously"
+                                        + $" on game day {pitch.GameDay} at {slot.StartTime:HH:mm} on pitch '{pitch.Name}'.",
+                                    ValidationSeverity.Warning,
+                                    Code: "REFEREE_CONFLICT",
+                                    GameDay: pitch.GameDay,
+                                    PitchName: pitch.Name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 }

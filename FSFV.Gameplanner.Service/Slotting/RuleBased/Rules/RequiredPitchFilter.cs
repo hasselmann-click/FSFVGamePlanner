@@ -68,4 +68,35 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
             !requiredPitchByLeague.TryGetValue(g.Group.Type.Name, out var requiredPitch)
                 || requiredPitch == pitch.Name);
     }
+
+    public override IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
+        {
+            var requiredPitchByLeague = pitches
+                .SelectMany(p => p.Slots)
+                .Select(s => s.Game.Group.Type)
+                .DistinctBy(t => t.Name)
+                .Where(t => !string.IsNullOrEmpty(t.RequiredPitchName))
+                .ToDictionary(t => t.Name, t => t.RequiredPitchName!);
+
+            if (requiredPitchByLeague.Count == 0) yield break;
+
+            foreach (var pitch in pitches)
+            {
+                foreach (var slot in pitch.Slots)
+                {
+                    var leagueName = slot.Game.Group.Type.Name;
+                    if (requiredPitchByLeague.TryGetValue(leagueName, out var requiredPitch)
+                        && pitch.Name != requiredPitch)
+                    {
+                        yield return new ValidationMessage(
+                            $"Game {slot.Game.Home.Name} vs {slot.Game.Away.Name} (league '{leagueName}')"
+                                + $" is on pitch '{pitch.Name}' but must be on pitch '{requiredPitch}'.",
+                            ValidationSeverity.Error,
+                            Code: "REQUIRED_PITCH_VIOLATION",
+                            GameDay: pitch.GameDay,
+                            PitchName: pitch.Name);
+                    }
+                }
+            }
+        }
 }

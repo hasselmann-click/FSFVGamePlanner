@@ -135,6 +135,91 @@ internal class TargetStateRule(int priority, ILogger<TargetStateRule> logger) : 
         base.Update(context, pitch, game);
     }
 
+    public override IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
+    {
+        if (!Validate(context)) yield break;
+
+        var targetStateRules = context.TargetStateRules!;
+        var groupTypeConfigs = context.GroupTypeConfigs!;
+
+        foreach (var state in targetStateRules)
+        {
+            (var aTeam, var aTime, var aLeague) = state.Applicator;
+            (var _, var _, var _, var filterPitch) = state.Filter;
+
+            // Find pitches matching the filter's round / date
+            var matchingPitches = pitches.Where(p => ShouldApplyToday(p, state)).ToList();
+            if (matchingPitches.Count == 0) continue;
+
+            // Narrow to the filtered pitch name if specified
+            var filteredPitches = string.IsNullOrEmpty(filterPitch)
+                ? matchingPitches
+                : matchingPitches.Where(p => p.Name == filterPitch).ToList();
+
+            var allSlots = filteredPitches.SelectMany(p => p.Slots).ToList();
+            var gameDay = matchingPitches[0].GameDay;
+
+            // Validate team constraint
+            if (!string.IsNullOrEmpty(aTeam))
+            {
+                var teamSlots = allSlots.Where(s => HasTeam(s.Game, aTeam)).ToList();
+                if (teamSlots.Count == 0)
+                {
+                    yield return new ValidationMessage(
+                        $"Target state rule: team '{aTeam}' was expected on game day {gameDay}"
+                            + (string.IsNullOrEmpty(filterPitch) ? "" : $" on pitch '{filterPitch}'")
+                            + " but was not found in the scheduled gameplan.",
+                        ValidationSeverity.Warning,
+                        Code: "TARGET_STATE_TEAM_NOT_FOUND",
+                        GameDay: gameDay);
+                }
+                else if (aTime.HasValue)
+                {
+                    var earliest = teamSlots.Min(s => s.StartTime);
+                    if (earliest < aTime.Value)
+                    {
+                        yield return new ValidationMessage(
+                            $"Target state rule: team '{aTeam}' should start at or after {aTime.Value:HH:mm}"
+                                + $" on game day {gameDay} but starts at {earliest:HH:mm}.",
+                            ValidationSeverity.Warning,
+                            Code: "TARGET_STATE_TIME_MISMATCH",
+                            GameDay: gameDay);
+                    }
+                }
+            }
+
+            // Validate league constraint
+            if (!string.IsNullOrEmpty(aLeague))
+            {
+                var leagueSlots = allSlots.Where(s => HasLeague(s.Game, aLeague)).ToList();
+                if (leagueSlots.Count == 0)
+                {
+                    yield return new ValidationMessage(
+                        $"Target state rule: league '{aLeague}' was expected on game day {gameDay}"
+                            + (string.IsNullOrEmpty(filterPitch) ? "" : $" on pitch '{filterPitch}'")
+                            + " but was not found in the scheduled gameplan.",
+                        ValidationSeverity.Warning,
+                        Code: "TARGET_STATE_LEAGUE_NOT_FOUND",
+                        GameDay: gameDay);
+                }
+                else if (aTime.HasValue)
+                {
+                    var bufferMinutes = GetTimeBufferMinutes(groupTypeConfigs, state);
+                    var earliest = leagueSlots.Min(s => s.StartTime);
+                    if (earliest.AddMinutes(bufferMinutes) < aTime.Value)
+                    {
+                        yield return new ValidationMessage(
+                            $"Target state rule: league '{aLeague}' should start at or after {aTime.Value:HH:mm}"
+                                + $" on game day {gameDay} but starts at {earliest:HH:mm}.",
+                            ValidationSeverity.Warning,
+                            Code: "TARGET_STATE_TIME_MISMATCH",
+                            GameDay: gameDay);
+                    }
+                }
+            }
+        }
+    }
+
     public override void ProcessAfterGameday(SlottingContext context, List<Pitch> pitches)
     {
         if (!Validate(context)) return;
