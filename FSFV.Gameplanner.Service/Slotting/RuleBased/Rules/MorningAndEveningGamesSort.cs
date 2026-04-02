@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
+using FSFV.Gameplanner.Service.Slotting;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -12,18 +13,20 @@ internal class MorningAndEveningGamesSort(int priority, IConfiguration configura
     private readonly TimeOnly EveningSince = configuration.GetValue<TimeOnly>("Schedule:EveningSince");
     private readonly TimeOnly MorningUntil = configuration.GetValue<TimeOnly>("Schedule:MorningUntil");
 
-    public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
+    public override IEnumerable<Game> Apply(SlottingContext context, Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
+        var morningUntil = context.MorningUntil ?? MorningUntil;
+        var eveningSince = context.EveningSince ?? EveningSince;
         var currentSlot = pitch.NextStartTime;
 
         // is morning?
-        if (currentSlot <= MorningUntil)
+        if (currentSlot <= morningUntil)
         {
             return games.OrderBy(g => g.Home.MorningGames + g.Away.MorningGames);
         }
 
         // is evening?
-        if (currentSlot >= EveningSince)
+        if (currentSlot >= eveningSince)
         {
             return games.OrderBy(g => g.Home.EveningGames + g.Away.EveningGames);
         }
@@ -32,11 +35,14 @@ internal class MorningAndEveningGamesSort(int priority, IConfiguration configura
         return games.OrderByDescending(g => g.Home.EveningGames + g.Away.EveningGames);
     }
 
-    public override void ProcessAfterGameday(List<Pitch> pitches)
+    public override void ProcessAfterGameday(SlottingContext context, List<Pitch> pitches)
     {
+        var morningUntil = context.MorningUntil ?? MorningUntil;
+        var eveningSince = context.EveningSince ?? EveningSince;
+
         // update morning games
         pitches.SelectMany(p => p.Slots)
-            .Where(s => s.StartTime <= MorningUntil)
+            .Where(s => s.StartTime <= morningUntil)
             .SelectMany(s => new[] { s.Game.Home, s.Game.Away })
             .ToList()
             .ForEach(t =>
@@ -46,7 +52,7 @@ internal class MorningAndEveningGamesSort(int priority, IConfiguration configura
 
         // update evening games
         pitches.SelectMany(p => p.Slots)
-            .Where(s => s.StartTime >= EveningSince)
+            .Where(s => s.StartTime >= eveningSince)
             .SelectMany(s => new[] { s.Game.Home, s.Game.Away })
             .ToList()
             .ForEach(t =>

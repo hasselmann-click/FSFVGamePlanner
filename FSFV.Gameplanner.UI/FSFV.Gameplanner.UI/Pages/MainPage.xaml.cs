@@ -328,14 +328,13 @@ public sealed partial class MainPage : Page
             games = games.Except(spielfrei).ToList();
         }
 
-        // prepare target state rules
-        if (targetRuleConfigs != null)
-        {
-            var targetStateRuleConfigProvider = services.GetRequiredService<TargetStateRuleConfigurationProvider>();
-            var targetRules = await targetRuleTask;
-            targetStateRuleConfigProvider.GroupTypeConfigs = groupTypes;
-            targetStateRuleConfigProvider.RuleConfigs = targetRules;
-        }
+        var slottingContext = targetRuleConfigs is null
+            ? SlottingContext.Empty
+            : new SlottingContext
+            {
+                GroupTypeConfigs = groupTypes,
+                TargetStateRules = await targetRuleTask!
+            };
 
         // slot by gameday
         var slotService = services.GetRequiredService<ISlotService>();
@@ -347,7 +346,8 @@ public sealed partial class MainPage : Page
             List<Pitch> pitchesToSlot = [.. gameDayPitches.OrderBy(p => rng.NextInt64())];
             var slottedPitches = slotService.SlotGameDay(
                 pitchesToSlot,
-                games.Where(g => g.GameDay == gameDayPitches.Key).ToList()
+                games.Where(g => g.GameDay == gameDayPitches.Key).ToList(),
+                slottingContext
             );
             gameDays.Add(new GameDay
             {

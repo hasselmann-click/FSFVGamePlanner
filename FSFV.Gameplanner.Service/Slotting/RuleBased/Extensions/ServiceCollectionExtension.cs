@@ -13,7 +13,6 @@ public static class ServiceCollectionExtension
         return services
             .AddScoped<ISlotService, RuleBasedSlotService>()
 
-            .AddSingleton<TargetStateRuleConfigurationProvider>()
             .AddSingleton<ISlotRule>(sp => ActivatorUtilities.CreateInstance<TargetStateRule>(sp, 200_000))
 
             .AddSingleton<ISlotRule>(new RequiredPitchFilter(100_000))

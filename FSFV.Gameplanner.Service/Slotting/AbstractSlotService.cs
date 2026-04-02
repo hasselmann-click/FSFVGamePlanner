@@ -15,6 +15,6 @@ public abstract class AbstractSlotService(ILogger logger) : ISlotService
 
     protected ILogger Logger => logger;
 
-    public abstract List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games);
+    public abstract List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games, SlottingContext? context = null);
 
 }

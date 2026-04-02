@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
+using FSFV.Gameplanner.Service.Slotting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -7,23 +8,28 @@ using System.Linq;
 
 namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.RefereeUpdate;
 
-internal class RefereeUpdateRule(int priority, ILogger<RefereeUpdateRule> logger, IConfiguration configuration) : AbstractSlotRule(priority)
+internal class RefereeUpdateRule(
+    int priority,
+    ILogger<RefereeUpdateRule> logger,
+    IConfiguration configuration) : AbstractSlotRule(priority)
 {
     private const string ConfigKey = "RefereeUpdate";
     // TOOD read from config
     private static readonly TimeSpan MaxBreak = TimeSpan.FromMinutes(30);
 
-    private readonly Dictionary<string, RefereeUpdateGroupConfig> configs 
+    private readonly Dictionary<string, RefereeUpdateGroupConfig> defaultConfigs 
         = configuration.GetSection(ConfigKey).Get<Dictionary<string, RefereeUpdateGroupConfig>>() ?? [];
 
-    public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
+    public override IEnumerable<Game> Apply(SlottingContext context, Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
         // do nothing
         return games;
     }
 
-    public override void ProcessAfterGameday(List<Pitch> pitches)
+    public override void ProcessAfterGameday(SlottingContext context, List<Pitch> pitches)
     {
+        var configs = context.RefereeUpdate?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            ?? new Dictionary<string, RefereeUpdateGroupConfig>(defaultConfigs);
 
         // For every pitch group games by league (GroupType)
         foreach (var pitch in pitches)

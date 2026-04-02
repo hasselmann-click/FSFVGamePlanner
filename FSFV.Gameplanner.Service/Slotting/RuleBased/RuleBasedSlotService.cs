@@ -1,5 +1,6 @@
 ﻿using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Rng;
+using FSFV.Gameplanner.Service.Slotting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -27,9 +28,10 @@ public class RuleBasedSlotService : AbstractSlotService
         }
     }
 
-    public override List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games)
+    public override List<Pitch> SlotGameDay(List<Pitch> pitches, List<Game> games, SlottingContext? context = null)
     {
-        rules.ForEach(r => r.ProcessBeforeGameday(pitches, games));
+        var slottingContext = context ?? SlottingContext.Empty;
+        rules.ForEach(r => r.ProcessBeforeGameday(slottingContext, pitches, games));
 
         var gameDate = pitches.Select(p => new { p.GameDay, p.Date }).First();
         // vars for endless loop prevention
@@ -56,7 +58,7 @@ public class RuleBasedSlotService : AbstractSlotService
                 foreach (var rule in rules) // rules are ordered by their priority
                 {
                     logger.LogDebug("Applying rule {rule}", rule.GetType().Name);
-                    slotCandidates = rule.Apply(nextPitch, slotCandidates, pitches) ?? EmptyList;
+                    slotCandidates = rule.Apply(slottingContext, nextPitch, slotCandidates, pitches) ?? EmptyList;
                 }
                 if (!slotCandidates.Any())
                 {
@@ -74,7 +76,7 @@ public class RuleBasedSlotService : AbstractSlotService
                 }
 
                 // update rules
-                rules.ForEach(r => r.Update(nextPitch, scheduledGame));
+                rules.ForEach(r => r.Update(slottingContext, nextPitch, scheduledGame));
 
                 logger.LogTrace("Game order: {games}", string.Join(", ", games.Select(g => g.Group + ";" + g.Home?.Name ?? "kein")));
                 logger.LogTrace("Slotted game Home: {g}", scheduledGame.Home.Name);
@@ -110,7 +112,7 @@ public class RuleBasedSlotService : AbstractSlotService
         }
 
         BuildTimeSlots(pitches);
-        rules.ForEach(r => r.ProcessAfterGameday(pitches));
+        rules.ForEach(r => r.ProcessAfterGameday(slottingContext, pitches));
 
         return pitches;
     }

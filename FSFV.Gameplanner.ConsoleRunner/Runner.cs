@@ -76,7 +76,8 @@ public class Runner(IConfiguration configuration, ILogger<Runner> logger, ISlotS
         {
             var slottedPitches = slotService.SlotGameDay(
                 [.. gameDayPitches],
-                games.Where(g => g.GameDay == gameDayPitches.Key).ToList()
+                games.Where(g => g.GameDay == gameDayPitches.Key).ToList(),
+                SlottingContext.Empty
             );
             gameDays.Add(new GameDay
             {

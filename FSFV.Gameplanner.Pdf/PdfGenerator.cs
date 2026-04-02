@@ -45,7 +45,10 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
     }
 
     public async Task GenerateAsync(Func<Task<Stream>> writeStreamProvider,
-        Func<Task<Stream>> gameplanCsvStream, Func<Task<Stream?>?>? holidaysStream = null, bool showDocument = false)
+        Func<Task<Stream>> gameplanCsvStream,
+        Func<Task<Stream?>?>? holidaysStream = null,
+        PdfConfigOverride? configOverride = null,
+        bool showDocument = false)
     {
         await using var writeStream = await writeStreamProvider();
         await using var gameplanStream = await gameplanCsvStream();
@@ -62,7 +65,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
 
         try
         {
-            await GenerateAsync(writeStream, gameplanStream, holidays, showDocument);
+            await GenerateAsync(writeStream, gameplanStream, holidays, configOverride, showDocument);
         }
         finally
         {
@@ -79,7 +82,10 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
 
     // This overload intentionally does not dispose caller-owned streams.
     public async Task GenerateAsync(Stream writeStream,
-        Stream gameplanCsvStream, Stream? holidaysStream = null, bool showDocument = false)
+        Stream gameplanCsvStream,
+        Stream? holidaysStream = null,
+        PdfConfigOverride? configOverride = null,
+        bool showDocument = false)
     {
         await using var gameplanCsvCopy = new MemoryStream();
         await gameplanCsvStream.CopyToAsync(gameplanCsvCopy);
@@ -97,6 +103,8 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
             holidays = await serializer.ParseHolidaysAsync(() => Task.FromResult<Stream?>(holidaysCopy));
         }
 
+        var effectiveConfig = ResolveConfig(configOverride);
+
         var document = Document.Create(container =>
         {
             var nextHoliday = holidays?.OrderBy(x => x.Key).FirstOrDefault();
@@ -108,12 +116,12 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
                 {
                     var (key, value) = nextHoliday.Value;
                     // special day page, e.g. Pentecost Monday
-                    container.Page(ComposePageSpecialDays(key, value));
+                    container.Page(ComposePageSpecialDays(key, value, effectiveConfig));
                     nextHoliday = holidays!.OrderBy(x => x.Key).FirstOrDefault(x => x.Key.CompareTo(key) > 0);
                 }
 
                 // game day page
-                container.Page(ComposePageGameDay(gameDay));
+                container.Page(ComposePageGameDay(gameDay, effectiveConfig));
             }
         });
 
@@ -204,15 +212,15 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         };
     }
 
-    private Action<PageDescriptor> ComposePageGameDay(IGrouping<DateOnly, GameplanGameDto> gameDay)
+    private Action<PageDescriptor> ComposePageGameDay(IGrouping<DateOnly, GameplanGameDto> gameDay, PdfConfig activeConfig)
     {
         return page =>
         {
             // Set page styles
             page.PlanPageStyle();
             // Set page header and footer
-            page.Header().Element(ComposeHeader(config.HeaderTitle));
-            page.Footer().Element(ComposeFooter(gameDay.First().Date.ToString(config.FooterDateFormat)));
+            page.Header().Element(ComposeHeader(activeConfig.HeaderTitle));
+            page.Footer().Element(ComposeFooter(gameDay.First().Date.ToString(activeConfig.FooterDateFormat)));
 
             // set page content
             page.Content()
@@ -237,7 +245,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
                     foreach (var game in gameDay.OrderBy(x => x.StartTime))
                     {
 
-                        if (!TryResolveLeagueColor(game.League, out var color))
+                        if (!TryResolveLeagueColor(activeConfig, game.League, out var color))
                         {
                             logger.LogWarning("No usable color defined for league {League}. Falling back to QuestPDF default row color.", game.League);
                             color = Colors.White;
@@ -245,7 +253,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
                         t.Cell().RowContainer(row, color);
 
                         t.Cell().Row(row).Column(1).ValueCell().Text(game.Pitch);
-                        t.Cell().Row(row).Column(2).ValueCell().Text(game.StartTime.ToString(config.GameStartTimeFormat));
+                        t.Cell().Row(row).Column(2).ValueCell().Text(game.StartTime.ToString(activeConfig.GameStartTimeFormat));
                         t.Cell().Row(row).Column(3).ValueCell().Text(game.Home);
                         t.Cell().Row(row).Column(4).ValueCell().Text(game.Away);
                         t.Cell().Row(row).Column(5).ValueCell().Text(game.Referee ?? "");
@@ -257,15 +265,15 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         };
     }
 
-    private Action<PageDescriptor> ComposePageSpecialDays(DateOnly date, string title)
+    private Action<PageDescriptor> ComposePageSpecialDays(DateOnly date, string title, PdfConfig activeConfig)
     {
         return page =>
         {
             // Set page styles
             page.PlanPageStyle();
             // Set page header and footer
-            page.Header().Element(ComposeHeader(config.HeaderTitle));
-            page.Footer().Element(ComposeFooter(date.ToString(config.FooterDateFormat)));
+            page.Header().Element(ComposeHeader(activeConfig.HeaderTitle));
+            page.Footer().Element(ComposeFooter(date.ToString(activeConfig.FooterDateFormat)));
 
             // set page content
             page.Content()
@@ -316,18 +324,43 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         t.Cell().Row(row).Column(7).LabelCell("LIGA");
     }
 
-    private bool TryResolveLeagueColor(string league, out Color color)
+    private bool TryResolveLeagueColor(PdfConfig activeConfig, string league, out Color color)
     {
-        if (config.LeagueColors.TryGetValue(league, out color))
+        if (activeConfig.LeagueColors.TryGetValue(league, out color))
         {
             return true;
         }
 
-        if (config.LeagueColors.TryGetValue(DefaultLeagueColorKey, out color))
+        if (activeConfig.LeagueColors.TryGetValue(DefaultLeagueColorKey, out color))
         {
             return true;
         }
 
         return false;
+    }
+
+    private PdfConfig ResolveConfig(PdfConfigOverride? configOverride)
+    {
+        var effectiveLeagueColors = new Dictionary<string, Color>(config.LeagueColors, StringComparer.OrdinalIgnoreCase);
+        if (configOverride?.LeagueColors is not null)
+        {
+            foreach (var (league, hexColor) in configOverride.LeagueColors)
+            {
+                if (string.IsNullOrWhiteSpace(league) || string.IsNullOrWhiteSpace(hexColor))
+                {
+                    continue;
+                }
+
+                effectiveLeagueColors[league] = Color.FromHex(hexColor);
+            }
+        }
+
+        return new PdfConfig
+        {
+            HeaderTitle = string.IsNullOrWhiteSpace(configOverride?.HeaderTitle) ? config.HeaderTitle : configOverride.HeaderTitle,
+            LeagueColors = effectiveLeagueColors,
+            FooterDateFormat = string.IsNullOrWhiteSpace(configOverride?.FooterDateFormat) ? config.FooterDateFormat : configOverride.FooterDateFormat,
+            GameStartTimeFormat = string.IsNullOrWhiteSpace(configOverride?.GameStartTimeFormat) ? config.GameStartTimeFormat : configOverride.GameStartTimeFormat,
+        };
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
+using FSFV.Gameplanner.Service.Slotting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
     private TimeSpan maxMinDurationAtGameDay;
     private Dictionary<string, string> requiredPitchByLeague;
 
-    public override void ProcessBeforeGameday(List<Pitch> pitches, List<Game> games)
+    public override void ProcessBeforeGameday(SlottingContext context, List<Pitch> pitches, List<Game> games)
     {
         maxMinDurationAtGameDay = TimeSpan.FromMinutes(games.Select(g => g.Group.Type.MinDurationMinutes).Max());
         requiredPitchByLeague = games
@@ -20,7 +21,7 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
             .ToDictionary(t => t.Name, t => t.RequiredPitchName);
     }
 
-    public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
+    public override IEnumerable<Game> Apply(SlottingContext context, Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
         if (requiredPitchByLeague.Count == 0)
         {

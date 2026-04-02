@@ -1,24 +1,25 @@
 ﻿using FSFV.Gameplanner.Common;
 using FSFV.Gameplanner.Common.Dto;
+using FSFV.Gameplanner.Service.Slotting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.TargetState;
-internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvider targetStates, ILogger<TargetStateRule> logger) : AbstractSlotRule(priority)
+internal class TargetStateRule(int priority, ILogger<TargetStateRule> logger) : AbstractSlotRule(priority)
 {
 
     // TODO extract to interface
-    private bool Validate()
+    private bool Validate(SlottingContext context)
     {
-        if (targetStates.RuleConfigs is null)
+        if (context.TargetStateRules is null)
         {
             logger.LogDebug("No target state rules given. Add some via a target.*.csv file");
             return false;
         }
 
-        if (targetStates.GroupTypeConfigs is null)
+        if (context.GroupTypeConfigs is null)
         {
             throw new InvalidOperationException("Can not use target state rules without group type configs");
         }
@@ -26,16 +27,19 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
         return true;
     }
 
-    public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
+    public override IEnumerable<Game> Apply(SlottingContext context, Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
-        if (!Validate()) return games;
+        if (!Validate(context)) return games;
+
+        var targetStateRules = context.TargetStateRules!;
+        var groupTypeConfigs = context.GroupTypeConfigs!;
 
         IEnumerable<Game> nextGames = games.ToList();
-        foreach (var state in targetStates.RuleConfigs)
+        foreach (var state in targetStateRules)
         {
             if (!ShouldApplyToday(pitch, state)) continue;
 
-            var minDurationMinutes = GetTimeBufferMinutes(targetStates.GroupTypeConfigs, state);
+            var minDurationMinutes = GetTimeBufferMinutes(groupTypeConfigs, state);
             bool shouldApply = ShouldApplyNow(pitch, state, minDurationMinutes);
             logger.LogTrace("Apply rule {rule}: {apply}", state.Filter.ToString(), shouldApply);
 
@@ -77,7 +81,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
 
     }
 
-    private int GetTimeBufferMinutes(Dictionary<string, GroupTypeDto> groupTypeConfigs, TargetStateRuleConfiguration state)
+    private int GetTimeBufferMinutes(IReadOnlyDictionary<string, GroupTypeDto> groupTypeConfigs, TargetStateRuleConfiguration state)
     {
         (var _, var aTime, var aLeague) = state.Applicator;
         var minDurationMinutes = 0;
@@ -126,17 +130,20 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
         return shouldApply;
     }
 
-    public override void Update(Pitch pitch, Game game)
+    public override void Update(SlottingContext context, Pitch pitch, Game game)
     {
-        base.Update(pitch, game);
+        base.Update(context, pitch, game);
     }
 
-    public override void ProcessAfterGameday(List<Pitch> pitches)
+    public override void ProcessAfterGameday(SlottingContext context, List<Pitch> pitches)
     {
-        if (!Validate()) return;
+        if (!Validate(context)) return;
+
+        var targetStateRules = context.TargetStateRules!;
+        var groupTypeConfigs = context.GroupTypeConfigs!;
 
         // update the timeslot start time 
-        foreach (var state in targetStates.RuleConfigs.Where(ts => ts.Applicator.Time.HasValue))
+        foreach (var state in targetStateRules.Where(ts => ts.Applicator.Time.HasValue))
         {
 
             if (!ShouldApplyToday(pitches.First(), state))
@@ -147,7 +154,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
             (var round, var time, var date, var fPitch) = state.Filter;
             (var _, var aTime, var _) = state.Applicator;
 
-            var bufferMinutes = GetTimeBufferMinutes(targetStates.GroupTypeConfigs, state);
+            var bufferMinutes = GetTimeBufferMinutes(groupTypeConfigs, state);
             var slots = pitches
                 .Where(p => fPitch == null || fPitch == p.Name)
                 .Where(p => round == null || round == p.GameDay)
@@ -214,7 +221,7 @@ internal class TargetStateRule(int priority, TargetStateRuleConfigurationProvide
             slots[(j + 1)..].ForEach(s => s.StartTime = s.StartTime.Add(additionalBreak));
         }
 
-        base.ProcessAfterGameday(pitches);
+        base.ProcessAfterGameday(context, pitches);
     }
 
 }

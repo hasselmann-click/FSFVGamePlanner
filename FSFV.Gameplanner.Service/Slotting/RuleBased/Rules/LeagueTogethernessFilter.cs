@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
+using FSFV.Gameplanner.Service.Slotting;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +10,7 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 /// </summary>
 internal class LeagueTogethernessFilter(int priority) : AbstractSlotRule(priority)
 {
-    public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
+    public override IEnumerable<Game> Apply(SlottingContext context, Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
         if (pitch.Games.Count == 0)
             return games;

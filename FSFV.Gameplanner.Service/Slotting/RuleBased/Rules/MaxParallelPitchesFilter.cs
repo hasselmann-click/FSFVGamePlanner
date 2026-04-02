@@ -1,4 +1,5 @@
 ﻿using FSFV.Gameplanner.Common;
+using FSFV.Gameplanner.Service.Slotting;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,7 +11,7 @@ internal class MaxParallelPitchesFilter(int priority) : AbstractSlotRule(priorit
     private Dictionary<string, HashSet<string>> currentParallelPitchesByLeague;
     private HashSet<string> isMaxedOut;
 
-    public override void ProcessBeforeGameday(List<Pitch> pitches, List<Game> games)
+    public override void ProcessBeforeGameday(SlottingContext context, List<Pitch> pitches, List<Game> games)
     {
         maxParallelPitchesByLeague = games
             .Select(g => g.Group.Type)
@@ -21,7 +22,7 @@ internal class MaxParallelPitchesFilter(int priority) : AbstractSlotRule(priorit
         isMaxedOut = new HashSet<string>(maxParallelPitchesByLeague.Count);
     }
 
-    public override IEnumerable<Game> Apply(Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
+    public override IEnumerable<Game> Apply(SlottingContext context, Pitch pitch, IEnumerable<Game> games, List<Pitch> pitches)
     {
         // return games which are either not maxed out (yet) or playing on the pitch already
         // TODO: check if there is enough space left for the league to finish on the maximum number of pitches
@@ -31,7 +32,7 @@ internal class MaxParallelPitchesFilter(int priority) : AbstractSlotRule(priorit
             ;
     }
 
-    public override void Update(Pitch pitch, Game game)
+    public override void Update(SlottingContext context, Pitch pitch, Game game)
     {
         var league = game.Group.Type.Name;
         if (!maxParallelPitchesByLeague.TryGetValue(league, out var maxParallelPitches))
