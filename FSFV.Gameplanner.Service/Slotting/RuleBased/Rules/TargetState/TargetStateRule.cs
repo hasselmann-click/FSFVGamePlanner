@@ -123,7 +123,7 @@ internal class TargetStateRule(int priority, ILogger<TargetStateRule> logger) : 
 
         // target rules have to either apply directly or prevent games from being scheduled prematurely
         var shouldApply =
-            (string.IsNullOrEmpty(pitchFilter) || pitch.Name == pitchFilter)
+            (string.IsNullOrEmpty(pitchFilter) || GetPitchDisplayName(pitch) == pitchFilter)
             && (time == null ||
                 // next start time (+ buffer) is after the time filter
                 pitch.NextStartTime.AddMinutes(bufferMinutes).CompareTo(time) >= 0);
@@ -133,6 +133,13 @@ internal class TargetStateRule(int priority, ILogger<TargetStateRule> logger) : 
     public override void Update(SlottingContext context, Pitch pitch, Game game)
     {
         base.Update(context, pitch, game);
+    }
+
+    private static string GetPitchDisplayName(Pitch pitch)
+    {
+        return string.IsNullOrWhiteSpace(pitch.DisplayName)
+            ? pitch.Name
+            : pitch.DisplayName;
     }
 
     public override IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
@@ -154,7 +161,7 @@ internal class TargetStateRule(int priority, ILogger<TargetStateRule> logger) : 
             // Narrow to the filtered pitch name if specified
             var filteredPitches = string.IsNullOrEmpty(filterPitch)
                 ? matchingPitches
-                : matchingPitches.Where(p => p.Name == filterPitch).ToList();
+                : matchingPitches.Where(p => GetPitchDisplayName(p) == filterPitch).ToList();
 
             var allSlots = filteredPitches.SelectMany(p => p.Slots).ToList();
             var gameDay = matchingPitches[0].GameDay;

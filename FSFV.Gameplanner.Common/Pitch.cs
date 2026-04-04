@@ -8,6 +8,7 @@ namespace FSFV.Gameplanner.Common;
 public class Pitch
 {
     public string Name { get; set; }
+    public string DisplayName { get; set; }
     public int GameDay { get; set; }
     public DateOnly Date { get; set; }
     public TimeOnly StartTime { get; set; }

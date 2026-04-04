@@ -43,7 +43,7 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
         {
             // if this is not the required pitch, continue
             var requiredPitch = requiredPitchByLeague[league.Key];
-            if (pitch.Name != requiredPitch)
+            if (GetPitchDisplayName(pitch) != requiredPitch)
             {
                 continue;
             }
@@ -66,7 +66,7 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
         // return games from leagues that don't have a required pitch or if this pitch is the required pitch 
         return games.Where(g =>
             !requiredPitchByLeague.TryGetValue(g.Group.Type.Name, out var requiredPitch)
-                || requiredPitch == pitch.Name);
+                || requiredPitch == GetPitchDisplayName(pitch));
     }
 
     public override IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
@@ -86,17 +86,24 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
                 {
                     var leagueName = slot.Game.Group.Type.Name;
                     if (requiredPitchByLeague.TryGetValue(leagueName, out var requiredPitch)
-                        && pitch.Name != requiredPitch)
+                        && GetPitchDisplayName(pitch) != requiredPitch)
                     {
                         yield return new ValidationMessage(
                             $"Game {slot.Game.Home.Name} vs {slot.Game.Away.Name} (league '{leagueName}')"
-                                + $" is on pitch '{pitch.Name}' but must be on pitch '{requiredPitch}'.",
+                                + $" is on pitch '{GetPitchDisplayName(pitch)}' but must be on pitch '{requiredPitch}'.",
                             ValidationSeverity.Error,
                             Code: "REQUIRED_PITCH_VIOLATION",
                             GameDay: pitch.GameDay,
-                            PitchName: pitch.Name);
+                            PitchName: GetPitchDisplayName(pitch));
                     }
                 }
             }
         }
+
+    private static string GetPitchDisplayName(Pitch pitch)
+    {
+        return string.IsNullOrWhiteSpace(pitch.DisplayName)
+            ? pitch.Name
+            : pitch.DisplayName;
+    }
 }
