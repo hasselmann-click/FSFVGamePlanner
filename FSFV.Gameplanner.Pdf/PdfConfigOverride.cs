@@ -6,4 +6,5 @@ public class PdfConfigOverride
     public Dictionary<string, string>? LeagueColors { get; set; }
     public string? FooterDateFormat { get; set; }
     public string? GameStartTimeFormat { get; set; }
+    public string? HolidayColor { get; set; }
 }

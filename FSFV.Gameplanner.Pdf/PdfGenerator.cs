@@ -302,7 +302,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
 
                     t.Cell()
                         .Row(5).Column(3).RowSpan(5).ColumnSpan(3)
-                        .Background("#DCD9C5")
+                        .Background(activeConfig.HolidayColor)
                         .AlignCenter()
                         .AlignMiddle()
                         .LabelCell(title)
@@ -355,12 +355,17 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
             }
         }
 
+        var effectiveHolidayColor = string.IsNullOrWhiteSpace(configOverride?.HolidayColor)
+            ? config.HolidayColor
+            : Color.FromHex(configOverride.HolidayColor);
+
         return new PdfConfig
         {
             HeaderTitle = string.IsNullOrWhiteSpace(configOverride?.HeaderTitle) ? config.HeaderTitle : configOverride.HeaderTitle,
             LeagueColors = effectiveLeagueColors,
             FooterDateFormat = string.IsNullOrWhiteSpace(configOverride?.FooterDateFormat) ? config.FooterDateFormat : configOverride.FooterDateFormat,
             GameStartTimeFormat = string.IsNullOrWhiteSpace(configOverride?.GameStartTimeFormat) ? config.GameStartTimeFormat : configOverride.GameStartTimeFormat,
+            HolidayColor = effectiveHolidayColor,
         };
     }
 }
