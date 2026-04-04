@@ -47,8 +47,12 @@ static class ContainerExtensions
         => container
                     .Row(row)
                     .ColumnSpan(7)
-                    .BorderTop(0.1f)
+                    .BorderColor(Colors.Black)
+                    .BorderAlignmentInside()
+                    .BorderTop(0.3f)
                     .Background(bgColor)
-                    .PlanCell()
+                    .ScaleToFit()
+                    .PaddingVertical(4)
+                    .PaddingLeft(5)
         ;
 }
