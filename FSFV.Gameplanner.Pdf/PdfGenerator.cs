@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace FSFV.Gameplanner.Pdf;
 
-public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSerializerService serializer)
+public class PdfGenerator(ILogger<PdfGenerator> logger, CsvSerializerService serializer)
 {
     private const string DefaultLeagueColorKey = "Default";
 
@@ -44,10 +44,11 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
             });
     }
 
-    public async Task GenerateAsync(Func<Task<Stream>> writeStreamProvider,
+    public async Task GenerateAsync(
+        PdfConfig config,
+        Func<Task<Stream>> writeStreamProvider,
         Func<Task<Stream>> gameplanCsvStream,
-        Func<Task<Stream?>?>? holidaysStream = null,
-        PdfConfigOverride? configOverride = null,
+        Func<Task<Stream>>? holidaysStream = null,
         bool showDocument = false)
     {
         await using var writeStream = await writeStreamProvider();
@@ -65,7 +66,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
 
         try
         {
-            await GenerateAsync(writeStream, gameplanStream, holidays, configOverride, showDocument);
+            await GenerateAsync(config, writeStream, gameplanStream, holidays, showDocument);
         }
         finally
         {
@@ -81,10 +82,10 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
     }
 
     // This overload intentionally does not dispose caller-owned streams.
-    public async Task GenerateAsync(Stream writeStream,
+    public async Task GenerateAsync(PdfConfig config,
+        Stream writeStream,
         Stream gameplanCsvStream,
         Stream? holidaysStream = null,
-        PdfConfigOverride? configOverride = null,
         bool showDocument = false)
     {
         await using var gameplanCsvCopy = new MemoryStream();
@@ -103,8 +104,6 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
             holidays = await serializer.ParseHolidaysAsync(() => Task.FromResult<Stream?>(holidaysCopy));
         }
 
-        var effectiveConfig = ResolveConfig(configOverride);
-
         var document = Document.Create(container =>
         {
             var nextHoliday = holidays?.OrderBy(x => x.Key).FirstOrDefault();
@@ -116,12 +115,12 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
                 {
                     var (key, value) = nextHoliday.Value;
                     // special day page, e.g. Pentecost Monday
-                    container.Page(ComposePageSpecialDays(key, value, effectiveConfig));
+                    container.Page(ComposePageSpecialDays(key, value, config));
                     nextHoliday = holidays!.OrderBy(x => x.Key).FirstOrDefault(x => x.Key.CompareTo(key) > 0);
                 }
 
                 // game day page
-                container.Page(ComposePageGameDay(gameDay, effectiveConfig));
+                container.Page(ComposePageGameDay(gameDay, config));
             }
         });
 
@@ -324,48 +323,24 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, PdfConfig config, CsvSer
         t.Cell().Row(row).Column(7).LabelCell("LIGA");
     }
 
-    private bool TryResolveLeagueColor(PdfConfig activeConfig, string league, out Color color)
+    private static bool TryResolveLeagueColor(PdfConfig activeConfig, string league, out Color color)
     {
-        if (activeConfig.LeagueColors.TryGetValue(league, out color))
+        if (activeConfig.LeagueColors.TryGetValue(league, out var hexColor)
+            && Color.FromHex(hexColor) is Color parsedColor)
         {
+            color = parsedColor;
             return true;
         }
 
-        if (activeConfig.LeagueColors.TryGetValue(DefaultLeagueColorKey, out color))
+        if (activeConfig.LeagueColors.TryGetValue(DefaultLeagueColorKey, out var defaultHexColor)
+            && Color.FromHex(defaultHexColor) is Color defaultColor)
         {
+            color = defaultColor;
             return true;
         }
 
+        color = Colors.Transparent;
         return false;
     }
 
-    private PdfConfig ResolveConfig(PdfConfigOverride? configOverride)
-    {
-        var effectiveLeagueColors = new Dictionary<string, Color>(config.LeagueColors, StringComparer.OrdinalIgnoreCase);
-        if (configOverride?.LeagueColors is not null)
-        {
-            foreach (var (league, hexColor) in configOverride.LeagueColors)
-            {
-                if (string.IsNullOrWhiteSpace(league) || string.IsNullOrWhiteSpace(hexColor))
-                {
-                    continue;
-                }
-
-                effectiveLeagueColors[league] = Color.FromHex(hexColor);
-            }
-        }
-
-        var effectiveHolidayColor = string.IsNullOrWhiteSpace(configOverride?.HolidayColor)
-            ? config.HolidayColor
-            : Color.FromHex(configOverride.HolidayColor);
-
-        return new PdfConfig
-        {
-            HeaderTitle = string.IsNullOrWhiteSpace(configOverride?.HeaderTitle) ? config.HeaderTitle : configOverride.HeaderTitle,
-            LeagueColors = effectiveLeagueColors,
-            FooterDateFormat = string.IsNullOrWhiteSpace(configOverride?.FooterDateFormat) ? config.FooterDateFormat : configOverride.FooterDateFormat,
-            GameStartTimeFormat = string.IsNullOrWhiteSpace(configOverride?.GameStartTimeFormat) ? config.GameStartTimeFormat : configOverride.GameStartTimeFormat,
-            HolidayColor = effectiveHolidayColor,
-        };
-    }
 }

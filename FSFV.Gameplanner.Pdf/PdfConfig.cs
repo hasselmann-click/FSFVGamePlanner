@@ -9,7 +9,7 @@ namespace FSFV.Gameplanner.Pdf
         public string HeaderTitle { get; set; } = string.Empty;
 
         [JsonConverter(typeof(ColorConverter))]
-        public Dictionary<string, Color> LeagueColors { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> LeagueColors { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public string FooterDateFormat { get; set; } = "dd.MM.yyyy";
         public string GameStartTimeFormat { get; set; } = "HH:mm";
 
