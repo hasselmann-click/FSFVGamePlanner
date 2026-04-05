@@ -301,7 +301,7 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, CsvSerializerService ser
 
                     t.Cell()
                         .Row(5).Column(3).RowSpan(5).ColumnSpan(3)
-                        .Background(activeConfig.HolidayColor)
+                        .Background(ResolveHolidayColorOrDefault(activeConfig))
                         .AlignCenter()
                         .AlignMiddle()
                         .LabelCell(title)
@@ -321,6 +321,17 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, CsvSerializerService ser
         t.Cell().Row(row).Column(5).LabelCell("SCHIRI");
         t.Cell().Row(row).Column(6).LabelCell("GRUPPE");
         t.Cell().Row(row).Column(7).LabelCell("LIGA");
+    }
+
+    private static Color ResolveHolidayColorOrDefault(PdfConfig activeConfig)
+    {
+        if (activeConfig.HolidayColor is not null
+            && Color.FromHex(activeConfig.HolidayColor) is Color parsedColor)
+        {
+            return parsedColor;
+        }
+
+        return Color.FromHex("#F2B880"); // "Light Orange" - Holiday default
     }
 
     private static bool TryResolveLeagueColor(PdfConfig activeConfig, string league, out Color color)
