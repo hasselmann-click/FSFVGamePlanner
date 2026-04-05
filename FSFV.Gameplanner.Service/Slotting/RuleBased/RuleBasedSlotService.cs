@@ -137,7 +137,7 @@ public class RuleBasedSlotService : AbstractSlotService
         {
             if (pitch.Games.Count < 1)
             {
-                Logger.LogWarning("No games for pitch {pitch} on {date}", pitch.Name, pitch.StartTime.ToShortTimeString());
+                Logger.LogWarning("No games for pitch {pitch} on {date} at game day {day}", pitch.Name, pitch.StartTime.ToShortTimeString(), pitch.GameDay);
                 continue;
             }
 
