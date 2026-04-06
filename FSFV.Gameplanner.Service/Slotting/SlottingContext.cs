@@ -22,4 +22,9 @@ public class SlottingContext
     /// null during normal generation. Used by <see cref="FSFV.Gameplanner.Service.Slotting.RuleBased.Rules.ConsistencyChecksRule"/>.
     /// </summary>
     public IReadOnlyList<(string HomeId, string AwayId, string GroupId, int GameDay)>? ExpectedFixtures { get; init; }
+
+    /// <summary>
+    /// Workaround: This buffer depends on the game break length. But the last games of the day don't need additional break time.
+    /// </summary>
+    public readonly int PitchOverdraftBufferMinutes = 10;
 }

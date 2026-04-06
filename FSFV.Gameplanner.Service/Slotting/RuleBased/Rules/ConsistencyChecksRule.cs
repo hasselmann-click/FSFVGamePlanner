@@ -11,6 +11,7 @@ namespace FSFV.Gameplanner.Service.Slotting.RuleBased.Rules;
 /// </summary>
 internal class ConsistencyChecksRule(int priority) : AbstractSlotRule(priority)
 {
+
     // ── Generation no-ops ────────────────────────────────────────────────────
 
     public override IEnumerable<Game> Apply(
@@ -19,11 +20,10 @@ internal class ConsistencyChecksRule(int priority) : AbstractSlotRule(priority)
 
     // ── Validation ───────────────────────────────────────────────────────────
 
-    public override IEnumerable<ValidationMessage> Validate(
-        SlottingContext context, IReadOnlyList<Pitch> pitches)
+    public override IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
     {
-        foreach (var msg in CheckPitchBoundaries(pitches)) yield return msg;
-        foreach (var msg in CheckPitchOverlaps(pitches)) yield return msg;
+        foreach (var msg in CheckPitchBoundaries(pitches, context)) yield return msg;
+        foreach (var msg in CheckPitchOverlaps(pitches, context)) yield return msg;
 
         if (context.ExpectedFixtures is { } expectedFixtures)
         {
@@ -33,7 +33,7 @@ internal class ConsistencyChecksRule(int priority) : AbstractSlotRule(priority)
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
-    private static IEnumerable<ValidationMessage> CheckPitchBoundaries(IReadOnlyList<Pitch> pitches)
+    private static IEnumerable<ValidationMessage> CheckPitchBoundaries(IReadOnlyList<Pitch> pitches, SlottingContext context)
     {
         foreach (var pitch in pitches)
         {
@@ -50,7 +50,8 @@ internal class ConsistencyChecksRule(int priority) : AbstractSlotRule(priority)
                         PitchName: pitch.Name);
                 }
 
-                if (slot.EndTime > pitch.EndTime)
+
+                if (slot.EndTime > pitch.EndTime.AddMinutes(context.PitchOverdraftBufferMinutes))
                 {
                     yield return new ValidationMessage(
                         $"Slot {slot.Game.Home.Name} vs {slot.Game.Away.Name} on pitch '{pitch.Name}'"
@@ -64,7 +65,7 @@ internal class ConsistencyChecksRule(int priority) : AbstractSlotRule(priority)
         }
     }
 
-    private static IEnumerable<ValidationMessage> CheckPitchOverlaps(IReadOnlyList<Pitch> pitches)
+    private static IEnumerable<ValidationMessage> CheckPitchOverlaps(IReadOnlyList<Pitch> pitches, SlottingContext context)
     {
         foreach (var pitch in pitches)
         {

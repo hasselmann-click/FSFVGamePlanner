@@ -44,25 +44,25 @@ public class RuleBasedSlotService : AbstractSlotService
         while (games.Count != 0)
         {
             // order pitches by their next available starting time 
-                var orderedPitches = pitches
-                .Where(p => !pitchesToIgnore.Contains(p.Name))
-                .OrderBy(p => rng.NextInt64())
-                    .ThenBy(op => op.NextStartTime)
-                    .ToList();
+            var orderedPitches = pitches
+            .Where(p => !pitchesToIgnore.Contains(p.Name))
+            .OrderBy(p => rng.NextInt64())
+                .ThenBy(op => op.NextStartTime)
+                .ToList();
 
-                if (orderedPitches.Count == 0)
-                {
-                    // All pitches were marked as ignored and we still have unscheduled games.
-                    // Fall back to the pitch with most remaining time to avoid crashing with First().
-                    var fallbackPitch = pitches.OrderByDescending(p => p.TimeLeft).First();
-                    fallbackPitch.Games.AddRange(games);
-                    logger.LogError("No available pitches left to continue slotting on game day {day} at {date}. " +
-                        "Assigned remaining {cnt} games to pitch {pitch} as fallback.",
-                        gameDate.GameDay, gameDate.Date, games.Count, fallbackPitch.Name);
-                    break;
-                }
+            if (orderedPitches.Count == 0)
+            {
+                // All pitches were marked as ignored and we still have unscheduled games.
+                // Fall back to the pitch with most remaining time to avoid crashing with First().
+                var fallbackPitch = pitches.OrderByDescending(p => p.TimeLeft).First();
+                fallbackPitch.Games.AddRange(games);
+                logger.LogError("No available pitches left to continue slotting on game day {day} at {date}. " +
+                    "Assigned remaining {cnt} games to pitch {pitch} as fallback.",
+                    gameDate.GameDay, gameDate.Date, games.Count, fallbackPitch.Name);
+                break;
+            }
 
-                var currentStartTime = orderedPitches[0].NextStartTime;
+            var currentStartTime = orderedPitches[0].NextStartTime;
 
             logger.LogTrace("Pitch Order: {pitches}", string.Join(", ", orderedPitches.Select(op => "[" + op.Name + ": " + op.NextStartTime + "]")));
             foreach (var nextPitch in orderedPitches)

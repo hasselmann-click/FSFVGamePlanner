@@ -10,8 +10,6 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
 {
     private TimeSpan maxMinDurationAtGameDay;
     private Dictionary<string, string> requiredPitchByLeague;
-    // Workaround: This buffer depends on the game break length. But the last games of the day don't need additional break time.
-    private readonly double pitchOverdraftBufferMinutes = 10;
 
     public override void ProcessBeforeGameday(SlottingContext context, List<Pitch> pitches, List<Game> games)
     {
@@ -58,12 +56,13 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
                 .First();
             var minRequiredTime = TimeSpan.FromMinutes(Math.Ceiling(leagueGames.Count / (double)parallelFactor) * minDuration);
 
+            // Example: 
             // next start time: 11.35
             // L minRequiredTime: 5h
             // maxMinDurationAtGameDay: The least amount of time another game would need on this pitch
             // EndTime: 18.00
             // 11.35 <= 18.00 - (5 + 1.35) = 11.25 -> missing 10 minutes 
-            if (pitch.NextStartTime <= (pitch.EndTime.AddMinutes(pitchOverdraftBufferMinutes).Add(minRequiredTime.Add(maxMinDurationAtGameDay).Negate())))
+            if (pitch.NextStartTime <= pitch.EndTime.AddMinutes(context.PitchOverdraftBufferMinutes).Add(minRequiredTime.Add(maxMinDurationAtGameDay).Negate()))
             {
                 continue;
             }
@@ -78,35 +77,35 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
     }
 
     public override IEnumerable<ValidationMessage> Validate(SlottingContext context, IReadOnlyList<Pitch> pitches)
+    {
+        var requiredPitchByLeague = pitches
+            .SelectMany(p => p.Slots)
+            .Select(s => s.Game.Group.Type)
+            .DistinctBy(t => t.Name)
+            .Where(t => !string.IsNullOrEmpty(t.RequiredPitchName))
+            .ToDictionary(t => t.Name, t => t.RequiredPitchName!);
+
+        if (requiredPitchByLeague.Count == 0) yield break;
+
+        foreach (var pitch in pitches)
         {
-            var requiredPitchByLeague = pitches
-                .SelectMany(p => p.Slots)
-                .Select(s => s.Game.Group.Type)
-                .DistinctBy(t => t.Name)
-                .Where(t => !string.IsNullOrEmpty(t.RequiredPitchName))
-                .ToDictionary(t => t.Name, t => t.RequiredPitchName!);
-
-            if (requiredPitchByLeague.Count == 0) yield break;
-
-            foreach (var pitch in pitches)
+            foreach (var slot in pitch.Slots)
             {
-                foreach (var slot in pitch.Slots)
+                var leagueName = slot.Game.Group.Type.Name;
+                if (requiredPitchByLeague.TryGetValue(leagueName, out var requiredPitch)
+                    && GetPitchDisplayName(pitch) != requiredPitch)
                 {
-                    var leagueName = slot.Game.Group.Type.Name;
-                    if (requiredPitchByLeague.TryGetValue(leagueName, out var requiredPitch)
-                        && GetPitchDisplayName(pitch) != requiredPitch)
-                    {
-                        yield return new ValidationMessage(
-                            $"Game {slot.Game.Home.Name} vs {slot.Game.Away.Name} (league '{leagueName}')"
-                                + $" is on pitch '{GetPitchDisplayName(pitch)}' but must be on pitch '{requiredPitch}'.",
-                            ValidationSeverity.Error,
-                            Code: "REQUIRED_PITCH_VIOLATION",
-                            GameDay: pitch.GameDay,
-                            PitchName: GetPitchDisplayName(pitch));
-                    }
+                    yield return new ValidationMessage(
+                        $"Game {slot.Game.Home.Name} vs {slot.Game.Away.Name} (league '{leagueName}')"
+                            + $" is on pitch '{GetPitchDisplayName(pitch)}' but must be on pitch '{requiredPitch}'.",
+                        ValidationSeverity.Error,
+                        Code: "REQUIRED_PITCH_VIOLATION",
+                        GameDay: pitch.GameDay,
+                        PitchName: GetPitchDisplayName(pitch));
                 }
             }
         }
+    }
 
     private static string GetPitchDisplayName(Pitch pitch)
     {
