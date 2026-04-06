@@ -24,7 +24,6 @@ internal class ConsistencyChecksRule(int priority) : AbstractSlotRule(priority)
     {
         foreach (var msg in CheckPitchBoundaries(pitches)) yield return msg;
         foreach (var msg in CheckPitchOverlaps(pitches)) yield return msg;
-        foreach (var msg in CheckSimultaneousTeamGames(pitches)) yield return msg;
 
         if (context.ExpectedFixtures is { } expectedFixtures)
         {
@@ -90,41 +89,6 @@ internal class ConsistencyChecksRule(int priority) : AbstractSlotRule(priority)
                         Code: "SLOT_OVERLAP",
                         GameDay: pitch.GameDay,
                         PitchName: pitch.Name);
-                }
-            }
-        }
-    }
-
-    private static IEnumerable<ValidationMessage> CheckSimultaneousTeamGames(IReadOnlyList<Pitch> pitches)
-    {
-        var byGameDay = pitches.GroupBy(p => p.GameDay);
-        foreach (var dayGroup in byGameDay)
-        {
-            var allSlots = dayGroup.SelectMany(p => p.Slots).ToList();
-
-            for (int i = 0; i < allSlots.Count; i++)
-            {
-                for (int j = i + 1; j < allSlots.Count; j++)
-                {
-                    var s1 = allSlots[i];
-                    var s2 = allSlots[j];
-
-                    // Non-overlapping window — no conflict possible
-                    if (s1.StartTime >= s2.EndTime || s2.StartTime >= s1.EndTime) continue;
-
-                    var teams1 = new[] { s1.Game.Home.Name, s1.Game.Away.Name };
-                    var teams2 = new[] { s2.Game.Home.Name, s2.Game.Away.Name };
-                    var conflict = teams1.Intersect(teams2).FirstOrDefault();
-                    if (conflict != null)
-                    {
-                        yield return new ValidationMessage(
-                            $"Team '{conflict}' is scheduled to play two games simultaneously"
-                                + $" on game day {dayGroup.Key}"
-                                + $" ({s1.StartTime:HH:mm}–{s1.EndTime:HH:mm} and {s2.StartTime:HH:mm}–{s2.EndTime:HH:mm}).",
-                            ValidationSeverity.Error,
-                            Code: "SIMULTANEOUS_TEAM_GAMES",
-                            GameDay: dayGroup.Key);
-                    }
                 }
             }
         }

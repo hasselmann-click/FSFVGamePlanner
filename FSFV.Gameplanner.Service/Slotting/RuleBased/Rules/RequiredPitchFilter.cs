@@ -10,6 +10,8 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
 {
     private TimeSpan maxMinDurationAtGameDay;
     private Dictionary<string, string> requiredPitchByLeague;
+    // Workaround: This buffer depends on the game break length. But the last games of the day don't need additional break time.
+    private readonly double pitchOverdraftBufferMinutes = 10;
 
     public override void ProcessBeforeGameday(SlottingContext context, List<Pitch> pitches, List<Game> games)
     {
@@ -55,7 +57,13 @@ internal class RequiredPitchFilter(int priority) : AbstractSlotRule(priority)
                 .Select(g => (g.Group.Type.MinDurationMinutes, g.Group.Type.ParallelGamesPerPitch))
                 .First();
             var minRequiredTime = TimeSpan.FromMinutes(Math.Ceiling(leagueGames.Count / (double)parallelFactor) * minDuration);
-            if (pitch.NextStartTime <= (pitch.EndTime.Add(minRequiredTime.Add(maxMinDurationAtGameDay).Negate())))
+
+            // next start time: 11.35
+            // L minRequiredTime: 5h
+            // maxMinDurationAtGameDay: The least amount of time another game would need on this pitch
+            // EndTime: 18.00
+            // 11.35 <= 18.00 - (5 + 1.35) = 11.25 -> missing 10 minutes 
+            if (pitch.NextStartTime <= (pitch.EndTime.AddMinutes(pitchOverdraftBufferMinutes).Add(minRequiredTime.Add(maxMinDurationAtGameDay).Negate())))
             {
                 continue;
             }
