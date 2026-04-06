@@ -106,21 +106,28 @@ public class PdfGenerator(ILogger<PdfGenerator> logger, CsvSerializerService ser
 
         var document = Document.Create(container =>
         {
-            var nextHoliday = holidays?.OrderBy(x => x.Key).FirstOrDefault();
+            var orderedHolidays = holidays?.OrderBy(x => x.Key).ToList() ?? [];
+            var holidayIndex = 0;
+
             foreach (var gameDay in gamesPerDay)
             {
-
                 // add holiday pages as long as they are before the current game day
-                while (nextHoliday?.Value is not null && nextHoliday?.Key.CompareTo(gameDay.Key) < 0)
+                while (holidayIndex < orderedHolidays.Count && orderedHolidays[holidayIndex].Key.CompareTo(gameDay.Key) < 0)
                 {
-                    var (key, value) = nextHoliday.Value;
+                    var (key, value) = orderedHolidays[holidayIndex++];
                     // special day page, e.g. Pentecost Monday
                     container.Page(ComposePageSpecialDays(key, value, config));
-                    nextHoliday = holidays!.OrderBy(x => x.Key).FirstOrDefault(x => x.Key.CompareTo(key) > 0);
                 }
 
                 // game day page
                 container.Page(ComposePageGameDay(gameDay, config));
+            }
+
+            // append holidays after the final game day as their own pages
+            while (holidayIndex < orderedHolidays.Count)
+            {
+                var (key, value) = orderedHolidays[holidayIndex++];
+                container.Page(ComposePageSpecialDays(key, value, config));
             }
         });
 

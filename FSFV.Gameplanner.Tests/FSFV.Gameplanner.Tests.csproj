@@ -19,6 +19,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\FSFV.Gameplanner.Appworks\FSFV.Gameplanner.Appworks.csproj" />
+	  <ProjectReference Include="..\FSFV.Gameplanner.Pdf\FSFV.Gameplanner.Pdf.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
