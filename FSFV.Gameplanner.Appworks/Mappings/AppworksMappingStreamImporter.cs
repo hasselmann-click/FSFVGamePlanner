@@ -75,7 +75,9 @@ public class AppworksMappingStreamImporter(ILogger<AppworksMappingStreamImporter
                     divisions[name] = id;
                     break;
                 case "Matchdays":
-                    matchdays[DateOnly.Parse(name).ToString(IAppworksMappingImporter.MatchdayDateFormat)] = id;
+                    // Matchday names only carry day and month (e.g. "06.09."), no year.
+                    matchdays[DateOnly.ParseExact(name, IAppworksMappingImporter.MatchdayDateFormat, CultureInfo.InvariantCulture)
+                        .ToString(IAppworksMappingImporter.MatchdayDateFormat)] = id;
                     break;
                 case "Locations":
                     locations[name] = id;

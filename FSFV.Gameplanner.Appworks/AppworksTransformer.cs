@@ -55,8 +55,9 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
 
             if (errors.Count != 0)
             {
-                logger.LogError("Errors while transforming games for tournament {Tournament}: {Errors}", t, string.Join("\n", errors));
-                throw new Exception("Errors while transforming games");
+                var message = $"Errors while transforming games for tournament {t}: {string.Join("; ", errors)}";
+                logger.LogError("{Message}", message);
+                throw new InvalidOperationException(message);
             }
 
             recordsPerTournament.Add(t, records);
