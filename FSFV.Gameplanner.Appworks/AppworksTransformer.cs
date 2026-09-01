@@ -66,8 +66,10 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
     }
 
     /// <summary>
-    /// Updates the team mappings with the closest match if the team is not found.
+    /// Updates the team mappings with the closest match if the team is not found, as long as the
+    /// closest match is close enough to be considered a naming variation rather than a different team.
     /// This is a simple utility to be able to not have the exact same team names in the mappings as in the gameplan.
+    /// Teams that cannot be confidently mapped are left unmapped, causing <see cref="Transform"/> to abort.
     /// </summary>
     /// <param name="origMappings"></param>
     /// <param name="gamePlan"></param>
@@ -86,11 +88,26 @@ public class AppworksTransformer(ILogger<AppworksTransformer> logger, IAppworksM
                 continue;
             }
 
-            var closestMatch = origMappings.Teams.Keys.OrderBy(x => LevenshteinDistance(x, team)).First();
+            var closestMatch = origMappings.Teams.Keys.OrderBy(x => LevenshteinDistance(x, team!)).First();
+            var distance = LevenshteinDistance(closestMatch, team!);
+            var maxAllowedDistance = Math.Max(2, (int)Math.Ceiling(team!.Length * MaxTeamNameFuzzyMatchRatio));
+            if (distance > maxAllowedDistance)
+            {
+                logger.LogError("Could not find a mapping for team {Team}. Closest match {ClosestMatch} is too different (distance {Distance}, allowed {MaxAllowedDistance})",
+                    team, closestMatch, distance, maxAllowedDistance);
+                continue;
+            }
+
             logger.LogWarning("Could not find team {Team}. Using closest match {ClosestMatch}", team, closestMatch);
             origMappings.Teams.Add(team, origMappings.Teams[closestMatch]);
         }
     }
+
+    /// <summary>
+    /// Maximum fraction of a team name's length that may differ (via Levenshtein distance) from a
+    /// mapping entry for it to still be considered the same team.
+    /// </summary>
+    private const double MaxTeamNameFuzzyMatchRatio = 0.3;
 
     public static int LevenshteinDistance(string a, string b)
     {
